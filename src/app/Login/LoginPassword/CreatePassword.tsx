@@ -1,0 +1,181 @@
+"use client";
+import { useTransition, useState } from "react";
+import PasswordInput from "@/components/custom/PasswordInput";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { Lock } from "lucide-react";
+import { toast } from "sonner";
+
+const CreatePassword = ({
+  email,
+  setStep,
+}: {
+  email: string;
+  setStep: React.Dispatch<React.SetStateAction<"email" | "login" | "create">>;
+}) => {
+  const [isPending, startTransition] = useTransition();
+  const formSchema = z
+    .object({
+      password: z.string().min(6, "Password must be at least 6 characters"),
+      confirmPassword: z
+        .string()
+        .min(6, "Password must be at least 6 characters"),
+    })
+    .refine(
+      (data) => {
+        if (data.password !== data.confirmPassword) {
+          return false;
+        }
+        return true;
+      },
+      { message: "Password should be same", path: ["confirmPassword"] }
+    );
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    startTransition(async () => {
+      try {
+        const { password } = values;
+
+        const res = await axios.post("/api/create-password", {
+          email,
+          password,
+        });
+        if (res.data.success) {
+          setStep("email");
+          toast.success("Sign Up Successful", {
+            position: "bottom-right",
+            duration: 3000,
+            className: "bg-green-700 text-white border border-green-600",
+            style: {
+              backgroundColor: "#285943",
+              color: "white",
+              border: "1px solid #3E5692",
+            },
+          });
+        } else {
+          toast.error("Sign Up Failed", {
+            description: res.data.message || "Something went wrong",
+            position: "bottom-right",
+            duration: 3000,
+            className: "bg-red-700 text-white border border-red-600",
+            style: {
+              backgroundColor: "#C1292E",
+              color: "white",
+              border: "1px solid #3E5692",
+            },
+          });
+        }
+      } catch (error: any) {
+        let message = "Something went wrong";
+        if (axios.isAxiosError(error)) {
+          if (error.response) {
+            // Server returned an error
+            message =
+              error.response.data?.message ||
+              `Server Error: ${error.response.status}`;
+          } else if (error.request) {
+            // No response from server
+            message =
+              "No response from server. Please check your internet connection.";
+          } else {
+            // Something else happened while setting up request
+            message = error.message;
+          }
+        } else {
+          message = error?.message || message;
+        }
+        toast.error("Sign Up Failed", {
+          description: message,
+          position: "bottom-right",
+          duration: 3000,
+          className: "bg-red-700 text-white border border-red-600",
+          style: {
+            backgroundColor: "#C1292E",
+            color: "white",
+            border: "1px solid #3E5692",
+          },
+        });
+        console.log("Signup error", error);
+      }
+    });
+  }
+
+  return (
+    <div>
+      <div className="space-y-2">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-slate-700  flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-sky-600" />
+                    Create Password
+                  </FormLabel>
+                  <FormControl>
+                    <PasswordInput {...field} className="" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-slate-700  flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-sky-600" />
+                    Enter Confirm Password
+                  </FormLabel>
+                  <FormControl>
+                    <PasswordInput {...field} className="" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              className="w-full h-12 font-gilRegular bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
+            >
+              <h2>
+                {isPending ? (
+                  <div className="flex items-center">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    Continuing...
+                  </div>
+                ) : (
+                  <div className="flex gap-2 items-center">Continue</div>
+                )}
+              </h2>
+            </Button>
+          </form>
+        </Form>
+      </div>
+    </div>
+  );
+};
+
+export default CreatePassword;
