@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+.env
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -24,6 +25,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
 
 # local env files
 .env*.local
