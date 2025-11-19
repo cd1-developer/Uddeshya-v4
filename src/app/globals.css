@@ -123,82 +123,82 @@
 
 @font-face {
   font-family: gilThin;
-  src: url(/public/font/Gilroy-Thin.woff2);
+  src: url(/font/Gilroy-Thin.woff2);
 }
 @font-face {
   font-family: gilUltraLight;
-  src: url(/public/font/Gilroy-UltraLight.woff2);
+  src: url(/font/Gilroy-UltraLight.woff2);
 }
 @font-face {
   font-family: gilLight;
-  src: url(/public/font/Gilroy-Light.woff2);
+  src: url(/font/Gilroy-Light.woff2);
 }
 @font-face {
   font-family: gilRegular;
-  src: url(/public/font/Gilroy-Regular.woff2);
+  src: url(/font/Gilroy-Regular.woff2);
 }
 @font-face {
   font-family: gilMedium;
-  src: url(/public/font/Gilroy-Medium.woff2);
+  src: url(/font/Gilroy-Medium.woff2);
 }
 @font-face {
   font-family: gilSemiBold;
-  src: url(/public/font/Gilroy-SemiBold.woff2);
+  src: url(/font/Gilroy-SemiBold.woff2);
 }
 @font-face {
   font-family: gilBold;
-  src: url(/public/font/Gilroy-Bold.woff);
+  src: url(/font/Gilroy-Bold.woff);
 }
 @font-face {
   font-family: gilExtraBold;
-  src: url(/public/font/Gilroy-ExtraBold.woff);
+  src: url(/font/Gilroy-ExtraBold.woff);
 }
 
 @font-face {
   font-family: gilBlack;
-  src: url(/public/font/Gilroy-Black.woff);
+  src: url(/font/Gilroy-Black.woff);
 }
 @font-face {
   font-family: gilHeavy;
-  src: url(/public/font/Gilroy-Heavy.woff);
+  src: url(/font/Gilroy-Heavy.woff);
 }
 @font-face {
   font-family: droidSans;
-  src: url(/public/font/DroidSansMono.woff2);
+  src: url(/font/DroidSansMono.woff2);
 }
 
 @font-face {
   font-family: mangoThin;
-  src: url(/public/font/MangoGrotesque-Thin.woff2);
+  src: url(/font/MangoGrotesque-Thin.woff2);
 }
 @font-face {
   font-family: mangoLight;
-  src: url(/public/font/MangoGrotesque-Light.woff2);
+  src: url(/font/MangoGrotesque-Light.woff2);
 }
 @font-face {
   font-family: mangoRegular;
-  src: url(/public/font/MangoGrotesque-Regular.woff2);
+  src: url(/font/MangoGrotesque-Regular.woff2);
 }
 @font-face {
   font-family: mangoMedium;
-  src: url(/public/font/MangoGrotesque-Medium.woff2);
+  src: url(/font/MangoGrotesque-Medium.woff2);
 }
 @font-face {
   font-family: mangoSemiBold;
-  src: url(/public/font/MangoGrotesque-SemiBold.woff2);
+  src: url(/font/MangoGrotesque-SemiBold.woff2);
 }
 @font-face {
   font-family: mangoBold;
-  src: url(/public/font/MangoGrotesque-Bold.woff2);
+  src: url(/font/MangoGrotesque-Bold.woff2);
 }
 @font-face {
   font-family: mangoExtraBold;
-  src: url(/public/font/MangoGrotesque-ExtraBold.woff2);
+  src: url(/font/MangoGrotesque-ExtraBold.woff2);
 }
 
 @font-face {
   font-family: mangoBlack;
-  src: url(/public//font/MangoGrotesque-Black.woff2);
+  /* src: url(/public/font/MangoGrotesque-Black.woff2); */
 }
 
 @theme {

@@ -43,12 +43,14 @@ export default function LoginEmail() {
     startTransition(async () => {
       try {
         const res = await axios.post(
-          "/api/verify-email",
+          "/api/auth/verify-email",
           {
             email: values.email,
           },
           { headers: { "Content-Type": "application/json" } }
         );
+        const { success, message } = res.data;
+        console.log(success);
 
         if (res.data.success) {
           setUserEmail(values.email);
@@ -70,7 +72,9 @@ export default function LoginEmail() {
             setStep("create");
           }
         } else {
-          toast.error(res.data.message || "Something went wrong");
+          toast.error(res.data.message || "Something went wrong", {
+            position: "bottom-right",
+          });
         }
       } catch (error: any) {
         console.error("Email verification error:", error);
@@ -98,7 +102,7 @@ export default function LoginEmail() {
       title="Sign in to your leave management account"
       navigateTitle="Don't have an account?"
       navigator="/Signup"
-      navigateTo="Sign up"
+      navigateTo=""
     >
       {step === "email" && (
         <Form {...form}>
@@ -110,7 +114,7 @@ export default function LoginEmail() {
                 name="email"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-slate-700 flex items-center gap-2">
+                    <FormLabel className="text-slate-700 font-gilSemiBold flex items-center gap-2">
                       <Mail className="w-4 h-4 text-sky-600" />
                       Email Address
                     </FormLabel>
@@ -119,7 +123,7 @@ export default function LoginEmail() {
                         type="email"
                         placeholder="Enter your email"
                         {...field}
-                        className="h-12 rounded-xl border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
+                        className="h-12 font-gilRegular rounded-xl border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
                       />
                     </FormControl>
                     <FormMessage />

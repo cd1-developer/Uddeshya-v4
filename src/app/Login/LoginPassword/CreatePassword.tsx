@@ -3,6 +3,7 @@ import { useTransition, useState } from "react";
 import PasswordInput from "@/components/custom/PasswordInput";
 import z from "zod";
 import { useForm } from "react-hook-form";
+import { ArrowLeft } from "lucide-react";
 import {
   Form,
   FormField,
@@ -16,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 const CreatePassword = ({
   email,
@@ -120,6 +122,17 @@ const CreatePassword = ({
 
   return (
     <div>
+      <div className="">
+        <Link href="/Login/LoginEmail">
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
+          </Button>
+        </Link>
+      </div>
       <div className="space-y-2">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">

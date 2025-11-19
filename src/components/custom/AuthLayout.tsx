@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-
 import { ArrowLeft, Calendar } from "lucide-react";
 
 interface AuthLayoutType {
@@ -21,7 +20,7 @@ function AuthLayout({
   navigateTitle,
 }: AuthLayoutType) {
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       {/* Doogal-style background elements */}
       {/* <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200/30 to-indigo-300/20 rounded-full blur-3xl animate-pulse"></div>
