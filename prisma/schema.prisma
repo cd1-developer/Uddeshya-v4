@@ -85,7 +85,6 @@ model Holiday {
 enum Gender {
   Male
   Female
-  Other
 }
 
 enum Role {
