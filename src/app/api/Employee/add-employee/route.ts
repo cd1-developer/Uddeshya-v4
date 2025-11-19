@@ -1,0 +1,70 @@
+import { Role } from "@/interfaces";
+import validateData from "../../../../../helper/validateData";
+import { prisma } from "../../../../../libs/prisma";
+import { findUser } from "../../../../../helper/findUser";
+import { NextRequest, NextResponse } from "next/server";
+import z from "zod";
+
+const addEmployeeSchema = z.object({
+  userId: z.string({ error: "userId is required" }),
+  role: z.enum(Role, { error: "role is required" }),
+  joiningDate: z.union(
+    [z.string().transform((val) => new Date(val)), z.date()],
+    { error: "joiningDate is required" }
+  ),
+});
+
+export const POST = async (req: NextRequest) => {
+  try {
+    const body = await req.json();
+
+    const { success, message, data } = validateData(addEmployeeSchema, body);
+
+    if (!success) {
+      return NextResponse.json({ success, message }, { status: 400 });
+    }
+
+    const { userId, role, joiningDate } = data as z.infer<
+      typeof addEmployeeSchema
+    >;
+
+    const { exists } = await findUser(userId);
+    if (!exists) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const newEmployee = await prisma.employee.create({
+      data: {
+        userId,
+        role,
+        joiningDate,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(
+      { success: true, data: newEmployee },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Add Employee Error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: error?.message || "Internal Server Error",
+      },
+      { status: 500 }
+    );
+  }
+};
