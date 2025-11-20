@@ -1,6 +1,6 @@
 import { Role } from "@/interfaces";
 import validateData from "../../../../../helper/validateData";
-import { prisma } from "../../../../../libs/prisma";
+import { prisma } from "@/libs/prisma";
 import { findUser } from "../../../../../helper/findUser";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";

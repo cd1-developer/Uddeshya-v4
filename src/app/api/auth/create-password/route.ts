@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
-import { prisma } from "../../../../../libs/prisma";
+import { prisma } from "@/libs/prisma";
 import { loginSchema } from "../../../../../schemas/auth-schema";
 import validateData from "../../../../../helper/validateData";
 import z from "zod";
