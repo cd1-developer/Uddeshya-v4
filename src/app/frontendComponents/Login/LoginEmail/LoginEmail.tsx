@@ -1,5 +1,4 @@
 "use client";
-
 import type React from "react";
 import { useTransition } from "react";
 import { useState } from "react";
@@ -23,6 +22,8 @@ import { toast } from "sonner";
 import axios from "axios";
 import LoginPassword from "../LoginPassword/LoginPassword";
 import CreatePassword from "../LoginPassword/CreatePassword";
+import { ErrorToast } from "@/components/custom/ErrorToast";
+import { successToast } from "@/components/custom/SuccessToast";
 
 export default function LoginEmail() {
   const [isPending, startTransition] = useTransition();
@@ -42,39 +43,25 @@ export default function LoginEmail() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
-        const res = await axios.post(
-          "/api/auth/verify-email",
-          {
-            email: values.email,
-          },
-          { headers: { "Content-Type": "application/json" } }
-        );
+        const res = await axios.post("/api/auth/verify-email", {
+          email: values.email,
+        });
         const { success, message } = res.data;
-        console.log(success);
 
-        if (res.data.success) {
-          setUserEmail(values.email);
-          localStorage.setItem("Email for password", values.email);
-          toast.success("Email verified! Redirecting to password entry...", {
-            position: "bottom-right",
-            duration: 1000,
-            className: "bg-green-700 text-white border border-green-600",
-            style: {
-              backgroundColor: "#285943",
-              color: "white",
-              border: "1px solid #3e5692",
-            },
-          });
+        if (!success) {
+          ErrorToast(message);
+          return;
+        }
 
-          if (res.data.isPasswordExist === true) {
-            setStep("login");
-          } else {
-            setStep("create");
-          }
+        setUserEmail(values.email);
+        localStorage.setItem("Email for password", values.email);
+
+        successToast("Email verified! Redirecting to password entry...");
+
+        if (res.data.isPasswordExist === true) {
+          setStep("login");
         } else {
-          toast.error(res.data.message || "Something went wrong", {
-            position: "bottom-right",
-          });
+          setStep("create");
         }
       } catch (error: any) {
         console.error("Email verification error:", error);

@@ -1,5 +1,5 @@
 "use client";
-import { Lock } from "lucide-react";
+import { Lock, ArrowLeft } from "lucide-react";
 import PasswordInput from "@/components/custom/PasswordInput";
 import {
   Form,
@@ -17,6 +17,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { SignInResponse } from "next-auth/react";
+import { ErrorToast } from "@/components/custom/ErrorToast";
+import { successToast } from "@/components/custom/SuccessToast";
 
 const LoginPassword = ({ email }: { email: string }) => {
   const navigation = useRouter();
@@ -39,33 +43,13 @@ const LoginPassword = ({ email }: { email: string }) => {
           password: values.password,
           redirect: false,
         });
-        if (res?.error) {
-          toast.success("Issue In Login", {
-            description: res.error,
-            position: "bottom-right",
-            duration: 3000,
-            className: "bg-red-700 text-white border border-red-600",
-            style: {
-              backgroundColor: "#C1292E",
-              color: "white",
-              border: "1px solid #3E5692",
-            },
-          });
-          throw new Error(res.error);
+        const { ok } = res as SignInResponse;
+        if (!ok) {
+          ErrorToast("Issue In Login");
+          return;
         }
-        if (res?.ok) {
-          toast.success("Login Successfull", {
-            position: "bottom-right",
-            duration: 1000,
-            className: "bg-green-700 text-white border border-green-600",
-            style: {
-              backgroundColor: "#285943",
-              color: "white",
-              border: "1px solid #3E5692",
-            },
-          });
-          navigation.push("/dashboard"); // or your desired redirect path
-        }
+        successToast("Login Successfull");
+        navigation.push("/dashboard");
       } catch (error: any) {
         toast.success("Issue In Login", {
           description: error.message,
@@ -83,6 +67,17 @@ const LoginPassword = ({ email }: { email: string }) => {
   }
   return (
     <div>
+      <div className="">
+        <Link href="/">
+          <Button
+            variant="ghost"
+            className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
+          </Button>
+        </Link>
+      </div>
       <div>
         <div className="space-y-2">
           <Form {...form}>

@@ -1,6 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
-
+import { LoginHandler } from "../../helper/loginHandler";
 import axios from "axios";
 
 export const Next_Auth: NextAuthOptions = {
@@ -26,12 +26,12 @@ export const Next_Auth: NextAuthOptions = {
             throw new Error("Email and password are required");
           }
 
-          const response = await axios.post("/api/auth/login", {
-            email: credentials.email,
-            password: credentials.password,
-          });
+          const response = await LoginHandler(
+            credentials.email,
+            credentials.password
+          );
 
-          const { success, message, user } = response.data;
+          const { success, message, user } = response;
 
           if (!success || !user) {
             throw new Error(message || "Invalid credentials");
@@ -84,6 +84,6 @@ export const Next_Auth: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/LoginEmail",
+    signIn: "/",
   },
 };

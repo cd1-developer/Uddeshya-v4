@@ -1,4 +1,4 @@
-import { prisma } from "../../../../../libs/prisma";
+import { prisma } from "@/libs/prisma";
 import validateData from "../../../../../helper/validateData";
 import { NextResponse, NextRequest } from "next/server";
 import z from "zod";

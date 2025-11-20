@@ -1,4 +1,4 @@
-import { prisma } from "../libs/prisma";
+import { prisma } from "@/libs/prisma";
 export const findUser = async (userId: string) => {
   const user = await prisma.user.findFirst({
     where: {

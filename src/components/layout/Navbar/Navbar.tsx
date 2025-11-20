@@ -30,7 +30,7 @@ const Navbar = () => {
             </div>
           </Link>
 
-          <div className="flex items-center space-x-4">
+          {/* <div className="flex items-center space-x-4">
             <Button
               variant="outline"
               onClick={() => navigate.push("/LoginEmail")}
@@ -38,7 +38,7 @@ const Navbar = () => {
             >
               <LogIn /> Sign In
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
     </header>
