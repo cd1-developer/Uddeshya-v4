@@ -12,6 +12,12 @@ const addEmployeeSchema = z.object({
     [z.string().transform((val) => new Date(val)), z.date()],
     { error: "joiningDate is required" }
   ),
+  probitionEndMonthYear: z.string({
+    error: "probitionEnd Month & Year is required",
+  }),
+  status: z.enum(["Active", "InActive", "Probation"], {
+    error: "status is required",
+  }),
 });
 
 export const POST = async (req: NextRequest) => {
@@ -24,9 +30,8 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ success, message }, { status: 400 });
     }
 
-    const { userId, role, joiningDate } = data as z.infer<
-      typeof addEmployeeSchema
-    >;
+    const { userId, role, joiningDate, probitionEndMonthYear, status } =
+      data as z.infer<typeof addEmployeeSchema>;
 
     const { exists } = await findUser(userId);
     if (!exists) {
@@ -41,6 +46,8 @@ export const POST = async (req: NextRequest) => {
         userId,
         role,
         joiningDate,
+        probitionEndMonthYear,
+        status,
       },
       include: {
         user: {

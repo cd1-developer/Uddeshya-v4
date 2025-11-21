@@ -14,7 +14,8 @@ export interface Employee {
   role: Role;
   reportManagerId?: string;
   joiningDate?: Date;
-
+  probitionEndMonthYear: String;
+  status: EmployeeStatus;
   // Relations
   user: User;
   reportManager?: Employee;
@@ -28,7 +29,6 @@ export interface Employee {
 export interface EmployeeLeaveBalance {
   id: string;
   employeeId: string;
-  leavePolicyId: string;
   balance: number;
   lastUpdated: Date;
   policyName: string;
@@ -65,6 +65,16 @@ export interface Leave {
   applicant: Employee;
   actionBy?: Employee;
 }
+export interface leavePolicy {
+  id: string;
+  policyName: string;
+  description: string;
+  accural: number;
+  accuralFrequency: AccuralFrequency;
+  capped?: number;
+  maxApply?: number;
+  sandwich: boolean;
+}
 
 export interface Holiday {
   id: string;
@@ -96,4 +106,15 @@ export enum AbsentType {
 export enum Gender {
   Male = "Male",
   Female = "Female",
+}
+
+export enum AccuralFrequency {
+  Monthly = "Monthly",
+  Quarterly = "Quarterly",
+}
+
+export enum EmployeeStatus {
+  Active = "Active",
+  InActive = "InActive",
+  Probation = "Probation",
 }

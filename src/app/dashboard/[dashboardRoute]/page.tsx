@@ -59,7 +59,7 @@ function DashboardRoutes() {
     }
   }
 
-  // Fallback for unknown routes
+  // Fallback for unknown
   return <div>404 Page Not Found</div>;
 }
 
