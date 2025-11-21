@@ -17,14 +17,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { SignInResponse } from "next-auth/react";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
 
-const LoginPassword = ({ email }: { email: string }) => {
-  const navigation = useRouter();
+interface LoginPasswordProps {
+  email: string;
+  setAuthStep: React.Dispatch<
+    React.SetStateAction<"email" | "login" | "create">
+  >;
+}
+const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
   const [isPending, startTransition] = useTransition();
+  const navigate = useRouter();
+
   const formSchema = z.object({
     password: z.string().min(6, "Password must be at least 6 characters"),
   });
@@ -49,7 +55,7 @@ const LoginPassword = ({ email }: { email: string }) => {
           return;
         }
         successToast("Login Successfull");
-        navigation.push("/dashboard");
+        navigate.push("/dashboard");
       } catch (error: any) {
         toast.success("Issue In Login", {
           description: error.message,
@@ -66,19 +72,18 @@ const LoginPassword = ({ email }: { email: string }) => {
     });
   }
   return (
-    <div>
+    <div className="relative">
       <div className="">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
+          onClick={() => setAuthStep("email")}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
+        </Button>
       </div>
-      <div>
+      <div className="">
         <div className="space-y-2">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">

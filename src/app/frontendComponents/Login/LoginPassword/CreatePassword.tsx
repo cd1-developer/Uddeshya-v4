@@ -21,10 +21,12 @@ import Link from "next/link";
 
 const CreatePassword = ({
   email,
-  setStep,
+  setAuthStep,
 }: {
   email: string;
-  setStep: React.Dispatch<React.SetStateAction<"email" | "login" | "create">>;
+  setAuthStep: React.Dispatch<
+    React.SetStateAction<"email" | "login" | "create">
+  >;
 }) => {
   const [isPending, startTransition] = useTransition();
   const formSchema = z
@@ -61,7 +63,7 @@ const CreatePassword = ({
           password,
         });
         if (res.data.success) {
-          setStep("email");
+          setAuthStep("email");
           toast.success("Sign Up Successful", {
             position: "bottom-right",
             duration: 3000,
