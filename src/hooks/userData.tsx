@@ -24,7 +24,7 @@ const useCurrentUser = () => {
       if (status === "authenticated" && session?.user?.id) {
         try {
           const response = await axios.get(
-            `/api/getUserInfo?id=${session?.user?.id}`
+            `/api/user/get-user?id=${session?.user?.id}`
           );
 
           const { success, message, user } = response.data;

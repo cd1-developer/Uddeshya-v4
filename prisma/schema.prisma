@@ -22,14 +22,14 @@ model Employee {
   id               String                 @id @default(auto()) @map("_id") @db.ObjectId
   userId           String                 @unique @db.ObjectId
   role             Role
-  reportManagerId  String?               @db.ObjectId
-  joiningDate      DateTime?     
-  probitionEndMonthYear String        
+  reportManagerId  String?                @db.ObjectId
+  joiningDate      DateTime?
+  probitionEndMonthYear String
   status           EmployeeStatus
   
   user             User                   @relation(fields: [userId], references: [id])
   reportManager    Employee?              @relation("AssignMembers", fields: [reportManagerId], references: [id],onDelete: NoAction, onUpdate: NoAction)
-  assignMembers     Employee[]             @relation("AssignMembers")
+  assignMembers    Employee[]            @relation("AssignMembers")
   leaveBalances    EmployeeLeaveBalance[] @relation("EmployeeLeaveBalance")
   EmployeeLatestIncrement EmployeeLatestIncrement[] @relation("LatestIncrement")
   leavesApplied    Leave[]                @relation("LeaveApplicant")

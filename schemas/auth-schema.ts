@@ -6,6 +6,10 @@ export const signupSchema = z.object({
     .string()
     .min(6, "Password must be at least 6 characters")
     .optional(),
+  gender: z
+    .enum(["Male", "Female"], { error: "Gender can be Male or Female" })
+    .optional(),
+  dateOfBirth: z.date({ error: "Date of birth is required" }).optional(),
 });
 
 export const loginSchema = z.object({
