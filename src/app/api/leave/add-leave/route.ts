@@ -35,6 +35,6 @@ export const POST = async (req: NextRequest) => {
   }
 
   const newAppliedLeave = await prisma.leave.create({
-    data: validLeaveData,
+    data: { ...validLeaveData },
   });
 };
