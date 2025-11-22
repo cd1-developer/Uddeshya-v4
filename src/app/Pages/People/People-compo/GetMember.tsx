@@ -21,28 +21,25 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { setEmployee } from "@/libs/dataslice";
-import { Employee, User } from "@/interfaces";
+import { Employee, EmployeeStatus, User } from "@/interfaces";
 import { toast } from "sonner";
 import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
 import { Badge } from "@/components/ui/badge";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
+import { format } from "date-fns";
 // import AssingMember from "@/components/ReportManager/AssingMember/AssingMember";
 
 const Current = () => {
   const dispatch = useDispatch();
-  //   const organisation = useSelector(
-  //     (state: RootState) => state.dataSlice.organisation
-  //   );
-  const orgMem = useSelector((state: RootState) => state.dataSlice.employee);
+
+  const employees = useSelector((state: RootState) => state.dataSlice.employee);
   const currentUser = useSelector(
     (state: RootState) => state.dataSlice.userInfo
   );
 
-  const roleOfCurrentUser = orgMem.find(
+  const roleOfCurrentUser = employees.find(
     (member) => member.userId === currentUser?.id
   )?.role;
-
-  //   const organisationId = organisation.id;
 
   const [isPending, startTransition] = useTransition();
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
@@ -52,9 +49,9 @@ const Current = () => {
   const updateMemberRole = async (memberId: string, newRole: string) => {
     setUpdatingMemberId(memberId);
 
-    const previousMembers = [...orgMem];
+    const previousMembers = [...employees];
 
-    const updateMembers = orgMem.map((member) =>
+    const updateMembers = employees.map((member) =>
       member.id === memberId ? { ...member, role: newRole as any } : member
     );
     dispatch(setEmployee(updateMembers));
@@ -121,12 +118,35 @@ const Current = () => {
           return "outline";
       }
     };
+
     return (
       <Badge variant={getRoleVarient(role)} className="font-gilSemiBold">
         {role}
       </Badge>
     );
   };
+
+  const StatusBadge = ({ status }: { status: string }) => {
+    const getStatusVarient = (status: string) => {
+      switch (status) {
+        case "Probation":
+          return "destructive";
+        case "Active":
+          return "secondary";
+        default:
+          return "outline";
+      }
+    };
+
+    return (
+      <Badge variant={getStatusVarient(status)} className="font-gilSemiBold">
+        {status}
+      </Badge>
+    );
+  };
+
+  const orgMem = useSelector((state: RootState) => state.dataSlice.employee);
+  console.log(orgMem);
 
   return (
     <div className="">
@@ -149,10 +169,10 @@ const Current = () => {
                 Role
               </TableHead>
               <TableHead className="text-neutral-600 font-gilBold">
-                Work Location
+                Joining Date
               </TableHead>
               <TableHead className="text-neutral-600 font-gilBold">
-                Department
+                Probation End Date
               </TableHead>
               <TableHead className="text-neutral-600 font-gilBold">
                 Actions
@@ -161,8 +181,8 @@ const Current = () => {
           </TableHeader>
 
           <TableBody className="">
-            {orgMem.length > 0 ? (
-              orgMem.map((member: Employee, i) => (
+            {employees.length > 0 ? (
+              employees.map((member: Employee, i) => (
                 <TableRow
                   key={i}
                   className={`${
@@ -196,7 +216,9 @@ const Current = () => {
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="font-gilMedium">{"—"}</TableCell>
+                  <TableCell className="font-gilMedium">
+                    {<StatusBadge status={member.status} />}
+                  </TableCell>
                   <TableCell className="font-gilSemiBold flex items-center gap-2 group relative">
                     {/* {member.role || "—"} */}
                     {member.role === "ADMIN" ? (
@@ -249,8 +271,19 @@ const Current = () => {
                         )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-gilMedium">{"—"}</TableCell>
-                  <TableCell className="font-gilMedium">{"—"}</TableCell>
+                  <TableCell className="font-gilMedium">
+                    {member.joiningDate
+                      ? format(new Date(member.joiningDate), "yyyy-MM-dd")
+                      : "-"}
+                  </TableCell>
+                  <TableCell className="font-gilMedium">
+                    {member.probitionEnd
+                      ? format(
+                          new Date(member.probitionEnd.toString()),
+                          "yyyy-MM-dd"
+                        )
+                      : "-"}
+                  </TableCell>
                   <TableCell className="font-gilMedium">{"—"}</TableCell>
                 </TableRow>
               ))

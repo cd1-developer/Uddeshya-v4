@@ -1,6 +1,6 @@
 "use client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Network } from "lucide-react";
 import {
   Form,
@@ -29,171 +29,139 @@ import z from "zod";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
+import { addMonths, format } from "date-fns";
 import GetMember from "./People-compo/GetMember";
-import { Role, EmployeeStatus } from "@/interfaces";
+import { Role, EmployeeStatus, Gender, Employee } from "@/interfaces";
+import { ErrorToast } from "@/components/custom/ErrorToast";
+import { successToast } from "@/components/custom/SuccessToast";
+import { setEmployee } from "@/libs/dataslice";
 
 const addEmployeeSchema = z.object({
-  userId: z.string({ error: "userId is required" }),
-  role: z.enum(Role, { error: "role is required" }),
+  username: z.string().min(1, "Username is required"),
+  email: z.string({ error: "Email is required" }),
+  role: z.enum(Role, { error: "Role is required" }),
+  gender: z.enum(Gender, { error: "Gender is required" }),
+  dateOfBirth: z.date().optional(),
   joiningDate: z.union(
     [z.string().transform((val) => new Date(val)), z.date()],
-    { error: "joiningDate is required" }
+    { error: "JoiningDate is required" }
   ),
-  probitionEndMonthYear: z.string({
-    error: "probitionEnd Month & Year is required",
-  }),
-  status: z.enum(["Active", "InActive", "Probation"], {
-    error: "status is required",
-  }),
+  probitionEnd: z.union([
+    z.string().transform((val) => new Date(val)),
+    z.date(),
+  ]),
+  status: z.enum([
+    EmployeeStatus.Active,
+    EmployeeStatus.InActive,
+    EmployeeStatus.Probation,
+  ]),
 });
 
 type addPeopleFormValues = {
-  userId: string;
+  username: string;
+  email: string;
   role: Role;
+  gender: Gender;
+  dateOfBirth?: Date;
   joiningDate: string | Date;
-  probitionEndMonthYear: string;
-  status: "Active" | "InActive" | "Probation";
+  probitionEnd: string | Date;
+  status: EmployeeStatus;
 };
 
 const People = () => {
   const [isOpen, setIsOpen] = useState(false);
-
   const [isPending, startTransition] = useTransition();
-  // const organisation = useSelector(
-  //   (state: RootState) => state.dataSlice.organisation
-  // );
+
   const orgMember = useSelector((state: RootState) => state.dataSlice.employee);
-  // const reportMangers = useSelector(
-  //   (state: RootState) => state.dataSlice.reportManager
-  // );
-  // const organisationId = organisation.id;
+  const currentEmployee = useSelector(
+    (state: RootState) => state.dataSlice.employee
+  );
 
   const form = useForm<addPeopleFormValues>({
     resolver: zodResolver(addEmployeeSchema),
     defaultValues: {
-      userId: "",
+      username: "",
+      email: "",
       role: Role.MEMBER,
+      gender: Gender.Male,
+      dateOfBirth: undefined,
       joiningDate: new Date(),
-      probitionEndMonthYear: "",
+      probitionEnd: addMonths(new Date(), 3),
       status: EmployeeStatus.InActive,
     },
   });
 
   const dispatch = useDispatch();
-  // const currentMembers = useSelector(
-  //   (state: RootState) => state.dataSlice.organisationMember
-  // );
 
-  const userData = useSelector((state: RootState) => state.dataSlice.userInfo);
-  console.log(userData);
+  const joinDate = form.watch("joiningDate");
+
+  useEffect(() => {
+    if (!joinDate) return;
+
+    const joiningDate = new Date(joinDate);
+    const probationEndDate = addMonths(joiningDate, 3);
+    const formateProbationEndDate = format(probationEndDate, "yyyy-MM-dd");
+
+    form.setValue("probitionEnd", formateProbationEndDate, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  }, [joinDate, form]);
 
   const onSubmit = (memberData: addPeopleFormValues) => {
     startTransition(async () => {
       try {
-        // const employeeInfo = [{
-        //   userId:
-        // }];
-
         const signupResponse = await axios.post("/api/auth/signup", {
           username: memberData.username,
           email: memberData.email,
+          gender: memberData.gender,
+          dateOfBirth: memberData.dateOfBirth,
         });
 
-        const orgMemberResponse = await axios.post("/api/add-member", {
-          // orgMembersInfo,
-        });
-      } catch {}
+        if (!signupResponse.data.success) {
+          ErrorToast(signupResponse.data.message);
+          return;
+        }
+        const newUserId = signupResponse.data.user.id;
+
+        const probationEndDate = new Date(memberData.probitionEnd);
+
+        const status =
+          new Date() < probationEndDate
+            ? EmployeeStatus.Probation
+            : EmployeeStatus.Active;
+
+        const orgMembersInfo = {
+          userId: newUserId,
+          role: memberData.role,
+          joiningDate: memberData.joiningDate,
+          probitionEnd: probationEndDate,
+          status: status,
+        };
+
+        const orgMemberResponse = await axios.post(
+          "/api/Employee/add-employee",
+
+          orgMembersInfo
+        );
+        const { success, message, data: newEmployee } = orgMemberResponse.data;
+        if (!success) {
+          ErrorToast(message);
+          return;
+        }
+        const updatedOrgMembers: Employee[] = [
+          ...(currentEmployee || []),
+          newEmployee,
+        ];
+        dispatch(setEmployee(updatedOrgMembers));
+        setIsOpen(false);
+        form.reset();
+        successToast(message);
+      } catch (error: any) {
+        console.error("Full error details:", error);
+        ErrorToast("Something went wrong while adding the members");
+      }
     });
-
-    // startTransition(async () => {
-    //   try {
-    //     // const validatedData = addPeopleSchema.parse(memberData);
-    //     const signupResponse = await axios.post("/api/signup", {
-    //       username: memberData.username,
-    //       email: memberData.email,
-    //     });
-    //     if (!signupResponse.data.success) {
-    //       toast.error("Failed to create user account", {
-    //         description: signupResponse.data.message,
-    //         position: "bottom-right",
-    //         duration: 3000,
-    //         className: "bg-red-700 text-white border border-red-600",
-    //         style: {
-    //           backgroundColor: "#C1292E",
-    //           color: "white",
-    //           border: "1px solid #3E5692",
-    //         },
-    //       });
-    //       return;
-    //     }
-    //     // console.log(signupResponse);
-    //     const newUserId = signupResponse.data.user.id;
-    //     const orgMembersInfo = [
-    //       {
-    //         userId: newUserId,
-    //         gender: memberData.gender,
-    //         role: memberData.role,
-    //         organisationId,
-    //         dateOfBirth: memberData.dateOfBirth,
-    //         joiningDate: memberData.joiningDate,
-    //       },
-    //     ];
-    //     const orgMemberResponse = await axios.post("/api/add-member", {
-    //       orgMembersInfo,
-    //     });
-    //     const {
-    //       success,
-    //       message,
-    //       data: newOrgMember,
-    //       newReportManger,
-    //     } = orgMemberResponse.data;
-    //     if (success) {
-    //       toast.success("Member has been added successfully", {
-    //         position: "bottom-right",
-    //         duration: 1500,
-    //         className: "bg-green-700 text-white border border-green-600",
-    //         style: {
-    //           backgroundColor: "#285943",
-    //           color: "white",
-    //           border: "1px solid #3E5692",
-    //         },
-    //       });
-    //       const updatedOrgMembers: OrganisationMember[] = [
-    //         ...(currentMembers || []),
-    //         ...newOrgMember,
-    //       ];
-    //       if (
-    //         newReportManger.length > 0 &&
-    //         memberData.role === "REPORT_MANAGER"
-    //       ) {
-    //         dispatch(setReportManager([...reportMangers, ...newReportManger]));
-    //       }
-    //       dispatch(setOrganisationMember(updatedOrgMembers));
-    //       setIsOpen(false);
-    //       form.reset();
-    //     } else {
-    //       toast.error("Failed to add member to organization", {
-    //         description: orgMemberResponse.data.message,
-    //       });
-    //     }
-    //   } catch (error: any) {
-    //     console.error("Full error details:", error);
-    //     console.error("Error response:", error.response?.data);
-    //     const errorMessage =
-    //       error.response?.data?.message || error.message || "Unknown error";
-    //     toast.error("Something went wrong while adding the members", {
-    //       description: errorMessage,
-    //       position: "bottom-right",
-    //       duration: 3000,
-    //       className: "bg-red-700 text-white border border-red-600",
-    //       style: {
-    //         backgroundColor: "#C1292E",
-    //         color: "white",
-    //         border: "1px solid #3E5692",
-    //       },
-    //     });
-    //   }
-    // });
   };
   const userRole = useSelector(
     (state: RootState) => state.dataSlice.employee
@@ -213,15 +181,6 @@ const People = () => {
             Bulk Transition
           </div>
           <div className=" adding-person">
-            {/* {userRole === "ADMIN" ? (
-              <Button
-                onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
-              >
-                <span>Add new person</span>
-              </Button>
-            ) : null} */}
-
             <Button
               onClick={() => setIsOpen(true)}
               className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
@@ -250,7 +209,7 @@ const People = () => {
                         <FormControl>
                           <Input
                             placeholder="Enter member's username"
-                            className="w-full border-1 border-[rgba(0,0,0,0.3)] font-gilMedium"
+                            className="w-full border-[rgba(0,0,0,0.3)] border-1 font-gilMedium"
                             {...field}
                           />
                         </FormControl>
@@ -324,11 +283,13 @@ const People = () => {
 
                           <SelectContent>
                             <SelectGroup className="font-gilRegular">
-                              <SelectItem value="REPORT_MANAGER">
+                              <SelectItem value={Role.REPORT_MANAGER}>
                                 Report Manager
                               </SelectItem>
-                              <SelectItem value="MEMBER">Member</SelectItem>
-                              <SelectItem value="ADMIN">Admin</SelectItem>
+                              <SelectItem value={Role.MEMBER}>
+                                Member
+                              </SelectItem>
+                              <SelectItem value={Role.ADMIN}>Admin</SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
@@ -368,7 +329,36 @@ const People = () => {
                         <FormControl>
                           <div className="w-full">
                             <DatePicker
-                              value={field.value}
+                              value={
+                                typeof field.value === "string"
+                                  ? new Date(field.value)
+                                  : field.value
+                              }
+                              onChange={field.onChange}
+                              className="w-full"
+                            />
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="probitionEnd"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-gilSemiBold">
+                          probition End
+                        </FormLabel>
+                        <FormControl>
+                          <div className="w-full opacity-70 pointer-events-none">
+                            <DatePicker
+                              value={
+                                typeof field.value === "string"
+                                  ? new Date(field.value)
+                                  : field.value
+                              }
                               onChange={field.onChange}
                               className="w-full"
                             />
