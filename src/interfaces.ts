@@ -14,7 +14,7 @@ export interface Employee {
   role: Role;
   reportManagerId?: string;
   joiningDate?: Date;
-  probitionEndMonthYear: String;
+  probitionEnd: String;
   status: EmployeeStatus;
   // Relations
   user: User;

@@ -25,13 +25,15 @@ import CreatePassword from "../LoginPassword/CreatePassword";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
 
+const formSchema = z.object({
+  email: z.email(),
+});
+
 export default function LoginEmail() {
   const [isPending, startTransition] = useTransition();
-  const [step, setStep] = useState<"email" | "login" | "create">("email");
-  const [userEmail, setUserEmail] = useState<string>("");
-  const formSchema = z.object({
-    email: z.email(),
-  });
+  const [authStep, setAuthStep] = useState<"email" | "login" | "create">(
+    "email"
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,6 +41,7 @@ export default function LoginEmail() {
       email: "",
     },
   });
+  const userEmail = form.watch("email");
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
@@ -53,15 +56,14 @@ export default function LoginEmail() {
           return;
         }
 
-        setUserEmail(values.email);
         localStorage.setItem("Email for password", values.email);
 
         successToast("Email verified! Redirecting to password entry...");
 
         if (res.data.isPasswordExist === true) {
-          setStep("login");
+          setAuthStep("login");
         } else {
-          setStep("create");
+          setAuthStep("create");
         }
       } catch (error: any) {
         console.error("Email verification error:", error);
@@ -91,7 +93,7 @@ export default function LoginEmail() {
       navigator="/Signup"
       navigateTo=""
     >
-      {step === "email" && (
+      {authStep === "email" && (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Field */}
@@ -139,9 +141,11 @@ export default function LoginEmail() {
         </Form>
       )}
 
-      {step === "login" && <LoginPassword email={userEmail} />}
-      {step === "create" && (
-        <CreatePassword email={userEmail} setStep={setStep} />
+      {authStep === "login" && (
+        <LoginPassword email={userEmail} setAuthStep={setAuthStep} />
+      )}
+      {authStep === "create" && (
+        <CreatePassword email={userEmail} setAuthStep={setAuthStep} />
       )}
     </AuthLayout>
   );

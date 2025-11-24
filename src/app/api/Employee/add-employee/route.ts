@@ -10,13 +10,11 @@ const addEmployeeSchema = z.object({
   role: z.enum(Role, { error: "role is required" }),
   joiningDate: z.union(
     [z.string().transform((val) => new Date(val)), z.date()],
-    { error: "joiningDate is required" }
+    { error: "joiningDate should be of date format." }
   ),
-  probitionEnd: z.date({
-    error: "probitionEnd is required",
-  }),
-  status: z.enum(["Active", "InActive", "Probation"], {
-    error: "status is required",
+  probitionEnd: z.date({ error: "Probation period should be of date format." }),
+  status: z.enum(["Active", "Probation"], {
+    error: "Status can be Active or Probation ",
   }),
 });
 

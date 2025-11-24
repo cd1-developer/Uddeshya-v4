@@ -10,7 +10,10 @@ type SignupTypes = z.infer<typeof signupSchema>;
 
 export const POST = async (req: NextRequest) => {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as any;
+    if (body.dateOfBirth) {
+      body.dateOfBirth = new Date(body.dateOfBirth);
+    }
 
     // ✅ Validate input using schema
     const { success, message, data } = validateData(signupSchema, body);

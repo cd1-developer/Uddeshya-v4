@@ -1,7 +1,11 @@
-import React from "react";
+import Dashboard from "./dashboard";
 
-const Dashboard = () => {
-  return <div>page</div>;
-};
+function DashboardPage() {
+  return (
+    <main className="flex flex-1 items-center justify-center p-4">
+      <Dashboard />
+    </main>
+  );
+}
 
-export default Dashboard;
+export default DashboardPage;

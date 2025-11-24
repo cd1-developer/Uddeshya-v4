@@ -20,29 +20,9 @@ function AuthLayout({
   navigateTitle,
 }: AuthLayoutType) {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Doogal-style background elements */}
-      {/* <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-200/30 to-indigo-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-100/40 to-slate-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-gradient-to-bl from-indigo-200/20 to-blue-300/10 rounded-full blur-2xl animate-pulse delay-500"></div>
-      </div> */}
-
-      {/* Back button */}
-      {/* <div className="absolute top-6 left-6 z-20">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
-          </Button>
-        </Link>
-      </div> */}
-
+    <div className="relative">
       {/* Main content */}
-      <div className="relative z-10 flex items-center justify-center p-4">
+      <div className=" flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="text-center mb-8">
