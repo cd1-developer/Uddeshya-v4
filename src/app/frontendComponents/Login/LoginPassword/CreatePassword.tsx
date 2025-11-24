@@ -18,6 +18,7 @@ import axios from "axios";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { successToast } from "@/components/custom/SuccessToast";
 
 interface CreatePasswordProps {
   email: string;
@@ -57,34 +58,15 @@ const CreatePassword = ({ email, setAuthStep }: CreatePasswordProps) => {
       try {
         const { password } = values;
 
-        const res = await axios.post("/api/create-password", {
+        const res = await axios.post("/api/auth/create-password", {
           email,
           password,
         });
         if (res.data.success) {
           setAuthStep("email");
-          toast.success("Sign Up Successful", {
-            position: "bottom-right",
-            duration: 3000,
-            className: "bg-green-700 text-white border border-green-600",
-            style: {
-              backgroundColor: "#285943",
-              color: "white",
-              border: "1px solid #3E5692",
-            },
-          });
+          successToast("Sign up successful");
         } else {
-          toast.error("Sign Up Failed", {
-            description: res.data.message || "Something went wrong",
-            position: "bottom-right",
-            duration: 3000,
-            className: "bg-red-700 text-white border border-red-600",
-            style: {
-              backgroundColor: "#C1292E",
-              color: "white",
-              border: "1px solid #3E5692",
-            },
-          });
+          toast.error("Sign up failed");
         }
       } catch (error: any) {
         let message = "Something went wrong";
@@ -105,17 +87,8 @@ const CreatePassword = ({ email, setAuthStep }: CreatePasswordProps) => {
         } else {
           message = error?.message || message;
         }
-        toast.error("Sign Up Failed", {
-          description: message,
-          position: "bottom-right",
-          duration: 3000,
-          className: "bg-red-700 text-white border border-red-600",
-          style: {
-            backgroundColor: "#C1292E",
-            color: "white",
-            border: "1px solid #3E5692",
-          },
-        });
+
+        toast.error("Sign up failed");
         console.log("Signup error", error);
       }
     });

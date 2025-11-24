@@ -28,6 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { format } from "date-fns";
 import { Role } from "@/interfaces";
+import AssingMember from "../ReportManager/AssignMember/AssignMember";
+import AssignMember from "../ReportManager/AssignMember/AssignMember";
 // import AssingMember from "@/components/ReportManager/AssingMember/AssingMember";
 
 const Current = () => {
@@ -41,7 +43,6 @@ const Current = () => {
   const roleOfCurrentUser = employees.find(
     (member) => member.userId === currentUser?.id
   )?.role;
-  console.log(roleOfCurrentUser);
 
   const [isPending, startTransition] = useTransition();
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
@@ -111,13 +112,13 @@ const Current = () => {
     const getRoleVarient = (role: string) => {
       switch (role) {
         case "ADMIN":
-          return "destructive";
-        case "REPORT_MANAGER":
           return "default";
-        case "MEMBER":
+        case "REPORT_MANAGER":
           return "secondary";
-        default:
+        case "MEMBER":
           return "outline";
+        default:
+          return "destructive";
       }
     };
 
@@ -148,7 +149,6 @@ const Current = () => {
   };
 
   const orgMem = useSelector((state: RootState) => state.dataSlice.employee);
-  console.log(orgMem);
 
   return (
     <div className="">
@@ -160,7 +160,7 @@ const Current = () => {
       <div className=" member">
         <Table className="">
           <TableHeader>
-            <TableRow>
+            <TableRow className="">
               <TableHead className="text-neutral-600 font-gilBold">
                 Person
               </TableHead>
@@ -188,7 +188,7 @@ const Current = () => {
                 <TableRow
                   key={i}
                   className={`${
-                    member.role === Role.ADMIN &&
+                    member.role === Role.REPORT_MANAGER &&
                     roleOfCurrentUser === "ADMIN" &&
                     "cursor-pointer"
                   }`}
@@ -205,7 +205,7 @@ const Current = () => {
                     }
                   }}
                 >
-                  <TableCell className="flex items-center gap-2">
+                  <TableCell className="flex items-center gap-2 border-r">
                     <div className="font-gilSemiBold w-10 h-10 rounded-4xl bg-sky-50 flex items-center justify-center dp">
                       {Avatar(member.user?.username || "No user linked")}
                     </div>
@@ -218,10 +218,10 @@ const Current = () => {
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="font-gilMedium">
+                  <TableCell className="font-gilMedium border-r">
                     {<StatusBadge status={member.status} />}
                   </TableCell>
-                  <TableCell className="font-gilSemiBold flex items-center gap-2 group relative">
+                  <TableCell className="font-gilSemiBold flex items-center gap-2 group relative border-r">
                     {/* {member.role || "—"} */}
                     {member.role === "ADMIN" ? (
                       <RoleBadge role={member.role} />
@@ -273,12 +273,12 @@ const Current = () => {
                         )}
                     </div>
                   </TableCell>
-                  <TableCell className="font-gilMedium">
+                  <TableCell className="font-gilMedium border-r">
                     {member.joiningDate
                       ? format(new Date(member.joiningDate), "yyyy-MM-dd")
                       : "-"}
                   </TableCell>
-                  <TableCell className="font-gilMedium">
+                  <TableCell className="font-gilMedium border-r">
                     {member.probationEnd
                       ? format(
                           new Date(member.probationEnd.toString()),
@@ -292,12 +292,12 @@ const Current = () => {
             ) : (
               <TableRow>
                 <TableCell
-                  //   colSpan={6}
-                  className=" flex flex-col items-center justify-center font-gilRegular text-gray-500 py-6"
+                  colSpan={6}
+                  className="w-full flex flex-col items-center justify-center font-gilRegular text-gray-500 py-6"
                 >
                   {/* No members found */}
-                  {/* <ThreeBodyLoader /> */}
-                  {/* <img src="/husky.gif" className="w-28" alt="" /> */}
+                  <ThreeBodyLoader />
+                  {/* <img src="/husky.gif" className="w-52 block" alt="" /> */}
                 </TableCell>
               </TableRow>
             )}
@@ -310,6 +310,7 @@ const Current = () => {
         className="h-[35rem]"
       >
         {/* <AssingMember userId={selectedUserId as string} /> */}
+        <AssignMember userId={selectedUserId as string} />
       </DialogCompo>
     </div>
   );
