@@ -46,7 +46,7 @@ const addEmployeeSchema = z.object({
     [z.string().transform((val) => new Date(val)), z.date()],
     { error: "JoiningDate is required" }
   ),
-  probitionEnd: z.union([
+  probationEnd: z.union([
     z.string().transform((val) => new Date(val)),
     z.date(),
   ]),
@@ -64,7 +64,7 @@ type addPeopleFormValues = {
   gender: Gender;
   dateOfBirth?: Date;
   joiningDate: string | Date;
-  probitionEnd: string | Date;
+  probationEnd: string | Date;
   status: EmployeeStatus;
 };
 
@@ -86,7 +86,7 @@ const People = () => {
       gender: Gender.Male,
       dateOfBirth: undefined,
       joiningDate: new Date(),
-      probitionEnd: addMonths(new Date(), 3),
+      probationEnd: addMonths(new Date(), 3),
       status: EmployeeStatus.InActive,
     },
   });
@@ -102,7 +102,7 @@ const People = () => {
     const probationEndDate = addMonths(joiningDate, 3);
     const formateProbationEndDate = format(probationEndDate, "yyyy-MM-dd");
 
-    form.setValue("probitionEnd", formateProbationEndDate, {
+    form.setValue("probationEnd", formateProbationEndDate, {
       shouldValidate: true,
       shouldDirty: true,
     });
@@ -124,7 +124,7 @@ const People = () => {
         }
         const newUserId = signupResponse.data.user.id;
 
-        const probationEndDate = new Date(memberData.probitionEnd);
+        const probationEndDate = new Date(memberData.probationEnd);
 
         const status =
           new Date() < probationEndDate
@@ -135,7 +135,7 @@ const People = () => {
           userId: newUserId,
           role: memberData.role,
           joiningDate: memberData.joiningDate,
-          probitionEnd: probationEndDate,
+          probationEnd: probationEndDate,
           status: status,
         };
 
@@ -345,7 +345,7 @@ const People = () => {
 
                   <FormField
                     control={form.control}
-                    name="probitionEnd"
+                    name="probationEnd"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-gilSemiBold">

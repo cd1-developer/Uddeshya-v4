@@ -277,9 +277,9 @@ const Current = () => {
                       : "-"}
                   </TableCell>
                   <TableCell className="font-gilMedium">
-                    {member.probitionEnd
+                    {member.probationEnd
                       ? format(
-                          new Date(member.probitionEnd.toString()),
+                          new Date(member.probationEnd.toString()),
                           "yyyy-MM-dd"
                         )
                       : "-"}

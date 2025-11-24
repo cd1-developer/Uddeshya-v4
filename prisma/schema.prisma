@@ -24,7 +24,7 @@ model Employee {
   role             Role
   reportManagerId  String?                @db.ObjectId
   joiningDate      DateTime?
-  probitionEnd     DateTime
+  probationEnd     DateTime
   status           EmployeeStatus
   
   user             User                   @relation(fields: [userId], references: [id])

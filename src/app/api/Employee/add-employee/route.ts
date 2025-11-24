@@ -8,11 +8,8 @@ import z from "zod";
 const addEmployeeSchema = z.object({
   userId: z.string({ error: "userId is required" }),
   role: z.enum(Role, { error: "role is required" }),
-  joiningDate: z.union(
-    [z.string().transform((val) => new Date(val)), z.date()],
-    { error: "joiningDate should be of date format." }
-  ),
-  probitionEnd: z.date({ error: "Probation period should be of date format." }),
+  joiningDate: z.date({ error: "joiningDate should be of date format." }),
+  probationEnd: z.date({ error: "Probation period should be of date format." }),
   status: z.enum(["Active", "Probation"], {
     error: "Status can be Active or Probation ",
   }),
@@ -22,7 +19,7 @@ export const POST = async (req: NextRequest) => {
   try {
     const body = (await req.json()) as any;
     body.joiningDate = new Date(body.joiningDate);
-    body.probitionEnd = new Date(body.probitionEnd);
+    body.probationEnd = new Date(body.probationEnd);
 
     const { success, message, data } = validateData(addEmployeeSchema, body);
 
@@ -30,7 +27,7 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ success, message }, { status: 400 });
     }
 
-    const { userId, role, joiningDate, probitionEnd, status } = data as z.infer<
+    const { userId, role, joiningDate, probationEnd, status } = data as z.infer<
       typeof addEmployeeSchema
     >;
 
@@ -47,7 +44,7 @@ export const POST = async (req: NextRequest) => {
         userId,
         role,
         joiningDate,
-        probitionEnd,
+        probationEnd,
         status,
       },
       include: {
