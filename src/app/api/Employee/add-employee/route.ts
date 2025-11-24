@@ -3,17 +3,23 @@ import validateData from "../../../../../helper/validateData";
 import { prisma } from "@/libs/prisma";
 import { findUser } from "../../../../../helper/findUser";
 import { NextRequest, NextResponse } from "next/server";
+import { RedisProvider } from "@/libs/RedisProvider";
 import z from "zod";
+import { Employee } from "@prisma/client";
 
 const addEmployeeSchema = z.object({
   userId: z.string({ error: "userId is required" }),
-  role: z.enum(Role, { error: "role is required" }),
+  role: z.enum(Role, {
+    error: "Role can be ADMIN , SUB_ADMIN , MEMBER or REPORT_MANAGER",
+  }),
   joiningDate: z.date({ error: "joiningDate should be of date format." }),
   probationEnd: z.date({ error: "Probation period should be of date format." }),
   status: z.enum(["Active", "Probation"], {
     error: "Status can be Active or Probation ",
   }),
 });
+
+const redis = new RedisProvider();
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -55,8 +61,16 @@ export const POST = async (req: NextRequest) => {
             email: true,
           },
         },
+        reportManager: true,
+        assignMembers: true,
+        leaveBalances: true,
+        EmployeeLatestIncrement: true,
+        leavesApplied: true,
+        leavesActioned: true,
       },
     });
+
+    await redis.addToList<Employee>("Employees", newEmployee);
 
     return NextResponse.json(
       { success: true, data: newEmployee },

@@ -1,36 +1,22 @@
-import { prisma } from "@/libs/prisma";
 import { NextResponse } from "next/server";
+import { getEmployees } from "../../../../../helper/getEmployees";
 
 export const GET = async () => {
   try {
-    const allEmployee = await prisma.employee.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-        reportManager: true,
-        assignMembers: true,
-        leaveBalances: true,
-        EmployeeLatestIncrement: true,
-        leavesApplied: true,
-        leavesActioned: true,
-      },
-    });
+    const allEmployee = await getEmployees();
 
+    // Send response to client
     return NextResponse.json(
       { success: true, data: allEmployee },
       { status: 200 }
     );
   } catch (error: any) {
+    // Log and return a user-friendly error response if something breaks
     console.error("Error fetching employees:", error);
     return NextResponse.json(
       {
         success: false,
-        message: error?.message || "Failed to fetch employees",
+        message: error?.message || "Failed to fetch employee data",
       },
       { status: 500 }
     );

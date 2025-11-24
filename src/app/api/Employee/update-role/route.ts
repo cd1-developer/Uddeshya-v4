@@ -4,12 +4,16 @@ import { z } from "zod";
 import { Role } from "@prisma/client";
 import getEmployeeInfo from "../../../../../helper/getEmployeeInfo";
 import validateData from "../../../../../helper/validateData";
+import { getEmployees } from "../../../../../helper/getEmployees";
+import { getLeaves } from "../../../../../helper/getLeaves";
+import { RedisProvider } from "@/libs/RedisProvider";
 
 const RoleSchema = z.object({
   role: z.enum(Role, {
     error: "Role can be Admin , Sub-Admin , Report-Manager or Member required",
   }),
 });
+const redis = new RedisProvider();
 
 export const PACTH = async (req: NextRequest) => {
   try {
@@ -55,7 +59,11 @@ export const PACTH = async (req: NextRequest) => {
     // If employee role is Report manager then and ADMIN change the role of
     // Employee from ReportManager to some other role then first unassign all the assign-memebers and
     // also unassign same manager from all existing applied leaves
+    const employess = (await getEmployees()) || [];
+    let updatedEmployees = employess;
+
     if (employee.role === "REPORT_MANAGER" && role !== "REPORT_MANAGER") {
+      // Step- 1 Update in DB
       await prisma.employee.updateMany({
         where: {
           reportManagerId: employeeId,
@@ -73,11 +81,35 @@ export const PACTH = async (req: NextRequest) => {
           actionByEmployeeId: null,
         },
       });
+
+      // Step- 2 Udpate in Redis Cache
+
+      const leaves = (await getLeaves()) || [];
+
+      // Update Employee Redis State First
+
+      updatedEmployees = employess?.map((employee) =>
+        employee.reportManagerId === employeeId
+          ? { ...employee, reportManagerId: null }
+          : employee
+      );
+
+      const updatedLeaves = leaves?.map((leave) =>
+        leave.actionByEmployeeId === employeeId
+          ? { ...leave, actionByEmployeeId: null }
+          : leave
+      );
+
+      await redis.set("leaves", updatedLeaves);
     }
     await prisma.employee.update({
       where: { id: employeeId },
       data: { role },
     });
+    updatedEmployees = updatedEmployees?.map((employee) =>
+      employee.id === employeeId ? { ...employee, role } : employee
+    );
+    await redis.set("Employees", updatedEmployees);
 
     return NextResponse.json({
       success: true,
