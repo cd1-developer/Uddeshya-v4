@@ -1,6 +1,6 @@
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
-import { User } from "@/interfaces";
+import { User } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const redis = new RedisProvider();
@@ -50,7 +50,7 @@ export const GET = async (req: NextRequest) => {
 
       user = db_user;
 
-      await redis.set(`user:${id}`, user);
+      await redis.set<User>(`user:${id}`, user);
       console.log("🔐 User stored in Redis cache");
     }
 

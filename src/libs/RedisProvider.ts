@@ -14,14 +14,21 @@ export class RedisProvider {
       console.log("Connecting to Redis...");
       await this.client.connect();
       console.log("Redis connected successfully!");
+    } else {
+      console.log("Redis is already connected");
     }
-    console.log("Redis is already connected");
   }
-  async set(key: string, value: any) {
+  async set<T>(key: string, value: T) {
     await this.client.set(key, JSON.stringify(value));
   }
-  async get(key: string) {
+  async get<T>(key: string): Promise<T | null> {
     let value = await this.client.get(key);
     return value ? JSON.parse(value) : null;
+  }
+  async addToList<T>(key: string, value: T) {
+    let list = (await this.get<T[]>(key)) || [];
+
+    list.push(value);
+    await this.set(key, list);
   }
 }

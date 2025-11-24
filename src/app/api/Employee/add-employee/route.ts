@@ -3,7 +3,9 @@ import validateData from "../../../../../helper/validateData";
 import { prisma } from "@/libs/prisma";
 import { findUser } from "../../../../../helper/findUser";
 import { NextRequest, NextResponse } from "next/server";
+import { RedisProvider } from "@/libs/RedisProvider";
 import z from "zod";
+import { Employee } from "@prisma/client";
 
 const addEmployeeSchema = z.object({
   userId: z.string({ error: "userId is required" }),
@@ -16,6 +18,8 @@ const addEmployeeSchema = z.object({
     error: "Status can be Active or Probation ",
   }),
 });
+
+const redis = new RedisProvider();
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -57,8 +61,16 @@ export const POST = async (req: NextRequest) => {
             email: true,
           },
         },
+        reportManager: true,
+        assignMembers: true,
+        leaveBalances: true,
+        EmployeeLatestIncrement: true,
+        leavesApplied: true,
+        leavesActioned: true,
       },
     });
+
+    await redis.addToList<Employee>("Employees", newEmployee);
 
     return NextResponse.json(
       { success: true, data: newEmployee },

@@ -1,0 +1,51 @@
+import { prisma } from "@/libs/prisma";
+import { RedisProvider } from "@/libs/RedisProvider";
+import { Employee } from "@prisma/client";
+
+const redis = new RedisProvider();
+
+/**
+ * Fetch all employees from Redis cache if available,
+ * otherwise fetch from DB and cache the data.
+ */
+export const getEmployees = async (): Promise<Employee[] | null> => {
+  try {
+    // Try from Redis
+    let employees = await redis.get<Employee[]>("Employees");
+
+    if (employees) {
+      console.log("Cache HIT ✅: Employees from Redis");
+      return employees;
+    }
+
+    console.log("Cache MISS ❌: Fetching employees from DB...");
+
+    // Fetch from DB
+    employees = await prisma.employee.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+          },
+        },
+        reportManager: true,
+        assignMembers: true,
+        leaveBalances: true,
+        EmployeeLatestIncrement: true,
+        leavesApplied: true,
+        leavesActioned: true,
+      },
+    });
+
+    // Save to cache for next time
+    await redis.set<Employee[]>("Employees", employees);
+    console.log("Employees saved to Redis cache 🔐");
+
+    return employees;
+  } catch (error: any) {
+    console.error("Error getting employees:", error);
+    return null;
+  }
+};
