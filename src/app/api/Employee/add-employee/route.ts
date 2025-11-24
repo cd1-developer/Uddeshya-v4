@@ -7,7 +7,9 @@ import z from "zod";
 
 const addEmployeeSchema = z.object({
   userId: z.string({ error: "userId is required" }),
-  role: z.enum(Role, { error: "role is required" }),
+  role: z.enum(Role, {
+    error: "Role can be ADMIN , SUB_ADMIN , MEMBER or REPORT_MANAGER",
+  }),
   joiningDate: z.date({ error: "joiningDate should be of date format." }),
   probationEnd: z.date({ error: "Probation period should be of date format." }),
   status: z.enum(["Active", "Probation"], {

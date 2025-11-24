@@ -2,9 +2,9 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  dateOfBirth: Date;
+  dateOfBirth?: Date;
   gender?: Gender;
-  CreatedAt: Date;
+  createdAt: Date;
   employee?: Employee;
 }
 
