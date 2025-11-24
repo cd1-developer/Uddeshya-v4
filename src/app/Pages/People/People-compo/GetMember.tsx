@@ -27,6 +27,7 @@ import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
 import { Badge } from "@/components/ui/badge";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { format } from "date-fns";
+import { Role } from "@/interfaces";
 // import AssingMember from "@/components/ReportManager/AssingMember/AssingMember";
 
 const Current = () => {
@@ -40,6 +41,7 @@ const Current = () => {
   const roleOfCurrentUser = employees.find(
     (member) => member.userId === currentUser?.id
   )?.role;
+  console.log(roleOfCurrentUser);
 
   const [isPending, startTransition] = useTransition();
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
@@ -186,7 +188,7 @@ const Current = () => {
                 <TableRow
                   key={i}
                   className={`${
-                    member.role === "REPORT_MANAGER" &&
+                    member.role === Role.ADMIN &&
                     roleOfCurrentUser === "ADMIN" &&
                     "cursor-pointer"
                   }`}

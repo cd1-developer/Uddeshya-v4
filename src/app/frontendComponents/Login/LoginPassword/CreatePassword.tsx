@@ -19,15 +19,14 @@ import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
-const CreatePassword = ({
-  email,
-  setAuthStep,
-}: {
+interface CreatePasswordProps {
   email: string;
   setAuthStep: React.Dispatch<
     React.SetStateAction<"email" | "login" | "create">
   >;
-}) => {
+}
+
+const CreatePassword = ({ email, setAuthStep }: CreatePasswordProps) => {
   const [isPending, startTransition] = useTransition();
   const formSchema = z
     .object({
@@ -125,15 +124,14 @@ const CreatePassword = ({
   return (
     <div>
       <div className="">
-        <Link href="/Login/LoginEmail">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
+          onClick={() => setAuthStep("email")}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
+        </Button>
       </div>
       <div className="space-y-2">
         <Form {...form}>
