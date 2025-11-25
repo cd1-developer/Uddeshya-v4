@@ -1,6 +1,24 @@
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
-import { Employee } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+
+type Employee = Prisma.EmployeeGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        username: true;
+        email: true;
+      };
+    };
+    reportManager: true;
+    assignMembers: true;
+    leaveBalances: true;
+    EmployeeLatestIncrement: true;
+    leavesApplied: true;
+    leavesActioned: true;
+  };
+}>;
 
 const redis = new RedisProvider();
 

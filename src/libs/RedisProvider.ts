@@ -31,4 +31,7 @@ export class RedisProvider {
     list.push(value);
     await this.set(key, list);
   }
+  async del(key: string) {
+    await this.client.del(key);
+  }
 }

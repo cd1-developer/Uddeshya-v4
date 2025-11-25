@@ -1,5 +1,5 @@
 import { prisma } from "@/libs/prisma";
-import { LeaveStatus } from "@prisma/client";
+import { LeaveStatus } from "@/interfaces";
 
 export const validateLeave = async (id: string) => {
   try {
