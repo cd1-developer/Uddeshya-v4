@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLeaves } from "../../../../../helper/getLeaves";
+import { Leave } from "@prisma/client";
 
 /**
  * API endpoint to fetch all leave applications for a specific employee.
@@ -31,7 +32,7 @@ export const GET = async (req: NextRequest) => {
 
     // 4. Filter the leaves to find all applications submitted by the specified employee.
     const employeeLeaves = leaves.filter(
-      (leave) => leave.employeeId === employeeId
+      (leave: Leave) => leave.employeeId === employeeId
     );
 
     // 5. Return the filtered list of leaves.
