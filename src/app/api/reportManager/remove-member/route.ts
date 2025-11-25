@@ -1,6 +1,10 @@
 import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import getEmployeeInfo from "../../../../../helper/getEmployeeInfo";
+import { RedisProvider } from "@/libs/RedisProvider";
+import { getEmployees } from "../../../../../helper/getEmployees";
+import { getLeaves } from "../../../../../helper/getLeaves";
+import { LeaveStatus } from "@prisma/client";
 
 export const DELETE = async (req: NextRequest) => {
   try {
@@ -43,6 +47,8 @@ export const DELETE = async (req: NextRequest) => {
         { status: 404 }
       );
     }
+    // If all Wells then update DB and then Udpate the redis Cache
+    // Step- 1 : First Update the DB
 
     // Unassign report manager from this employee
     await prisma.employee.update({
@@ -64,6 +70,9 @@ export const DELETE = async (req: NextRequest) => {
       });
     }
 
+    // Step-2 : Update the Redis Cache
+    await updatedEmployeesCache(employeeId, reportManagerId);
+
     return NextResponse.json({
       success: true,
       message: "Report manager unassigned successfully",
@@ -79,4 +88,48 @@ export const DELETE = async (req: NextRequest) => {
       { status: 500 }
     );
   }
+};
+
+const updatedEmployeesCache = async (
+  employeeId: string,
+  reportManagerId: string
+) => {
+  const redis = new RedisProvider();
+  const employees = (await getEmployees()) || [];
+  const leaves = (await getLeaves()) || [];
+
+  let updatedEmployees = employees.map((emp) =>
+    emp.id === reportManagerId
+      ? {
+          ...emp,
+          // Remove the all Pending leaves of the assign members
+          leavesApplied: emp.leavesApplied.map((leave) =>
+            leave.actionByEmployeeId === employeeId &&
+            leave.LeaveStatus === LeaveStatus.PENDING
+              ? { ...leave, actionByEmployeeId: null }
+              : leave
+          ),
+          // Remove the assing member from the reportManager
+          assignMembers: emp.assignMembers.filter(
+            (member) => member.id != employeeId
+          ),
+        }
+      : emp
+  );
+  // remove the reportManager info from the assing member
+  updatedEmployees = updatedEmployees.map((emp) =>
+    emp.id === employeeId
+      ? { ...emp, reportManagerId: null, reportManager: null }
+      : emp
+  );
+  // Remove the reportManager from the assing members applied leaves
+
+  let updatedLeaves = leaves.map((leave) =>
+    leave.employeeId === employeeId && leave.LeaveStatus === LeaveStatus.PENDING
+      ? { ...leave, actionByEmployeeId: null }
+      : leave
+  );
+
+  await redis.set("Employees", updatedEmployees);
+  await redis.set("leaves", updatedLeaves);
 };

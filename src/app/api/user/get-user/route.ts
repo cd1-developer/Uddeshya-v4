@@ -1,6 +1,6 @@
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
-import { User } from "@prisma/client";
+import { User } from "@/interfaces";
 import { NextRequest, NextResponse } from "next/server";
 
 const redis = new RedisProvider();

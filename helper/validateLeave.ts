@@ -1,5 +1,6 @@
 import { prisma } from "@/libs/prisma";
-import { LeaveStatus } from "@prisma/client";
+import { LeaveStatus } from "@/interfaces";
+import { getLeaves } from "./getLeaves";
 
 export const validateLeave = async (id: string) => {
   try {
@@ -10,10 +11,13 @@ export const validateLeave = async (id: string) => {
         status: 400,
       };
     }
+    const leaves = (await getLeaves()) || [];
 
-    const leave = await prisma.leave.findFirst({
-      where: { id },
-    });
+    const leave =
+      leaves.find((leaveInfo) => leaveInfo.id === id) ||
+      (await prisma.leave.findFirst({
+        where: { id },
+      }));
 
     if (!leave) {
       return {

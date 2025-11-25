@@ -1,5 +1,5 @@
 import z from "zod";
-import { AbsentType } from "@prisma/client";
+import { AbsentType } from "@/interfaces";
 
 export const LeaveSchema = z.object({
   employeeId: z.string({ error: "Employee Id is required" }),
