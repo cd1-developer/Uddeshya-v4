@@ -307,10 +307,10 @@ const Current = () => {
       <DialogCompo
         isOpen={isOpen}
         onOpenChange={() => setIsOpen(false)}
-        className="h-[35rem]"
+        title="Assign Members"
       >
         {/* <AssingMember userId={selectedUserId as string} /> */}
-        <AssignMember userId={selectedUserId as string} />
+        <AssignMember isOpen={setIsOpen} userId={selectedUserId as string} />
       </DialogCompo>
     </div>
   );
