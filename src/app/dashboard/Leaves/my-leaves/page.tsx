@@ -1,13 +1,42 @@
 "use client";
-import React from "react";
+
+import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import LeaveRequest from "./MyLeaveCompo/LeaveRequest";
+import LeaveBalance from "./MyLeaveCompo/LeaveBalance";
+
+const TABS = [
+  {
+    tab: "Leave Balance",
+    compo: <LeaveBalance />,
+  },
+  {
+    tab: "Leave Request",
+    compo: <LeaveRequest />,
+  },
+];
 
 const MyLeavesPage = () => {
-  console.log("This is my leave page");
+  const [activeTab, setActiveTab] = useState(TABS[0].tab);
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">MyLeavesPage</h1>
-      <p>MyLeavePage content goes here...</p>
-    </div>
+    <main>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="space-x-2">
+          {TABS.map((tab, i) => (
+            <TabsTrigger key={i} value={tab.tab}>
+              <h3 className="font-gilSemiBold text-[0.95rem]">{tab.tab}</h3>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <hr />
+        {TABS.map((tab, i) => (
+          <TabsContent value={tab.tab} key={i}>
+            {tab.compo}
+          </TabsContent>
+        ))}
+      </Tabs>
+    </main>
   );
 };
 

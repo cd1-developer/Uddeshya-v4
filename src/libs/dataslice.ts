@@ -1,10 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "@/interfaces";
-import { Employee } from "@/interfaces";
+import { User, Employee, Leave, Holiday } from "@/interfaces";
 
 const initialState = {
   userInfo: {} as User,
   employee: [] as Employee[],
+  leave: [] as Leave[],
+  holiday: [] as Holiday[],
   isLoading: false,
 };
 
@@ -18,6 +19,12 @@ const dataSlice = createSlice({
     setEmployee: (state, action: PayloadAction<Employee[]>) => {
       state.employee = action.payload;
     },
+    setLeave: (state, action: PayloadAction<Leave[]>) => {
+      state.leave = action.payload;
+    },
+    setHoliday: (state, action: PayloadAction<Holiday[]>) => {
+      state.holiday = action.payload;
+    },
     setIsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
@@ -26,7 +33,7 @@ const dataSlice = createSlice({
   },
 });
 
-export const { setUserInfo, removeState, setEmployee, setIsLoading } =
+export const { setUserInfo, removeState, setEmployee, setLeave, setIsLoading } =
   dataSlice.actions;
 
 export default dataSlice.reducer;
