@@ -1,6 +1,6 @@
 "use client";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
-import { Building2, LucideProps } from "lucide-react";
+import { Building2, LucideProps, ShieldHalf, UserRoundCog } from "lucide-react";
 import * as React from "react";
 import {
   AudioWaveform,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import useCurrentUser from "@/hooks/userData";
 import { TeamSwitcher } from "./team-switcher";
+import { title } from "process";
 
 // This is sample data.
 export const sidebarData = {
@@ -82,6 +83,26 @@ export const sidebarData = {
       compo: "people",
       url: "/dashboard/people",
       icon: Users2Icon,
+      items: [
+        {
+          title: "All Members",
+          url: "/dashboard/People/all-members",
+          compo: "all-members",
+          icon: Users,
+        },
+        {
+          title: "Reporting Managers",
+          url: "/dashboard/People/reporting-managers",
+          compo: "reporting-managers",
+          icon: UserRoundCog,
+        },
+        {
+          title: "My Team",
+          url: "/dashboard/People/my-team",
+          compo: "my-team",
+          icon: ShieldHalf,
+        },
+      ],
     },
     {
       title: "Core",

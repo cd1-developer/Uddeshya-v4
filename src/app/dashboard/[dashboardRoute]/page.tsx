@@ -4,7 +4,10 @@ import React from "react";
 import Home from "@/app/Pages/Home/Home";
 import Profile from "@/app/Pages/Profile/Profile";
 import MyApprovals from "@/app/Pages/MyApprovals/MyApprovals";
-import People from "@/app/Pages/People/People";
+import People from "../People/people";
+import Members from "../People/all-members/page";
+import ReportManager from "../People/reporting-managers/page";
+import MyTeam from "../People/my-team/page";
 import Leaves from "../Leaves/leave";
 import MyLeavesPage from "../Leaves/my-leaves/page";
 import LeavePoliciesPage from "../Leaves/policies/page";
@@ -13,6 +16,7 @@ import BalancesPage from "../Leaves/balances/page";
 import ReportsPage from "../Leaves/reports/page";
 import LeavePeoplePage from "../Leaves/people/page";
 import Core from "@/app/Pages/Core/Core";
+// import AllMembers from "@/app/Pages/People/all-members/page";
 
 function DashboardRoutes() {
   const params = useParams();
@@ -32,7 +36,16 @@ function DashboardRoutes() {
   }
 
   if (dashboardRoute === "people") {
-    return <People />;
+    if (!subRoute) {
+      return <People />;
+    } else if (subRoute === "all-members") {
+      return <Members />;
+    } else if (subRoute === "reporting-managers") {
+      return <ReportManager />;
+    } else if (subRoute === "my-team") {
+      return <MyTeam />;
+    }
+    return <div>404 Page Not Found</div>;
   }
   if (dashboardRoute === "core") {
     return <Core />;

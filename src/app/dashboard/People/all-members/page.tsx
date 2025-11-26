@@ -68,7 +68,7 @@ type addPeopleFormValues = {
   status: EmployeeStatus;
 };
 
-const People = () => {
+const Members = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -405,4 +405,4 @@ const People = () => {
   );
 };
 
-export default People;
+export default Members;

@@ -28,8 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { format } from "date-fns";
 import { Role } from "@/interfaces";
-import AssingMember from "../ReportManager/AssignMember/AssignMember";
-import AssignMember from "../ReportManager/AssignMember/AssignMember";
+import AssignMember from "../ReportManager/AssignMember/AssignMembers";
 // import AssingMember from "@/components/ReportManager/AssingMember/AssingMember";
 
 const Current = () => {
@@ -60,10 +59,12 @@ const Current = () => {
     dispatch(setEmployee(updateMembers));
 
     try {
-      const response = await axios.post("/api/update-role", {
-        memberId,
-        newRole,
-      });
+      const response = await axios.patch(
+        `/api/Employee/update-role?employeeId=${memberId}`,
+        {
+          role: newRole,
+        }
+      );
 
       const { success, message, data } = response.data;
 

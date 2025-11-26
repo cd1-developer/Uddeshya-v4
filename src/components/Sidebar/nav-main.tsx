@@ -111,6 +111,7 @@ export function NavMain({ items }: NavMainProps) {
                     <span className="sidebar-menu-button-label">
                       {item.title}
                     </span>
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 sidebar-menu-button-chevron" />
 
                     {/* {user?.role !== "MEMBER" ? <div> {} </div> : <div></div>} */}
 

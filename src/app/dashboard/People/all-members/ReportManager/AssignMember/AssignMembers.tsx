@@ -1,9 +1,3 @@
-// import {
-//   OrganisationMember,
-//   ReportManager,
-//   setOrganisationMember,
-//   setReportManager,
-// } from "@/libs/Dataslice";
 import { Employee, Role } from "@/interfaces";
 import { setEmployee } from "@/libs/dataslice";
 import { RootState } from "@/libs/store";
@@ -17,13 +11,12 @@ import React, {
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { X, UserPlus, Trash2, Loader2 } from "lucide-react";
+import { UserPlus, Trash2, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios";
 import { toast } from "sonner";
-import { stat } from "fs";
 import { ErrorToast } from "@/components/custom/ErrorToast";
-import { emit } from "process";
+import { successToast } from "@/components/custom/SuccessToast";
 interface AssingMemberProps {
   userId: string;
   isOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -55,7 +48,6 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
       allEmployee.find((mem) => mem.userId === selectedReportManager?.userId)
         ?.reportManagerId
   )?.userId;
-  //   console.log(reportManagerSupervisorId);
 
   const unassignedMembers = useMemo(
     () =>
@@ -68,7 +60,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
             ? emp.userId !== reportManagerSupervisorId
             : true)
       ),
-    [allEmployee, selectedEmployees, userId]
+    [allEmployee, userId, reportManagerSupervisorId]
   );
 
   const filteredUnassignedMembers = useMemo(() => {
@@ -117,17 +109,16 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedEmployeesId = selectedEmployees.map((mem) => mem.id);
-  console.log(selectedEmployeesId);
+  const selectedEmployeesIds = selectedEmployees.map((mem) => mem.id);
 
-  // 🔹 Assign selected organisation members under a specific report manager
+  //todo   🔹<--------  Assign selected organisation members under a specific report manager -------->
   function assignMember() {
     startTransition(async () => {
       try {
         // 🟩 Step 1: Send API request to assign members to the selected Report Manager
         const res = await axios.post("/api/reportManager/assign-member", {
           reportManagerId: selectedReportManager?.id,
-          employeeId: selectedEmployeesId,
+          selectedEmployeesId: selectedEmployeesIds,
         });
 
         const { success, message } = res.data;
@@ -139,39 +130,34 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
 
         // 🟦 Step 3: Update the Report Managers state — add assigned members to the selected manager
 
-        let updatedEmployee = allEmployee.map((employee) =>
-          employee.id === selectedReportManager?.id
-            ? {
-                ...employee,
-                assignMember: [...employee.assignMembers, ...selectedEmployees],
-              }
-            : employee
-        );
+        const updatedEmployee = allEmployee.map((employee) => {
+          const isReportManager = employee.id === selectedReportManager?.id;
+          const isSelectedEmployee = selectedEmployees.some(
+            (mem) => mem.id === employee.id
+          );
 
-        // 🟦 Step 4: Update Organisation Members state — set reportManagerId for assigned members
+          if (isReportManager) {
+            return {
+              ...employee,
+              assignMembers: [
+                ...(employee.assignMembers || []),
+                ...selectedEmployees,
+              ],
+            };
+          }
+          if (isSelectedEmployee) {
+            return {
+              ...employee,
+              reportManagerId: selectedReportManager?.id,
+              reportManager: selectedReportManager!,
+            };
+          }
+          return employee;
+        });
 
-        updatedEmployee = allEmployee.map((member) =>
-          selectedEmployees.some((mem) => mem.id === member.id)
-            ? {
-                ...member,
-                reportManagerId: selectedReportManager?.id as string,
-                reportManager: selectedReportManager,
-              }
-            : member
-        );
-
-        console.log(updatedEmployee);
         dispatch(setEmployee(updatedEmployee));
-
-        // 🟩 Step 5: Dispatch updated data to the Redux store
-
-        //todo ---------->   main
-
-        // dispatch(setOrganisationMember(updatedOrgMembers));
-        // dispatch(setReportManager(updatedReportManagers));
-        //todo ---------->   main
-
         setSelectedEmployees([]);
+        successToast("Members assigned successfully");
       } catch (error: any) {
         // 🟥 Step 6: Handle unexpected errors gracefully
         console.error("Error assigning members:", error);
@@ -242,14 +228,11 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
   //       });
   //     }
   //   }
+  console.log(allEmployee);
 
   return (
     <div className="">
       <div className="flex justify-center flex-col">
-        {/* Header */}
-        {/* <h2 className="text-2xl font-gilSemiBold text-gray-900">
-          Assign Members
-        </h2> */}
         <p className="text-gray-600 font-gilRegular mb-3">
           Assign team members to report to{" "}
           <span className="font-gilSemiBold text-gray-900">
@@ -271,38 +254,12 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
             />
           </div>
 
-          {/* Selected Members */}
-          {/* {selectedEmployees.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {selectedEmployees.map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm  transition-all duration-200 cursor-pointer hover:scale-95 "
-                >
-                  <span className="font-gilRegular">
-                    {member.user.username}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setselectedEmployees((prev) =>
-                        prev.filter((mem) => mem.id !== member.id)
-                      )
-                    }
-                    className="hover:text-red-500"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )} */}
-
           {filteredUnassignedMembers.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 mt-2">
+              <img src="/husky.gif" className="w-28 animate-scale-in" alt="" />
               <p className="font-gilRegular text-gray-600 text-sm">
                 No members found
               </p>
-              <img src="/husky.gif" className="w-28" alt="" />
             </div>
           ) : (
             <ScrollArea className="h-[20rem]">
@@ -376,59 +333,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
               </div>
             </ScrollArea>
           )}
-
-          {/* Dropdown */}
-          {/* {isFocused && (
-            <div className="absolute w-[92%] top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
-              {filteredUnassignedMembers.length > 0 ? (
-                filteredUnassignedMembers.map((member) => (
-                  <div
-                    key={member.userId}
-                    onClick={() => {
-                      setselectedEmployees([...selectedEmployees, member]);
-                      setInput("");
-                      setIsFocused(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="font-gilSemiBold text-gray-700">
-                        {String(member.user.username.trim()[0]).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-gilMedium text-gray-800">
-                        {member.user.username}
-                      </p>
-                      <p className="font-gilRegular text-xs text-gray-500">
-                        {member.user.email}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-2 mt-2">
-                  <p className="font-gilRegular text-gray-600 text-sm">
-                    No members found
-                  </p>
-                  <img src="/husky.gif" className="w-28" alt="" />
-                </div>
-              )}
-            </div>
-          )} */}
         </div>
-
-        {/* Assigned Members List */}
-        {/* <div className="mt-8">
-          <ScrollArea className="h-80 w-[92%] md:w-[96%]">
-            <h3 className="text-md font-gilMedium text-center text-gray-800 mb-3">
-              {selectedReportManager?.assignMembers.length === 0
-                ? "No members assigned yet"
-                : "People reporting to this manager"}
-            </h3>
-            <div className="space-y-3 px-2 sm:px-3 md:px-4 py-2"></div>
-          </ScrollArea>
-        </div> */}
       </div>
       <div className="mt-8 flex justify-end-safe items-center gap-3">
         <button
@@ -446,13 +351,13 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
           {isPending ? (
             <>
               <Loader2 size={18} className="animate-spin text-white" />
-              <span>Assigning...</span>
+              <span className="font-gilMedium">Assigning...</span>
             </>
           ) : (
             <>
               {/* 👤 Normal button state */}
-              <UserPlus size={18} className="text-white" />
-              <span>Assign Member</span>
+              <UserPlus size={18} strokeWidth={1.5} className="text-white" />
+              <span className="font-gilMedium">Assign Member</span>
             </>
           )}
         </button>
