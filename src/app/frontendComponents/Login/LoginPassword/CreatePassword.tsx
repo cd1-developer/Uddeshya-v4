@@ -18,16 +18,16 @@ import axios from "axios";
 import { Lock } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { successToast } from "@/components/custom/SuccessToast";
 
-const CreatePassword = ({
-  email,
-  setAuthStep,
-}: {
+interface CreatePasswordProps {
   email: string;
   setAuthStep: React.Dispatch<
     React.SetStateAction<"email" | "login" | "create">
   >;
-}) => {
+}
+
+const CreatePassword = ({ email, setAuthStep }: CreatePasswordProps) => {
   const [isPending, startTransition] = useTransition();
   const formSchema = z
     .object({
@@ -58,34 +58,15 @@ const CreatePassword = ({
       try {
         const { password } = values;
 
-        const res = await axios.post("/api/create-password", {
+        const res = await axios.post("/api/auth/create-password", {
           email,
           password,
         });
         if (res.data.success) {
           setAuthStep("email");
-          toast.success("Sign Up Successful", {
-            position: "bottom-right",
-            duration: 3000,
-            className: "bg-green-700 text-white border border-green-600",
-            style: {
-              backgroundColor: "#285943",
-              color: "white",
-              border: "1px solid #3E5692",
-            },
-          });
+          successToast("Sign up successful");
         } else {
-          toast.error("Sign Up Failed", {
-            description: res.data.message || "Something went wrong",
-            position: "bottom-right",
-            duration: 3000,
-            className: "bg-red-700 text-white border border-red-600",
-            style: {
-              backgroundColor: "#C1292E",
-              color: "white",
-              border: "1px solid #3E5692",
-            },
-          });
+          toast.error("Sign up failed");
         }
       } catch (error: any) {
         let message = "Something went wrong";
@@ -106,17 +87,8 @@ const CreatePassword = ({
         } else {
           message = error?.message || message;
         }
-        toast.error("Sign Up Failed", {
-          description: message,
-          position: "bottom-right",
-          duration: 3000,
-          className: "bg-red-700 text-white border border-red-600",
-          style: {
-            backgroundColor: "#C1292E",
-            color: "white",
-            border: "1px solid #3E5692",
-          },
-        });
+
+        toast.error("Sign up failed");
         console.log("Signup error", error);
       }
     });
@@ -125,15 +97,14 @@ const CreatePassword = ({
   return (
     <div>
       <div className="">
-        <Link href="/Login/LoginEmail">
-          <Button
-            variant="ghost"
-            className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
+          onClick={() => setAuthStep("email")}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
+        </Button>
       </div>
       <div className="space-y-2">
         <Form {...form}>

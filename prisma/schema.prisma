@@ -53,11 +53,11 @@ model EmployeeLatestIncrement {
   dateOfIncrement DateTime
   employee_id String @unique @db.ObjectId
   employee Employee @relation("LatestIncrement",references: [id],fields: [employee_id])
- }
+}
 
 model Leave {
   id                   String      @id @default(auto()) @map("_id") @db.ObjectId
-  employeeId           String @db.ObjectId
+  employeeId           String      @db.ObjectId
   policyName           String
   startDateTime        DateTime
   startAbsentType      AbsentType

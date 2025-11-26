@@ -17,12 +17,15 @@ const Dashboard = () => {
       const response = await axios.get(`/api/Employee/get-employees`);
 
       const { success, data, message } = response.data;
+      console.log(response.data);
 
       if (!success) {
         ErrorToast(message || "Failed to fetch members");
         return;
       }
-      dispatch(setEmployee(data));
+      startTransition(() => {
+        dispatch(setEmployee(data));
+      });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message;
       console.error("Error fetching members: ", errorMessage);
@@ -33,8 +36,6 @@ const Dashboard = () => {
   useEffect(() => {
     fetchEmployees();
   }, []);
-  const orgMem = useSelector((state: RootState) => state.dataSlice.employee);
-  console.log(orgMem);
 
   return <div>Dashboard</div>;
 };
