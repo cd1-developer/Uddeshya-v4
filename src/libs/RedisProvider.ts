@@ -4,6 +4,7 @@ export class RedisProvider {
   client;
   constructor() {
     this.client = createClient({
+      RESP: 3,
       clientSideCache: {
         ttl: 600000, // Expires after 10 minutes
       },

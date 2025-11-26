@@ -2,15 +2,17 @@ import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import validateData from "../../../../../helper/validateData";
 import z from "zod";
-
+import { RedisProvider } from "@/libs/RedisProvider";
 const HolidaySchema = z.object({
   holidayName: z.string({ error: "Holiday name is required" }),
   holidayDate: z.date({ error: "Holiday date is required" }),
 });
+const redis = new RedisProvider();
 
 export const POST = async (req: NextRequest) => {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as z.infer<typeof HolidaySchema>;
+    body.holidayDate = new Date(body.holidayDate);
 
     const { success, message, data } = validateData(HolidaySchema, body);
 
@@ -26,6 +28,8 @@ export const POST = async (req: NextRequest) => {
         holidayName,
       },
     });
+
+    await redis.addToList("holidays", newHoliday);
 
     return NextResponse.json({
       success: true,

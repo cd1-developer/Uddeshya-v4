@@ -1,9 +1,15 @@
-import { prisma } from "@/libs/prisma";
 import { NextResponse } from "next/server";
+import { getHolidays } from "../../../../../helper/getHolidays";
 
 export const GET = async () => {
   try {
-    const holidays = await prisma.holiday.findMany({});
+    const { success, message, holidays } = await getHolidays();
+    if (!success) {
+      return NextResponse.json({
+        success,
+        message,
+      });
+    }
     return NextResponse.json({
       success: true,
       holidays,
