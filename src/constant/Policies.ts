@@ -1,7 +1,7 @@
 import { leavePolicy } from "@/interfaces";
 import { AccuralFrequency } from "@/interfaces";
 
-const LEAVE_POLICIES: leavePolicy[] = [
+const POLICIES: leavePolicy[] = [
   {
     id: "1",
     policyName: "Earned Leave",
@@ -37,4 +37,4 @@ const LEAVE_POLICIES: leavePolicy[] = [
     sandwich: false,
   },
 ];
-export default LEAVE_POLICIES;
+export default POLICIES;

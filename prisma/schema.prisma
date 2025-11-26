@@ -40,11 +40,10 @@ model Employee {
 model EmployeeLeaveBalance {
   id             String      @id @default(auto()) @map("_id") @db.ObjectId
   employeeId     String @db.ObjectId
-  leavePolicyId  String
   balance        Int         @default(0)
   lastUpdated    DateTime    @default(now())
   employee       Employee    @relation("EmployeeLeaveBalance",fields: [employeeId], references: [id])
-  policyName           String
+  policyName     String
 }
 
 model EmployeeLatestIncrement {

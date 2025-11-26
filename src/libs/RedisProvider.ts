@@ -3,7 +3,11 @@ import { createClient } from "redis";
 export class RedisProvider {
   client;
   constructor() {
-    this.client = createClient();
+    this.client = createClient({
+      clientSideCache: {
+        ttl: 600000, // Expires after 10 minutes
+      },
+    });
     this.client.on("error", (error) =>
       console.error(`Redis Client error: ${error}`)
     );
