@@ -74,7 +74,7 @@ const updatedHolidaysCache = async (
   holidayId: string,
   dataToUpdate: z.infer<typeof HolidaySchema>
 ) => {
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
 
   const holidays = (await redis.get<Holiday[]>("holidays")) || [];
 

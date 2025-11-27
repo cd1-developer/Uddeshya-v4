@@ -1,26 +1,28 @@
-import { createClient } from "redis";
+import { createClient, RedisClientType } from "redis";
 
 export class RedisProvider {
-  client;
+  private static instance: RedisProvider;
+  private client: RedisClientType;
+
   constructor() {
-    this.client = createClient({
-      RESP: 3,
-      clientSideCache: {
-        ttl: 600000, // Expires after 10 minutes
-      },
-    });
+    this.client = createClient();
     this.client.on("error", (error) =>
       console.error(`Redis Client error: ${error}`)
     );
-    this.init();
   }
-  async init() {
+  static async getInstance() {
+    if (!RedisProvider.instance) {
+      RedisProvider.instance = new RedisProvider();
+      await RedisProvider.instance.init();
+    }
+    return RedisProvider.instance;
+  }
+
+  private async init() {
     if (!this.client.isReady) {
       console.log("Connecting to Redis...");
       await this.client.connect();
-      console.log("Redis connected successfully!");
-    } else {
-      console.log("Redis is already connected");
+      console.log("Redis connected!");
     }
   }
   async set<T>(key: string, value: T) {

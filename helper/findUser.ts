@@ -1,13 +1,12 @@
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
 
-const redis = new RedisProvider();
-
 /**
  * Checks if a user exists either in Redis cache or the database.
  * Returns an object with a boolean `exists` value.
  */
 export const findUser = async (userId: string) => {
+  const redis = await RedisProvider.getInstance();
   // 🔹 Try fetching user from Redis cache
   let user = await redis.get(`user:${userId}`);
 

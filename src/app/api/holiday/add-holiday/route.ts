@@ -7,9 +7,9 @@ const HolidaySchema = z.object({
   holidayName: z.string({ error: "Holiday name is required" }),
   holidayDate: z.date({ error: "Holiday date is required" }),
 });
-const redis = new RedisProvider();
 
 export const POST = async (req: NextRequest) => {
+  const redis = await RedisProvider.getInstance();
   try {
     const body = (await req.json()) as z.infer<typeof HolidaySchema>;
     body.holidayDate = new Date(body.holidayDate);

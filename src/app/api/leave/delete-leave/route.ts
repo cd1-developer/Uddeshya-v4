@@ -50,7 +50,7 @@ const deleteLeaveFromCache = async (leaveId: string) => {
   // 1. Fetch the current state of leaves and employees from the cache.
   const leaves = (await getLeaves()) || [];
   const employees = (await getEmployees()) || [];
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
 
   // 2. Create a new list of leaves, excluding the one that was deleted.
   const updatedLeaves = leaves.filter((leave) => leave.id !== leaveId);

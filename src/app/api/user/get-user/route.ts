@@ -3,9 +3,8 @@ import { RedisProvider } from "@/libs/RedisProvider";
 import { User } from "@/interfaces";
 import { NextRequest, NextResponse } from "next/server";
 
-const redis = new RedisProvider();
-
 export const GET = async (req: NextRequest) => {
+  const redis = await RedisProvider.getInstance();
   try {
     const { searchParams } = new URL(req.url);
     const { id } = Object.fromEntries(searchParams.entries());

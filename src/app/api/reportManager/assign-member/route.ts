@@ -114,7 +114,7 @@ async function updateReportManagerInCache(
 ) {
   // Fetch the entire list of employees from the cache/source.
   const employess = await getEmployees();
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
 
   // First pass: Update the reporting manager's `assignMembers` list.
   let updatedEmployees = employess?.map((employee) =>

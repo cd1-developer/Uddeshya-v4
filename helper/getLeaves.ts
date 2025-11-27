@@ -2,9 +2,8 @@ import { RedisProvider } from "@/libs/RedisProvider";
 import { prisma } from "@/libs/prisma";
 import { Leave } from "@prisma/client";
 
-const redis = new RedisProvider();
-
 export const getLeaves = async () => {
+  const redis = await RedisProvider.getInstance();
   try {
     // Try getting leaves from cache first
     let leaves = await redis.get<Leave[]>("leaves");

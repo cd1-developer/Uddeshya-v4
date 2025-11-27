@@ -1,9 +1,8 @@
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
 
-const redis = new RedisProvider();
-
 export const getHolidays = async () => {
+  const redis = await RedisProvider.getInstance();
   try {
     const holidays =
       (await redis.get("holidays")) || (await prisma.holiday.findMany({}));

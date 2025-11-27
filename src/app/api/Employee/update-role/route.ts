@@ -13,9 +13,9 @@ const RoleSchema = z.object({
     error: "Role can be Admin , Sub-Admin , Report-Manager or Member required",
   }),
 });
-const redis = new RedisProvider();
 
 export const PATCH = async (req: NextRequest) => {
+  const redis = await RedisProvider.getInstance();
   try {
     const { searchParams } = new URL(req.url);
 
@@ -131,7 +131,7 @@ export const PATCH = async (req: NextRequest) => {
 const updateRedisCache = async (employee: Employee, role: Role) => {
   const employees = (await getEmployees()) || [];
   const leaves = (await getLeaves()) || [];
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
 
   let updatedEmployees = employees;
   let updatedLeaves = leaves;

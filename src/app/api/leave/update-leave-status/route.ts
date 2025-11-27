@@ -202,7 +202,7 @@ const updateRedisCache = async ({
   employees,
 }: updateRedisCacheType) => {
   try {
-    const redis = new RedisProvider();
+    const redis = await RedisProvider.getInstance();
 
     // Update the specific leave in the leaves array.
     const updatedLeaves = leaves.map((leave) => {

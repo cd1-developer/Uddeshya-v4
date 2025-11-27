@@ -19,9 +19,8 @@ const addEmployeeSchema = z.object({
   }),
 });
 
-const redis = new RedisProvider();
-
 export const POST = async (req: NextRequest) => {
+  const redis = await RedisProvider.getInstance();
   try {
     const body = (await req.json()) as any;
     body.joiningDate = new Date(body.joiningDate);

@@ -94,7 +94,7 @@ const updatedEmployeesCache = async (
   employeeId: string,
   reportManagerId: string
 ) => {
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
   const employees = (await getEmployees()) || [];
   const leaves = (await getLeaves()) || [];
 
