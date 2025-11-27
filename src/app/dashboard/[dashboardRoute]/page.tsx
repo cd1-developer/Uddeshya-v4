@@ -1,7 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
 import React from "react";
-import Home from "@/app/Pages/Home/Home";
 import Profile from "@/app/Pages/Profile/Profile";
 import MyApprovals from "@/app/Pages/MyApprovals/MyApprovals";
 import People from "../People/people";
@@ -16,6 +15,7 @@ import BalancesPage from "../Leaves/balances/page";
 import ReportsPage from "../Leaves/reports/page";
 import LeavePeoplePage from "../Leaves/people/page";
 import Core from "@/app/Pages/Core/Core";
+import Dashboard from "../dashboard";
 // import AllMembers from "@/app/Pages/People/all-members/page";
 
 function DashboardRoutes() {
@@ -23,8 +23,8 @@ function DashboardRoutes() {
   const { dashboardRoute, subRoute } = params;
 
   // Main routes
-  if (dashboardRoute === "home") {
-    return <Home />;
+  if (dashboardRoute === "/") {
+    return <Dashboard />;
   }
 
   if (dashboardRoute === "profile") {

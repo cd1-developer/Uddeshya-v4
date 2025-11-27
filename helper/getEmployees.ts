@@ -2,7 +2,7 @@ import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
 import { Prisma } from "@prisma/client";
 
-type Employee = Prisma.EmployeeGetPayload<{
+export type Employee = Prisma.EmployeeGetPayload<{
   include: {
     user: {
       select: {
