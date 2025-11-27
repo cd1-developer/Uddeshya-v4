@@ -1,9 +1,8 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, startTransition } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { Role } from "@/interfaces";
-import { Employee } from "@/interfaces";
 import {
   Accordion,
   AccordionItem,
@@ -22,19 +21,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { UserPlus, UserRoundMinus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import AlertDialogCompo from "@/components/custom/AlertDialog/AlertDialogCompo";
+
+import { Trash2, UserPlus, Users } from "lucide-react";
+import { ErrorToast } from "@/components/custom/ErrorToast";
+import axios from "axios";
+import { forwardRef } from "react";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { setEmployee } from "@/libs/dataslice";
+import { Employee } from "@/interfaces";
+import { successToast } from "@/components/custom/SuccessToast";
 
 const OPTIONS = ["All Structure", "Manager (No Team)", "With Members"];
 
 const ReportManager = () => {
+  const dispatch = useDispatch();
   const [input, setInput] = useState("");
+  const [isRemoving, setIsRemoving] = useState(false);
   const [searchTeamMember, setSearchTeamMember] = useState<string>("");
   const [selectedValue, setSelectedValue] = useState<string>(OPTIONS[0]);
+  const employees = useSelector((state: RootState) => state.dataSlice.employee);
 
-  const reportManager = useSelector(
-    (state: RootState) => state.dataSlice.employee
-  ).filter((manager) => manager.role === Role.REPORT_MANAGER);
+  const reportManager = employees.filter(
+    (emp: Employee) => emp.role === Role.REPORT_MANAGER
+  );
   console.log(reportManager);
 
   function handleDropdown(value: string) {
@@ -66,7 +78,7 @@ const ReportManager = () => {
             manager.user.email.toLowerCase().includes(input.toLowerCase())
           );
     return searchedReportManager;
-  }, [selectedValue, input]);
+  }, [selectedValue, input, employees]);
 
   function firstLetter(username: string) {
     let userName = username
@@ -78,6 +90,78 @@ const ReportManager = () => {
     return userName;
   }
 
+  const handleDeleteMember = (teamMemberId: string) => {
+    try {
+      // 1️⃣ Find manager who has this member
+      const manager = reportManager.find((manager: Employee) =>
+        manager.assignMembers.some((mem: Employee) => mem.id === teamMemberId)
+      );
+
+      const reportManagerId = manager?.id;
+      const employeeId = manager?.assignMembers.find(
+        (mem: Employee) => mem.id === teamMemberId
+      )?.id;
+
+      // 2️⃣ Validate IDs
+      if (!reportManagerId || !employeeId) {
+        ErrorToast("Unable to remove. Member or Manager not found.");
+        return;
+      }
+
+      // 3️⃣ API Call with transition
+      startTransition(async () => {
+        try {
+          const res = await axios.delete("/api/reportManager/remove-member", {
+            data: {
+              reportManagerId,
+              employeeId,
+            },
+          });
+
+          const { success, message } = res.data;
+
+          // 4️⃣ If backend indicates failure
+          if (!success) {
+            ErrorToast(message || "Failed to remove member.");
+            return;
+          }
+
+          // 5️⃣ Update local state
+          const updatedReportManager = employees.map((emp: Employee) =>
+            emp.id === reportManagerId
+              ? {
+                  ...emp,
+                  assignMembers: emp.assignMembers.filter(
+                    (mem: Employee) => mem.id !== employeeId
+                  ),
+                }
+              : emp
+          );
+
+          dispatch(setEmployee(updatedReportManager));
+
+          successToast(message || "Member removed successfully!");
+        } catch (err: any) {
+          // 6️⃣ Handle axios errors
+          if (axios.isAxiosError(err)) {
+            console.error("Axios Error:", err.response?.data || err.message);
+            ErrorToast(
+              err.response?.data?.message ||
+                "Unable to connect to the server. Try again."
+            );
+          } else {
+            console.error("Unexpected Error:", err);
+            ErrorToast("Unexpected error occurred. Try again later.");
+          }
+        }
+      });
+    } catch (err) {
+      // 7️⃣ Handle unexpected outer errors
+      console.error("Outer Error:", err);
+      ErrorToast("Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <div>
       <header>
@@ -85,8 +169,8 @@ const ReportManager = () => {
           <input
             className="flex-1 px-2 py-[0.3rem] rounded-md outline-none border font-gilRegular placeholder:tracking-wider placeholder:font-gilRegular placeholder:text-[0.75rem]"
             placeholder="Search Report Manager..."
-            // value={input}
-            // onChange={(e) => setInput(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
           />
           <div className="drop-down">
             <Select
@@ -110,13 +194,13 @@ const ReportManager = () => {
         </div>
       </header>
       <div className="main">
-        <ul className="member">
+        <ul className=" member">
           {filterReportManagers.length === 0 ? (
-            <div className="flex flex-col items-center opacity-50">
+            <div className="flex flex-col items-center absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] opacity-50">
               <span>
-                <UserPlus size={32} strokeWidth={1.5} />
+                <UserPlus size={26} strokeWidth={1} />
               </span>
-              <span className="font-gilMedium text-lg">
+              <span className="font-gilMedium text-md">
                 No Report Manager Found
               </span>
             </div>
@@ -131,9 +215,9 @@ const ReportManager = () => {
                     value={manager.id}
                     className="border-none w-full"
                   >
-                    <div className="flex items-center gap-3 w-full">
+                    <div className="gap-3 w-full">
                       <AccordionTrigger className="cursor-pointer">
-                        <div className="bg-blue-200  text-blue-900 w-10 h-10 flex items-center justify-center rounded-[50%] font-gilMedium sm:font-gilSemiBold text-sm sm:text-[1rem]">
+                        <div className="bg-blue-200  text-sky-900 w-10 h-10 flex items-center justify-center rounded-4xl  font-gilMedium sm:font-gilMedium sm:text-[0.85rem]">
                           {firstLetter(manager.user.username)}
                         </div>
 
@@ -154,7 +238,7 @@ const ReportManager = () => {
                       {manager.assignMembers.length === 0 ? (
                         <div className="flex flex-col gap-3 items-center justify-center">
                           <h2 className="text-zinc-400">
-                            <Users size={30} />
+                            <Users size={26} strokeWidth={1} />
                           </h2>
 
                           <h2 className="text-md text-zinc-500 font-gilRegular">
@@ -180,14 +264,20 @@ const ReportManager = () => {
                                 </h2>
                               </div>
 
-                              <div
-                                className="cursor-pointer dlt-member"
-                                // onClick={() => handleDeleteMember(teamMember.id)}
-                              >
-                                <UserRoundMinus
-                                  size={14}
-                                  strokeWidth={1.7}
-                                  className="text-red-600"
+                              <div className="cursor-pointer ml-auto">
+                                <AlertDialogCompo
+                                  triggerButton={<DeleteButton />}
+                                  isDisabled={isRemoving}
+                                  onClickHandler={() =>
+                                    handleDeleteMember(teamMember.id)
+                                  }
+                                  description={
+                                    <Description
+                                      title={teamMember.user.username}
+                                    />
+                                  }
+                                  actionTitle="Remove Member"
+                                  loader="Removing..."
                                 />
                               </div>
                             </div>
@@ -207,3 +297,26 @@ const ReportManager = () => {
 };
 
 export default ReportManager;
+
+const Description = ({ title }: { title: string }) => {
+  return (
+    <>
+      Are you sure you want to remove{" "}
+      <span className="font-gilSemiBold text-black">{title}</span> from this
+      Report Manager? This action cannot be undone.
+    </>
+  );
+};
+
+const DeleteButton = forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button">
+>((props, ref) => (
+  <Button
+    ref={ref}
+    {...props}
+    className="bg-transparent hover:bg-transparent cursor-pointer text-black"
+  >
+    <Trash2 strokeWidth={1.2} color="red" />
+  </Button>
+));
