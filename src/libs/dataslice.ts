@@ -22,7 +22,7 @@ const dataSlice = createSlice({
     setLeave: (state, action: PayloadAction<Leave[]>) => {
       state.leave = action.payload;
     },
-    setHoliday: (state, action: PayloadAction<Holiday[]>) => {
+    setHolidays: (state, action: PayloadAction<Holiday[]>) => {
       state.holiday = action.payload;
     },
     setIsLoading: (state, action: PayloadAction<boolean>) => {
@@ -33,7 +33,13 @@ const dataSlice = createSlice({
   },
 });
 
-export const { setUserInfo, removeState, setEmployee, setLeave, setIsLoading } =
-  dataSlice.actions;
+export const {
+  setUserInfo,
+  removeState,
+  setEmployee,
+  setLeave,
+  setIsLoading,
+  setHolidays,
+} = dataSlice.actions;
 
 export default dataSlice.reducer;

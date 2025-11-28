@@ -62,7 +62,7 @@ export const sidebarData = {
     {
       title: "Home",
       compo: "home",
-      url: "/dashboard/home",
+      url: "/dashboard/",
       icon: HomeIcon,
       isActive: true,
     },
@@ -199,7 +199,7 @@ function AppSidebar({ ...props }: AppSidebarProps) {
       <SidebarHeader>
         <TeamSwitcher teams={sidebarData.teams} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="w-full">
         <NavMain items={sidebarData.navMain} />
       </SidebarContent>
       <SidebarFooter>

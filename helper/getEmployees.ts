@@ -2,7 +2,7 @@ import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
 import { Prisma } from "@prisma/client";
 
-type Employee = Prisma.EmployeeGetPayload<{
+export type Employee = Prisma.EmployeeGetPayload<{
   include: {
     user: {
       select: {
@@ -20,13 +20,12 @@ type Employee = Prisma.EmployeeGetPayload<{
   };
 }>;
 
-const redis = new RedisProvider();
-
 /**
  * Fetch all employees from Redis cache if available,
  * otherwise fetch from DB and cache the data.
  */
 export const getEmployees = async (): Promise<Employee[] | null> => {
+  const redis = await RedisProvider.getInstance();
   try {
     // Try from Redis
     let employees = await redis.get<Employee[]>("Employees");

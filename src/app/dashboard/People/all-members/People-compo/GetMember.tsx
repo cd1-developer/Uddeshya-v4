@@ -149,8 +149,6 @@ const Current = () => {
     );
   };
 
-  const orgMem = useSelector((state: RootState) => state.dataSlice.employee);
-
   return (
     <div className="">
       <div className="flex items-center gap-4">
@@ -294,11 +292,9 @@ const Current = () => {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="w-full flex flex-col items-center justify-center font-gilRegular text-gray-500 py-6"
+                  className="text-center font-gilRegular text-lg text-gray-500 py-6"
                 >
-                  {/* No members found */}
-                  <ThreeBodyLoader />
-                  {/* <img src="/husky.gif" className="w-52 block" alt="" /> */}
+                  No members found
                 </TableCell>
               </TableRow>
             )}

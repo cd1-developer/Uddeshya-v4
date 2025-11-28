@@ -1,5 +1,7 @@
 import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { RedisProvider } from "@/libs/RedisProvider";
+import { Holiday } from "@prisma/client";
 
 export const DELETE = async (req: NextRequest) => {
   try {
@@ -20,6 +22,8 @@ export const DELETE = async (req: NextRequest) => {
       },
     });
 
+    await updateHolidayCache(id);
+
     return NextResponse.json({
       success: true,
       message: "Holiday deleted successfully",
@@ -36,4 +40,16 @@ export const DELETE = async (req: NextRequest) => {
       { status: 500 }
     );
   }
+};
+
+const updateHolidayCache = async (holidayId: string) => {
+  const redis = await RedisProvider.getInstance();
+
+  const holidays = (await redis.get<Holiday[]>("holidays")) || [];
+
+  const updatedHolidays = holidays.filter(
+    (holiday) => holiday.id !== holidayId
+  );
+
+  await redis.set("holidays", updatedHolidays);
 };

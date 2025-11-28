@@ -248,7 +248,6 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              // onFocus={() => setIsFocused(true)}
               placeholder="Search and add people..."
               className="w-full bg-transparent font-gilRegular outline-none placeholder:text-gray-400 placeholder:font-gilThin"
             />

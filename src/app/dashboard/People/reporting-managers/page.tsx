@@ -80,15 +80,12 @@ const ReportManager = () => {
     return searchedReportManager;
   }, [selectedValue, input, employees]);
 
-  function firstLetter(username: string) {
-    let userName = username
-      .trim()
-      .split(" ")
-      .map((name) => `${name[0].toUpperCase()}`)
-      .join("");
-
-    return userName;
-  }
+  console.log("Managers:", filterReportManagers);
+  console.log(
+    "Members:",
+    filterReportManagers.map((mem) => mem.assignMembers)
+  );
+  // console.log("Members:", manager.assignMembers);
 
   const handleDeleteMember = (teamMemberId: string) => {
     try {
@@ -98,9 +95,10 @@ const ReportManager = () => {
       );
 
       const reportManagerId = manager?.id;
-      const employeeId = manager?.assignMembers.find(
-        (mem: Employee) => mem.id === teamMemberId
-      )?.id;
+      // const employeeId = manager?.assignMembers.find(
+      //   (mem: Employee) => mem.id === teamMemberId
+      // )?.id;
+      const employeeId = teamMemberId;
 
       // 2️⃣ Validate IDs
       if (!reportManagerId || !employeeId) {
@@ -127,16 +125,24 @@ const ReportManager = () => {
           }
 
           // 5️⃣ Update local state
-          const updatedReportManager = employees.map((emp: Employee) =>
-            emp.id === reportManagerId
-              ? {
-                  ...emp,
-                  assignMembers: emp.assignMembers.filter(
-                    (mem: Employee) => mem.id !== employeeId
-                  ),
-                }
-              : emp
-          );
+          const updatedReportManager = employees.map((emp: Employee) => {
+            //! Remove from manager's assignMembers
+            if (emp.id === reportManagerId) {
+              return {
+                ...emp,
+                assignMembers: emp.assignMembers.filter(
+                  (mem: Employee) => mem.id !== employeeId
+                ),
+              };
+            }
+            if (emp.id === employeeId) {
+              return {
+                ...emp,
+                reportManagerId: undefined,
+              };
+            }
+            return emp;
+          }) as Employee[];
 
           dispatch(setEmployee(updatedReportManager));
 
@@ -161,6 +167,15 @@ const ReportManager = () => {
       ErrorToast("Something went wrong. Please try again.");
     }
   };
+  function firstLetter(username?: string) {
+    if (!username || typeof username !== "string") return "U";
+
+    let parts = username.trim().split(" ").filter(Boolean);
+
+    if (parts.length === 0) return "U";
+
+    return parts.map((name) => name[0]?.toUpperCase() ?? "").join("") || "U";
+  }
 
   return (
     <div>
@@ -247,20 +262,23 @@ const ReportManager = () => {
                         </div>
                       ) : (
                         <div className="flex flex-col gap-3">
-                          {manager.assignMembers.map((teamMember) => (
+                          {manager.assignMembers.map((teamMember: Employee) => (
                             <div
                               key={teamMember.id}
                               className="flex gap-2 items-center border-b border-neutral-300 pb-2 relative"
                             >
                               <h2 className="text-md h-8 w-8 flex items-center justify-center text-white font-gilMedium tracking-sm bg-zinc-400 px-3 py-0.5 rounded-4xl">
-                                {firstLetter(teamMember.user.username)}
+                                {/* {firstLetter(teamMember.user.username)} */}
+                                {firstLetter(teamMember?.user?.username ?? "")}
                               </h2>
                               <div className="flex flex-col ">
                                 <h2 className="text-md font-gilSemiBold text-zinc-600">
-                                  {teamMember.user.username}
+                                  {/* {teamMember.user.username} */}
+                                  {teamMember?.user?.username || "Unknown User"}
                                 </h2>
                                 <h2 className="text-zinc-500 text-[0.8rem]">
-                                  {teamMember.user.email}
+                                  {/* {teamMember.user.email} */}
+                                  {teamMember?.user?.email || "No email"}
                                 </h2>
                               </div>
 
@@ -273,7 +291,10 @@ const ReportManager = () => {
                                   }
                                   description={
                                     <Description
-                                      title={teamMember.user.username}
+                                      title={
+                                        teamMember?.user?.username ||
+                                        "Unknown User"
+                                      }
                                     />
                                   }
                                   actionTitle="Remove Member"

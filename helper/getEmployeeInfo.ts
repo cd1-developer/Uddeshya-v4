@@ -2,14 +2,13 @@ import { Employee } from "@/interfaces";
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
 
-const redis = new RedisProvider();
-
 /**
  * Fetches employee information by ID.
  * First tries Redis cache for better performance.
  * Falls back to database when cache does not have the data.
  */
 const getEmployeeInfo = async (id: string) => {
+  const redis = await RedisProvider.getInstance();
   try {
     // 🔹 Try to get all employees from Redis/cache
     const allEmployee = await redis.get<Employee[]>("Employees");
