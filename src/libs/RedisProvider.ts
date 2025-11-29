@@ -26,7 +26,9 @@ export class RedisProvider {
     }
   }
   async set<T>(key: string, value: T) {
-    await this.client.set(key, JSON.stringify(value));
+    await this.client.set(key, JSON.stringify(value), {
+      EX: 600,
+    });
   }
   async get<T>(key: string): Promise<T | null> {
     let value = await this.client.get(key);

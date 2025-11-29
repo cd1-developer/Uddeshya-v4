@@ -118,7 +118,7 @@ async function updateLeavesInfoInCache(
   reportManagerId: string,
   leave: Leave
 ) {
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
 
   const employeess = (await getEmployees()) || [];
 
