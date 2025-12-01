@@ -27,6 +27,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
+import { Role } from "@/interfaces";
 
 export interface NavItem {
   title: string;
@@ -59,12 +60,13 @@ export function NavMain({ items }: NavMainProps) {
   const isItemActive = (item: NavItem) => {
     return pathname === item.url || pathname.startsWith(item.url + "/");
   };
+  const employee = useSelector((state: RootState) => state.dataSlice.employee);
+  const user = useSelector((state: RootState) => state.dataSlice.userInfo);
 
-  const user = useSelector(
-    (state: RootState) => state.dataSlice.userInfo
-  ).orgMember;
+  const currentUser = employee.find((emp) => emp.userId === user.id);
+  // console.log(currentUser);
 
-  const isNotMember = user?.role !== "MEMBER";
+  const isNotMember = currentUser?.role !== Role.MEMBER;
 
   const filteredItems = items.filter((item) => {
     if (item.title === "Core") {
@@ -138,14 +140,14 @@ export function NavMain({ items }: NavMainProps) {
                           {/* This is Submenus Sections  */}
                           <Link
                             href={
-                              user?.role === "ADMIN" &&
+                              currentUser?.role === Role.ADMIN &&
                               subItem.url?.includes("my-leaves")
                                 ? "#"
                                 : subItem.url || "#"
                             }
                             onClick={(e) => {
                               if (
-                                user?.role === "ADMIN" &&
+                                currentUser?.role === Role.ADMIN &&
                                 subItem.url?.includes("my-leaves")
                               ) {
                                 e.preventDefault();
@@ -156,7 +158,7 @@ export function NavMain({ items }: NavMainProps) {
                           >
                             <div
                               className={`flex items-center gap-1 ${
-                                user?.role === "ADMIN" &&
+                                currentUser?.role === Role.ADMIN &&
                                 subItem.url?.includes("my-leaves")
                                   ? "opacity-50 cursor-not-allowed"
                                   : ""

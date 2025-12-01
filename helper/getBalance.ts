@@ -82,6 +82,9 @@ export const getBalance = ({
         ? balance - 1
         : startAbsentType === AbsentType.SECOND_HALF
         ? balance - 0.5
+        : startAbsentType === AbsentType.FULL_DAY &&
+          endAbsentType === AbsentType.FIRST_HALF
+        ? balance - 0.5
         : balance;
   }
 

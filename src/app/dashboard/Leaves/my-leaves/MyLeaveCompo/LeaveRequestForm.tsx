@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ConfigProvider, DatePicker, Space } from "antd";
 import { LeaveSchema } from "../../../../../../schemas/leave.schema";
@@ -23,16 +24,17 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { type UseFormReturn } from "react-hook-form";
 import dayjs from "dayjs";
-import z from "zod";
-// import { getBalance } from "@/helper/getBalance";
-import { AbsentType, LeaveStatus, leavePolicy } from "@/interfaces";
+import { isSameDay } from "date-fns";
+import z, { keyof } from "zod";
+import { getBalance } from "../../../../../../helper/getBalance";
+import { AbsentType, Employee, LeaveStatus, leavePolicy } from "@/interfaces";
 import axios from "axios";
 import { successToast } from "@/components/custom/SuccessToast";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { setLeave } from "@/libs/dataslice";
-import LEAVE_POLICIES from "@/constant/Policies";
 import { useDispatch } from "react-redux";
-import { isSameDay } from "date-fns";
+import POLICIES from "@/constant/Policies";
+import { ArrowBigLeft } from "lucide-react";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
@@ -70,12 +72,10 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
   const selectedLeaveType = form.watch("policyName");
   const startDate = form.watch("startDateTime");
   const startAbsentType = form.watch("startAbsentType");
-  const endDate = form.watch("endDateTime");
+  const endDate = form.watch("endDateTime") as Date;
   const endAbsentType = form.watch("endAbsentType");
   const isLeaveTypeSelected = policyName !== "" || policyName;
   const dispatch = useDispatch();
-
-  console.log(LEAVE_POLICIES);
 
   useEffect(() => {
     if (startAbsentType === AbsentType.FIRST_HALF && startDate) {
@@ -83,364 +83,361 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
     }
   }, [startDate, startAbsentType]);
 
-  const { occasionCalender, leaves, organisationMembers } = useSelector(
+  const { holidays, leaves, employees, currentUser } = useSelector(
     (state: RootState) => ({
-      occasionCalender: state.dataSlice.holiday,
+      holidays: state.dataSlice.holiday,
       leaves: state.dataSlice.leave,
-      organisationMembers: state.dataSlice.employee,
+      employees: state.dataSlice.employee,
+      currentUser: state.dataSlice.userInfo,
     })
   );
 
-  //   const deductedBalance = useMemo(() => {
-  //     const leaveInfo = leavetypes.find(
-  //       (data: LeaveTypes) => data.policyName === policyName
-  //     ) as LeaveTypes;
+  const deductedBalance = useMemo(() => {
+    const leaveInfo = POLICIES.find((data) => data.policyName === policyName);
 
-  //     if (!startDate || !startAbsentType) return 0;
+    if (!startDate || !startAbsentType) return 0;
 
-  //     const balance = getBalance({
-  //       startDateTime: startDate,
-  //       endDateTime: endDate,
-  //       startAbsentType,
-  //       endAbsentType,
-  //       leaveType: leaveInfo,
-  //       occasionCalender,
-  //     });
-  //     return balance;
-  //   }, [startDate, endDate, startAbsentType, endAbsentType]);
+    const balance = getBalance({
+      startDateTime: startDate,
+      endDateTime: endDate as Date,
+      startAbsentType,
+      endAbsentType,
+      leavePolicies: leaveInfo as leavePolicy,
+      holidays,
+    });
+    return balance;
+  }, [startDate, endDate, startAbsentType, endAbsentType]);
 
-  //   const selectLeaveType = leavetypes.map((leave, index) => {
-  //     return {
-  //       leavetype: leave.policyName,
-  //     };
-  //   });
+  const selectLeaveType = POLICIES.map((leave, index) => {
+    return {
+      leavetype: leave.policyName,
+    };
+  });
 
-  //   const isEndDateDisabled = useMemo(() => {
-  //     if (!startDate || !endDate) return true;
+  const isEndDateDisabled = useMemo(() => {
+    if (!startDate || !endDate) return true;
 
-  //     return startAbsentType === DayType.FirstHalf;
-  //   }, [startDate, startAbsentType]);
+    return startAbsentType === AbsentType.FIRST_HALF;
+  }, [startDate, startAbsentType]);
 
-  //   const getEndDatePlaceholder = () => {
-  //     if (!isLeaveTypeSelected) {
-  //       return "Please select leave type first";
-  //     }
+  const getEndDatePlaceholder = () => {
+    if (!isLeaveTypeSelected) {
+      return "Please select leave type first";
+    }
 
-  //     if (isEndDateDisabled) {
-  //       return "Disabled for First Half leave";
-  //     }
+    if (isEndDateDisabled) {
+      return "Disabled for First Half leave";
+    }
 
-  //     if (!startDate) {
-  //       return "Select start date first";
-  //     }
+    if (!startDate) {
+      return "Select start date first";
+    }
 
-  //     return "Select end date";
-  //   };
+    return "Select end date";
+  };
 
-  //   const getEndAbsentTypePlaceholder = () => {
-  //     if (!isLeaveTypeSelected) {
-  //       return "Select leave type first";
-  //     }
+  const getEndAbsentTypePlaceholder = () => {
+    if (!isLeaveTypeSelected) {
+      return "Select leave type first";
+    }
 
-  //     if (!startDate) {
-  //       return "Select start date first";
-  //     }
+    if (!startDate) {
+      return "Select start date first";
+    }
 
-  //     if (isEndDateDisabled) {
-  //       if (startAbsentType === DayType.FirstHalf) {
-  //         return "Disabled for First Half leave";
-  //       }
-  //       return "Auto-set for same day";
-  //     }
+    if (isEndDateDisabled) {
+      if (startAbsentType === AbsentType.FIRST_HALF) {
+        return "Disabled for First Half leave";
+      }
+      return "Auto-set for same day";
+    }
 
-  //     return "Select absent type";
-  //   };
+    return "Select absent type";
+  };
 
-  //   const onSubmit = async (leaveData: CreateLeaveFormValues) => {
-  //     let { startAbsentType, endAbsentType } = leaveData;
+  const onSubmit = async (leaveData: CreateLeaveFormValues) => {
+    let { startAbsentType, endAbsentType } = leaveData;
 
-  //     const orgMember = organisationMembers.find(
-  //       (member) => member.id === leaveData.orgMemberId
-  //     );
-  //     const pendingLeaves = leaves.filter(
-  //       (leaveInfo) => leaveInfo.leaveStatus === LeaveStatus.Pending
-  //     );
+    // const employee = employees.find(
+    //   (member) => member.id === leaveData.employeeId
+    // );
 
-  //     const currentBalance = orgMember?.totalBalances.find(
-  //       (leaveBalanceInfo) => leaveBalanceInfo.policyName === leaveData.policyName
-  //     )?.balance as number;
+    const employee = employees.find(
+      (emp) => emp.userId === currentUser.id
+    ) as Employee;
 
-  //     if (pendingLeaves.length >= 1) {
-  //       ErrorToast(`You have already ${pendingLeaves.length} pending leaves`);
-  //       return;
-  //     }
+    const currentBal = (employee?.leaveBalances.find(
+      (leaveBalanceInfo) => leaveBalanceInfo.policyName === leaveData.policyName
+    )?.balance || 0) as number;
 
-  //     if (deductedBalance > currentBalance) {
-  //       ErrorToast(`You can not apply more than ${currentBalance}`);
-  //       return;
-  //     }
+    if (deductedBalance > currentBal) {
+      ErrorToast(`Insufficiant leave balance ${currentBal}`);
+      return;
+    }
 
-  //     const payload = {
-  //       ...leaveData,
-  //       startAbsentType,
-  //       endAbsentType: endAbsentType,
-  //     };
+    const payload = {
+      ...leaveData,
+      startAbsentType,
+      endAbsentType: endAbsentType,
+    };
 
-  //     try {
-  //       const res = await axios.post("/api/leave/create-leave", payload);
+    try {
+      const res = await axios.post("/api/leave/apply-leave", payload);
+      const { success, message, data } = res.data;
 
-  //       const { success, message, data } = res.data;
-
-  //       if (success) {
-  //         successToast(message);
-  //         dispatch(setLeaves([...leaves, data]));
-  //         setIsOpen(false);
-  //         form.reset();
-  //       } else {
-  //         ErrorToast(message || "Something went wrong while creating leave.");
-  //         dispatch(setLeaves([]));
-  //       }
-  //     } catch (error: any) {
-  //       console.error("Error creating leave:", error);
-  //       ErrorToast(error);
-  //     }
-  //   };
+      if (success) {
+        successToast(message);
+        dispatch(setLeave([...leaves, data]));
+        setIsOpen(false);
+        form.reset();
+      } else {
+        ErrorToast(message || "Something went wrong while creating leave.");
+        dispatch(setLeave([]));
+      }
+    } catch (error: any) {
+      console.error("Error creating leave:", error);
+      ErrorToast(error);
+    }
+  };
 
   return (
-    <h1>Leave Request Form</h1>
-    // <Form {...form}>
-    //   <form
-    //     className="space-y-4"
-    //     onSubmit={form.handleSubmit(onSubmit, (errors: any) => {
-    //       console.log("Validation errors:", errors);
-    //     })}
-    //   >
-    //     <FormField
-    //       control={form.control}
-    //       name="policyName"
-    //       render={({ field }) => (
-    //         <FormItem className="">
-    //           <FormLabel className="font-gilSemiBold text-neutral-800 text-md flex-1">
-    //             Leave Type
-    //           </FormLabel>
-    //           <Select onValueChange={field.onChange} value={field.value}>
-    //             <FormControl className="w-full">
-    //               <SelectTrigger className="font-gilMedium bg-white border-[rgba(0,0,0,0.3)]">
-    //                 <SelectValue placeholder="select leavetype" />
-    //               </SelectTrigger>
-    //             </FormControl>
+    <Form {...form}>
+      <form
+        className="space-y-4"
+        onSubmit={form.handleSubmit(onSubmit, (errors: any) => {
+          console.log("Validation errors:", errors);
+        })}
+      >
+        <FormField
+          control={form.control}
+          name="policyName"
+          render={({ field }) => (
+            <FormItem className="">
+              <FormLabel className="font-gilSemiBold text-neutral-800 text-md flex-1">
+                Leave Type
+              </FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl className="w-full">
+                  <SelectTrigger className="font-gilMedium bg-white border-[rgba(0,0,0,0.3)]">
+                    <SelectValue placeholder="select leavetype" />
+                  </SelectTrigger>
+                </FormControl>
 
-    //             <SelectContent className="">
-    //               <SelectGroup className="font-gilRegular">
-    //                 {selectLeaveType.map((Item, index) => (
-    //                   <SelectItem value={Item.leavetype} key={index}>
-    //                     <div>{Item.leavetype}</div>
-    //                   </SelectItem>
-    //                 ))}
-    //               </SelectGroup>
-    //             </SelectContent>
-    //           </Select>
-    //         </FormItem>
-    //       )}
-    //     />
+                <SelectContent className="">
+                  <SelectGroup className="font-gilRegular">
+                    {selectLeaveType.map((Item, index) => (
+                      <SelectItem value={Item.leavetype} key={index}>
+                        <div>{Item.leavetype}</div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
 
-    //     <div className="space-y-2 mb-5">
-    //       <FormLabel className="font-gilSemiBold text-neutral-800 text-md">
-    //         Start Date
-    //       </FormLabel>
+        <div className="space-y-2 mb-5">
+          <FormLabel className="font-gilSemiBold text-neutral-800 text-md">
+            Start Date
+          </FormLabel>
 
-    //       <div className="flex justify-between gap-4">
-    //         <FormField
-    //           control={form.control}
-    //           name="startDateTime"
-    //           render={({ field }) => (
-    //             <FormItem className="flex-1">
-    //               <div className="">
-    //                 <ConfigProvider
-    //                   theme={{
-    //                     token: {
-    //                       fontFamily: "gilRegular",
-    //                     },
-    //                   }}
-    //                 >
-    //                   <Space
-    //                     direction="vertical"
-    //                     className="custom-datepicker w-full"
-    //                   >
-    //                     <DatePicker
-    //                       className="w-full h-9"
-    //                       value={field.value ? dayjs(field.value) : null}
-    //                       onChange={(date) =>
-    //                         form.setValue("startDateTime", date.toDate())
-    //                       }
-    //                       allowClear
-    //                       disabled={!isLeaveTypeSelected}
-    //                       placeholder={
-    //                         !isLeaveTypeSelected
-    //                           ? "Please select leave type first"
-    //                           : "Select start date"
-    //                       }
-    //                     />
-    //                   </Space>
-    //                 </ConfigProvider>
-    //                 <FormMessage />
-    //               </div>
-    //             </FormItem>
-    //           )}
-    //         />
+          <div className="flex justify-between gap-4">
+            <FormField
+              control={form.control}
+              name="startDateTime"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <div className="">
+                    <ConfigProvider
+                      theme={{
+                        token: {
+                          fontFamily: "gilRegular",
+                        },
+                      }}
+                    >
+                      <Space
+                        orientation="vertical"
+                        className="custom-datepicker w-full"
+                      >
+                        <DatePicker
+                          className="w-full h-9"
+                          value={field.value ? dayjs(field.value) : null}
+                          onChange={(date) =>
+                            form.setValue("startDateTime", date.toDate())
+                          }
+                          allowClear
+                          disabled={!isLeaveTypeSelected}
+                          placeholder={
+                            !isLeaveTypeSelected
+                              ? "Please select leave type first"
+                              : "Select start date"
+                          }
+                        />
+                      </Space>
+                    </ConfigProvider>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )}
+            />
 
-    //         <Select
-    //           onValueChange={(value) => {
-    //             const absentType = DayType[value as keyof typeof DayType];
+            <Select
+              onValueChange={(value) => {
+                const absentType = AbsentType[value as keyof typeof AbsentType];
 
-    //             form.setValue("startAbsentType", absentType);
-    //           }}
-    //           disabled={!isLeaveTypeSelected || !startDate}
-    //           value={startAbsentType}
-    //         >
-    //           <FormControl className="">
-    //             <SelectTrigger className="font-gilMedium text-neutral-800 bg-white border-[rgba(0,0,0,0.3)]">
-    //               <SelectValue
-    //                 placeholder={
-    //                   !startDate ? "Select start date first" : "Absent type"
-    //                 }
-    //               />
-    //             </SelectTrigger>
-    //           </FormControl>
+                form.setValue("startAbsentType", absentType);
+              }}
+              disabled={!isLeaveTypeSelected || !startDate}
+              value={startAbsentType}
+            >
+              <FormControl className="">
+                <SelectTrigger className="font-gilMedium text-neutral-800 bg-white border-[rgba(0,0,0,0.3)]">
+                  <SelectValue
+                    placeholder={
+                      !startDate ? "Select start date first" : "Absent type"
+                    }
+                  />
+                </SelectTrigger>
+              </FormControl>
 
-    //           <SelectContent className="">
-    //             <SelectGroup className="font-gilMedium">
-    //               {AbsentTypes.map((type: AbsentType) => (
-    //                 <SelectItem key={type.key} value={type.key}>
-    //                   {type.value}
-    //                 </SelectItem>
-    //               ))}
-    //             </SelectGroup>
-    //           </SelectContent>
-    //         </Select>
-    //       </div>
-    //     </div>
+              <SelectContent className="">
+                <SelectGroup className="font-gilMedium">
+                  {AbsentTypes.map((type) => (
+                    <SelectItem key={type.key} value={type.key}>
+                      {type.value}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-    //     <div className="space-y-2 mb-5">
-    //       <FormLabel className="font-gilSemiBold text-neutral-800 text-md">
-    //         End Date
-    //       </FormLabel>
+        <div className="space-y-2 mb-5">
+          <FormLabel className="font-gilSemiBold text-neutral-800 text-md">
+            End Date
+          </FormLabel>
 
-    //       <div className="flex justify-between gap-4">
-    //         <FormField
-    //           name="endDateTime"
-    //           control={form.control}
-    //           render={({ field }) => (
-    //             <FormItem className="flex-1">
-    //               <div className="">
-    //                 <ConfigProvider
-    //                   theme={{
-    //                     token: {
-    //                       fontFamily: "gilRegular",
-    //                     },
-    //                   }}
-    //                 >
-    //                   <Space
-    //                     direction="vertical"
-    //                     className="custom-datepicker w-full"
-    //                   >
-    //                     <DatePicker
-    //                       className="w-full h-9"
-    //                       value={field.value ? dayjs(field.value) : null}
-    //                       onChange={(date) => {
-    //                         form.setValue("endDateTime", date.toDate());
-    //                       }}
-    //                       allowClear
-    //                       disabled={!isLeaveTypeSelected || isEndDateDisabled}
-    //                       placeholder={getEndDatePlaceholder()}
-    //                     />
-    //                   </Space>
-    //                 </ConfigProvider>
-    //               </div>
-    //             </FormItem>
-    //           )}
-    //         />
+          <div className="flex justify-between gap-4">
+            <FormField
+              name="endDateTime"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <div className="">
+                    <ConfigProvider
+                      theme={{
+                        token: {
+                          fontFamily: "gilRegular",
+                        },
+                      }}
+                    >
+                      <Space
+                        orientation="vertical"
+                        className="custom-datepicker w-full"
+                      >
+                        <DatePicker
+                          className="w-full h-9"
+                          value={field.value ? dayjs(field.value) : null}
+                          onChange={(date) => {
+                            form.setValue("endDateTime", date.toDate());
+                          }}
+                          allowClear
+                          disabled={!isLeaveTypeSelected || isEndDateDisabled}
+                          placeholder={getEndDatePlaceholder()}
+                        />
+                      </Space>
+                    </ConfigProvider>
+                  </div>
+                </FormItem>
+              )}
+            />
 
-    //         <Select
-    //           onValueChange={(value: string) => {
-    //             const absentType = DayType[value as keyof typeof DayType];
-    //             form.setValue("endAbsentType", absentType);
-    //           }}
-    //           disabled={
-    //             !isLeaveTypeSelected ||
-    //             isEndDateDisabled ||
-    //             isSameDay(startDate, endDate)
-    //           }
-    //           value={endAbsentType}
-    //         >
-    //           <FormControl className="">
-    //             <SelectTrigger className="font-gilMedium text-neutral-800 bg-white border-[rgba(0,0,0,0.3)]">
-    //               <SelectValue placeholder={getEndAbsentTypePlaceholder()} />
-    //             </SelectTrigger>
-    //           </FormControl>
+            <Select
+              onValueChange={(value) => {
+                const absentType =
+                  value === AbsentType.FIRST_HALF
+                    ? AbsentType.FIRST_HALF
+                    : AbsentType.FULL_DAY;
 
-    //           <SelectContent className="">
-    //             <SelectGroup className="font-gilMedium">
-    //               {EndAbsentTypes.map((type: AbsentType) => (
-    //                 <SelectItem key={type.key} value={type.key}>
-    //                   {type.value}
-    //                 </SelectItem>
-    //               ))}
-    //             </SelectGroup>
-    //           </SelectContent>
-    //         </Select>
-    //       </div>
-    //     </div>
+                form.setValue("endAbsentType", absentType);
+              }}
+              disabled={
+                !isLeaveTypeSelected ||
+                isEndDateDisabled ||
+                isSameDay(startDate, endDate)
+              }
+              value={endAbsentType}
+            >
+              <FormControl className="">
+                <SelectTrigger className="font-gilMedium text-neutral-800 bg-white border-[rgba(0,0,0,0.3)]">
+                  <SelectValue placeholder={getEndAbsentTypePlaceholder()} />
+                </SelectTrigger>
+              </FormControl>
 
-    //     {isLeaveTypeSelected && (
-    //       <h2>
-    //         Balance Debit:{" "}
-    //         <span className="text-red-700">{deductedBalance}</span>
-    //       </h2>
-    //     )}
+              <SelectContent className="">
+                <SelectGroup className="font-gilMedium">
+                  {EndAbsentTypes.map((type) => (
+                    <SelectItem key={type.key} value={type.key}>
+                      {type.value}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-    //     <FormField
-    //       name="reason"
-    //       control={form.control}
-    //       render={({ field }) => (
-    //         <FormItem className="">
-    //           <FormLabel className="font-gilSemiBold text-neutral-800 text-md">
-    //             Reason
-    //           </FormLabel>
-    //           <FormControl className="">
-    //             <Textarea
-    //               {...field}
-    //               className="font-gilMedium"
-    //               placeholder="comments"
-    //             />
-    //           </FormControl>
-    //         </FormItem>
-    //       )}
-    //     />
+        {isLeaveTypeSelected && (
+          <h2>
+            Balance Debit:{" "}
+            <span className="text-red-700">{deductedBalance}</span>
+          </h2>
+        )}
 
-    //     <div className="flex items-center justify-end gap-6 btn">
-    //       <Button
-    //         type="button"
-    //         onClick={() => {
-    //           form.reset();
-    //           setIsOpen(false);
-    //         }}
-    //         className="text-black bg-white cursor-pointer border-1 border-[rgba(0,0,0,0.3)] outline-1 px-4 py-1 text-sm font-gilSemiBold rounded-sm hover:text-white"
-    //       >
-    //         Cancel
-    //       </Button>
+        <FormField
+          name="reason"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="">
+              <FormLabel className="font-gilSemiBold text-neutral-800 text-md">
+                Reason
+              </FormLabel>
+              <FormControl className="">
+                <Textarea
+                  {...field}
+                  className="font-gilMedium"
+                  placeholder="comments"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-    //       <div className="add">
-    //         <Button
-    //           type="submit"
-    //           className="flex items-center gap-3 px-4 py-1 text-sm font-gilSemiBold rounded-sm text-white"
-    //         >
-    //           Create
-    //         </Button>
-    //       </div>
-    //     </div>
-    //   </form>
-    // </Form>
+        <div className="flex items-center justify-end gap-6 btn">
+          <Button
+            type="button"
+            onClick={() => {
+              form.reset();
+              setIsOpen(false);
+            }}
+            className="text-black bg-white cursor-pointer border-1 border-[rgba(0,0,0,0.3)] outline-1 px-4 py-1 text-sm font-gilSemiBold rounded-sm hover:text-white"
+          >
+            Cancel
+          </Button>
+
+          <div className="add">
+            <Button
+              type="submit"
+              className="flex items-center gap-3 px-4 py-1 text-sm font-gilSemiBold rounded-sm text-white"
+            >
+              Create
+            </Button>
+          </div>
+        </div>
+      </form>
+    </Form>
   );
 };
 

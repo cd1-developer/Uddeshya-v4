@@ -30,6 +30,7 @@ export class RedisProvider {
   }
   async get<T>(key: string): Promise<T | null> {
     let value = await this.client.get(key);
+
     return value ? JSON.parse(value) : null;
   }
   async addToList<T>(key: string, value: T) {

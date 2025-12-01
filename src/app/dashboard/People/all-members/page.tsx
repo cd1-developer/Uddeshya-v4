@@ -72,10 +72,17 @@ const Members = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const orgMember = useSelector((state: RootState) => state.dataSlice.employee);
-  const currentEmployee = useSelector(
+  const currentEmployees = useSelector(
     (state: RootState) => state.dataSlice.employee
   );
+
+  const currentUser = useSelector(
+    (state: RootState) => state.dataSlice.userInfo
+  );
+  const currentEmp = currentEmployees.find(
+    (emp) => emp.user.id === currentUser.id
+  );
+  // console.log(currentEmp);
 
   const form = useForm<addPeopleFormValues>({
     resolver: zodResolver(addEmployeeSchema),
@@ -92,7 +99,6 @@ const Members = () => {
   });
 
   const dispatch = useDispatch();
-
   const joinDate = form.watch("joiningDate");
 
   useEffect(() => {
@@ -150,7 +156,7 @@ const Members = () => {
           return;
         }
         const updatedOrgMembers: Employee[] = [
-          ...(currentEmployee || []),
+          ...(currentEmployees || []),
           newEmployee,
         ];
         dispatch(setEmployee(updatedOrgMembers));
@@ -163,9 +169,6 @@ const Members = () => {
       }
     });
   };
-  const userRole = useSelector(
-    (state: RootState) => state.dataSlice.employee
-  ).find((member) => member.role)?.role;
 
   return (
     <div className="transition-all duration-300">
@@ -181,12 +184,14 @@ const Members = () => {
             Bulk Transition
           </div>
           <div className=" adding-person">
-            <Button
-              onClick={() => setIsOpen(true)}
-              className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
-            >
-              <span>Add new person</span>
-            </Button>
+            {currentEmp?.role === Role.ADMIN && (
+              <Button
+                onClick={() => setIsOpen(true)}
+                className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
+              >
+                <span>Add new person</span>
+              </Button>
+            )}
 
             <DialogCompo
               isOpen={isOpen}

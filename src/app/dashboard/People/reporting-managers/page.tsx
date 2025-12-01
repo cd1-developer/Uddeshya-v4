@@ -53,6 +53,8 @@ const ReportManager = () => {
     setSelectedValue(value);
   }
 
+  console.log(reportManager);
+
   const filterReportManagers = useMemo(() => {
     let searchedReportManager = [] as Employee[];
 
@@ -71,16 +73,20 @@ const ReportManager = () => {
     searchedReportManager =
       input === ""
         ? searchedReportManager
-        : searchedReportManager.filter((manager) =>
-            manager.user.username.toLowerCase().includes(input.toLowerCase())
-          ) ||
-          searchedReportManager.filter((manager) =>
-            manager.user.email.toLowerCase().includes(input.toLowerCase())
+        : searchedReportManager.filter(
+            (manager) =>
+              manager.user.username
+                .toLowerCase()
+                .includes(input.toLowerCase()) ||
+              manager.user.email.toLowerCase().includes(input.toLowerCase())
           );
+    // searchedReportManager.filter((manager) =>
+    //   manager.user.email.toLowerCase().includes(input.toLowerCase())
+    // );
     return searchedReportManager;
   }, [selectedValue, input, employees]);
 
-  console.log("Managers:", filterReportManagers);
+  // console.log("Managers:", filterReportManagers);
   console.log(
     "Members:",
     filterReportManagers.map((mem) => mem.assignMembers)
@@ -250,7 +256,7 @@ const ReportManager = () => {
                     </div>
 
                     <AccordionContent className="pl-0 sm:pl-16">
-                      {manager.assignMembers.length === 0 ? (
+                      {(manager.assignMembers?.length ?? 0) === 0 ? (
                         <div className="flex flex-col gap-3 items-center justify-center">
                           <h2 className="text-zinc-400">
                             <Users size={26} strokeWidth={1} />

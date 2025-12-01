@@ -36,6 +36,7 @@ export const GET = async (req: NextRequest) => {
           gender: true,
           dateOfBirth: true,
           createdAt: true,
+          employee: true,
         },
       })) as User | null;
 

@@ -48,7 +48,20 @@ export const getEmployees = async (): Promise<Employee[] | null> => {
           },
         },
         reportManager: true,
-        assignMembers: true,
+        assignMembers: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                dateOfBirth: true,
+                gender: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
         leaveBalances: true,
         EmployeeLatestIncrement: true,
         leavesApplied: true,

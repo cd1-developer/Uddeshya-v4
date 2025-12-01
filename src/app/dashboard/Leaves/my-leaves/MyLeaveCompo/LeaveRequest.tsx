@@ -14,7 +14,8 @@ import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
 import { useDispatch } from "react-redux";
 import { setLeave } from "@/libs/dataslice";
-import { AbsentType, Leave } from "@/interfaces";
+import { AbsentType, Leave, LeaveStatus, Role } from "@/interfaces";
+import POLICIES from "@/constant/Policies";
 
 import {
   Select,
@@ -26,11 +27,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { CurrencyIcon } from "lucide-react";
+import { emit } from "process";
 
-type CreateLeaveFormValues = z.infer<typeof leaveSchema>;
+type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
 const LeaveRequest = () => {
-  const leaveData = useSelector((state: RootState) => state.dataSlice.leaves);
+  const leaveData = useSelector((state: RootState) => state.dataSlice.leave);
+  const employees = useSelector((state: RootState) => state.dataSlice.employee);
+  const currentUserId = useSelector(
+    (state: RootState) => state.dataSlice.userInfo.id
+  );
+
+  const employeeId = employees.find((emp) => emp.userId === currentUserId)?.id;
+
+  // const reportManagerId = useSelector(
+  //   (state: RootState) => state.dataSlice.userInfo.employee?.reportManagerId
+  // );
+  const reportManagerId = employees.find(
+    (emp) => emp.userId === employeeId
+  )?.reportManagerId;
+
+  // console.log(reportManagerId);
   //   const { orgMembers, orgMemberId, reportManagerId, loading } = useSelector(
   //     (state: RootState) => ({
   //       orgMembers: state.dataSlice.organisationMember,
@@ -42,20 +60,21 @@ const LeaveRequest = () => {
 
   const dispatch = useDispatch();
 
-  const adminId = orgMembers.find((memeber) => memeber.role === "ADMIN")?.id;
+  // const adminId = orgMembers.find((memeber) => memeber.role === "ADMIN")?.id;
+  const adminId = employees.find((emp) => emp.role === Role.ADMIN)?.id;
 
   const form = useForm<CreateLeaveFormValues>({
-    resolver: zodResolver(leaveSchema),
+    resolver: zodResolver(LeaveSchema),
     mode: "onBlur",
     defaultValues: {
+      employeeId,
       policyName: "",
       startDateTime: undefined,
       endDateTime: undefined,
+      startAbsentType: AbsentType.FIRST_HALF, // Add this
+      endAbsentType: undefined,
       reason: "",
-      startAbsentType: DayType.FirstHalf, // Add this
-      endAbsentType: "",
-      orgMemberId,
-      reportManagerId: reportManagerId || adminId, // Those who does not have reportManager
+      actionByEmployeeId: reportManagerId || adminId, // Those who does not have reportManager
       // then their leave request is handel my Admin
     },
   });
@@ -165,21 +184,21 @@ const LeaveRequest = () => {
                     {format(new Date(leave.startDateTime), "dd/MM/yyyy")}
                   </td>
                   <td className="p-3 font-gilLight">
-                    {new Date(leave.endDateTime).toLocaleDateString()}
+                    {new Date(leave.endDateTime as Date).toLocaleDateString()}
                   </td>
                   <td className="p-3 font-gilLight">{leave.reason}</td>
                   <td className="p-3 font-gilLight">
                     <Badge
                       variant={
-                        leave.leaveStatus === "Approved"
+                        leave.LeaveStatus === LeaveStatus.APPROVED
                           ? "outline"
-                          : leave.leaveStatus === "Rejected"
+                          : leave.LeaveStatus === LeaveStatus.REJECTED
                           ? "destructive"
                           : "default"
                       }
                       className={`px-2 py-1 rounded-full text-xs font-gilMedium`}
                     >
-                      {leave.leaveStatus}
+                      {leave.LeaveStatus}
                     </Badge>
                   </td>
                 </tr>

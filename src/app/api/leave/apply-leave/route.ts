@@ -24,18 +24,15 @@ export const POST = async (req: NextRequest) => {
     }
 
     // 2. Validate the request body against the leave schema.
-    const { success, message, data } = validateData(LeaveSchema, body);
+    const {
+      success,
+      message,
+      data: validLeaveData,
+    } = validateData(LeaveSchema, body);
 
     if (!success) {
       return NextResponse.json({ success, message }, { status: 400 });
     }
-
-    // 3. Sanitize the validated data to remove any undefined fields.
-    const validLeaveData = Object.fromEntries(
-      Object.entries(data as z.infer<typeof LeaveSchema>).filter(
-        ([_, value]) => value !== undefined
-      )
-    ) as z.infer<typeof LeaveSchema>;
 
     const {
       employeeId,
@@ -46,9 +43,9 @@ export const POST = async (req: NextRequest) => {
       endAbsentType,
       reason,
       actionByEmployeeId,
-    } = validLeaveData;
+    } = validLeaveData as z.infer<typeof LeaveSchema>;
 
-    // 4. Verify that the employee applying for leave exists in the database.
+    // 3. Verify that the employee applying for leave exists in the database.
     const employee = await prisma.employee.findFirst({
       where: { id: employeeId },
     });
@@ -60,7 +57,7 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // 5. Prepare the data for creating the new leave record.
+    // 4. Prepare the data for creating the new leave record.
     const appliedLeaveData = {
       employeeId,
       policyName,
@@ -71,12 +68,16 @@ export const POST = async (req: NextRequest) => {
       reason,
       actionByEmployeeId,
     };
-    // 6. Create the new leave record in the database.
+    // 5. Create the new leave record in the database.
     const newAppliedLeave = await prisma.leave.create({
       data: appliedLeaveData,
+      include: {
+        applicant: true,
+        actionBy: true,
+      },
     });
 
-    // 7. Update the Redis cache with the new leave information.
+    // 6. Update the Redis cache with the new leave information.
     await updateLeavesInfoInCache(
       employeeId,
       employee.reportManagerId as string,
@@ -92,7 +93,7 @@ export const POST = async (req: NextRequest) => {
       { status: 201 }
     );
   } catch (error: any) {
-    // 8. Handle any unexpected errors during the process.
+    // 7. Handle any unexpected errors during the process.
     console.error("Error applying leave:", error);
     return NextResponse.json(
       {
@@ -118,7 +119,7 @@ async function updateLeavesInfoInCache(
   reportManagerId: string,
   leave: Leave
 ) {
-  const redis = new RedisProvider();
+  const redis = await RedisProvider.getInstance();
 
   const employeess = (await getEmployees()) || [];
 

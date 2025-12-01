@@ -17,6 +17,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
+import { SelectIcon } from "@radix-ui/react-select";
 interface AssingMemberProps {
   userId: string;
   isOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -110,6 +111,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
   }, []);
 
   const selectedEmployeesIds = selectedEmployees.map((mem) => mem.id);
+  console.log(selectedReportManager);
 
   //todo   🔹<--------  Assign selected organisation members under a specific report manager -------->
   function assignMember() {
@@ -154,6 +156,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
           }
           return employee;
         });
+        // console.log(updatedEmployee);
 
         dispatch(setEmployee(updatedEmployee));
         setSelectedEmployees([]);
@@ -228,7 +231,6 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
   //       });
   //     }
   //   }
-  console.log(allEmployee);
 
   return (
     <div className="">

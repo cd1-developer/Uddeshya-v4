@@ -10,7 +10,7 @@ export const LeaveSchema = z.object({
     .date({ error: "End Date should be in date format" })
     .optional(),
   endAbsentType: z
-    .enum(["FULL_DAY", "FIRST_HALF"], {
+    .enum([AbsentType.FULL_DAY, AbsentType.FIRST_HALF], {
       error: "Absent type is required",
     })
     .optional(),

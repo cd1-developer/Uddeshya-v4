@@ -16,6 +16,7 @@ import { Holiday } from "@prisma/client";
 import { format } from "date-fns";
 import { successToast } from "@/components/custom/SuccessToast";
 import { Input } from "@/components/ui/input";
+import { setLeave } from "@/libs/dataslice";
 type UpComingDOBType = {
   id: string;
   username: string;
@@ -27,8 +28,40 @@ const Dashboard = () => {
 
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
   const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
-
   const employees = useSelector((state: RootState) => state.dataSlice.employee);
+  const currentUserId = useSelector(
+    (state: RootState) => state.dataSlice.userInfo.id
+  );
+
+  const employeeId = employees.find((emp) => emp.userId === currentUserId)?.id;
+
+  useEffect(() => {
+    const fetchLeavesData = async () => {
+      if (!employeeId) return;
+
+      try {
+        const response = await axios.get(
+          `/api/leave/employee?employeeId=${employeeId}`
+        );
+
+        const { success, data, message } = response.data;
+
+        if (!success) {
+          ErrorToast(message || "Failed to fetch members");
+          return;
+        }
+
+        dispatch(setLeave(data));
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message;
+        console.error("Error fetching members: ", errorMessage);
+        ErrorToast("Failed to load Leaves ");
+      }
+    };
+    startTransition(() => {
+      fetchLeavesData();
+    });
+  }, [employeeId]);
 
   const upComingdateOfBirth = useMemo(() => {
     if (employees.length === 0 || !employees) {
@@ -121,15 +154,15 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="px-6 py-6 space-y-8 w-full">
+    <div className="px-6 space-y-8 w-full">
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <h1 className="text-3xl font-semibold">Dashboard</h1>
+        <h1 className="text-3xl font-gilSemiBold">Dashboard</h1>
 
         {currentUserRole === "ADMIN" && (
           <Button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-2"
+            className="flex items-center font-gilRegular gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Occasion
@@ -141,18 +174,20 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Holidays */}
         <section className="rounded-xl p-5 border shadow-sm bg-white">
-          <h2 className="text-lg font-medium mb-4">All Holidays</h2>
+          <h2 className="text-lg font-gilSemiBold mb-4">All Holidays</h2>
 
           <div className="space-y-3 max-h-72 overflow-y-auto">
-            {holidays.length === 0 && <h2>😔 No Holidays</h2>}
+            {holidays.length === 0 && (
+              <h2 className="font-gilRegular">😔 No Holidays</h2>
+            )}
             {holidays.map((holiday) => (
               <div
                 key={holiday.id}
                 className="flex justify-between items-center border p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
               >
                 <div>
-                  <p className="font-medium">{holiday.holidayName}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-gilMedium">{holiday.holidayName}</p>
+                  <p className="text-sm font-gilRegular text-gray-600">
                     {new Date(holiday.holidayDate).toDateString()}
                   </p>
                 </div>
@@ -172,11 +207,11 @@ const Dashboard = () => {
 
         {/* Birthdays */}
         <section className="rounded-xl p-5 border shadow-sm bg-white">
-          <h2 className="text-lg font-medium mb-4">Upcoming Birthdays</h2>
+          <h2 className="text-lg font-gilSemiBold mb-4">Upcoming Birthdays</h2>
 
           <div className="space-y-3 max-h-72 overflow-y-auto">
             {upComingdateOfBirth.length === 0 && (
-              <h2>🎂 No Upcoming Birthdays</h2>
+              <h2 className="font-gilRegular">🎂 No Upcoming Birthdays</h2>
             )}
             {upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
               <div
@@ -299,27 +334,28 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
   }
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-800 text-center">
+      <h2 className="text-xl font-gilSemiBold text-gray-800 text-center">
         🎉 Add a New Occasion
       </h2>
 
       <form onSubmit={onAddOccasion} className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-gilMedium text-gray-700">
             Occasion Date
           </label>
           <DatePicker
             onChange={onChange}
-            className="w-full border rounded-md py-2 px-3 hover:border-gray-400 focus:ring-2 focus:ring-blue-500"
+            className="w-full border rounded-md py-2 px-3 hover:border-gray-400 focus:ring-2 focus:ring-blue-500 font-gilRegular"
             size="large"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-gilMedium text-gray-700">
             Occasion Name
           </label>
           <Input
+            className="font-gilRegular"
             type="text"
             placeholder="e.g., Team Anniversary, Festival..."
             value={holidaysInfo.holidayName}
@@ -337,7 +373,7 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="text-gray-700 hover:bg-gray-100 transition-all"
+            className="text-gray-700 hover:bg-gray-100 font-gilRegular transition-all"
           >
             Cancel
           </Button>
@@ -345,11 +381,11 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
           <Button type="submit" disabled={isPending} className="font-medium">
             {isPending ? (
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white font-gilRegular rounded-full animate-spin"></div>
                 Adding...
               </div>
             ) : (
-              "Add Occasion"
+              <div className="font-gilRegular">Add Occasion</div>
             )}
           </Button>
         </div>
