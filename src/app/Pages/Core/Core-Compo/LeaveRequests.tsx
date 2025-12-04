@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { forwardRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,6 +11,9 @@ import AlertDialogCompo from "@/components/custom/AlertDialog/AlertDialogCompo";
 import { LeaveStatus } from "@/interfaces";
 
 import useUpdateLeaveStatus from "@/hooks/useUpdateLeaveStatus";
+import { useSelector } from "react-redux";
+import { RootState } from "@/libs/store";
+import { Input } from "@/components/ui/input";
 
 const getStartTime = (absentType: AbsentType) => {
   return absentType === AbsentType.FIRST_HALF
@@ -70,9 +73,11 @@ const LeaveRequests = ({
   setAllLeaves,
   setAssignMembers,
 }: LeaveRequestsProps) => {
+  const [rejectedReason, setRejectedReason] = useState<string>("");
   const { isPending, updateLeaveStatus } = useUpdateLeaveStatus({
     setAllLeaves,
     setAssignMembers,
+    rejectedReason,
   });
 
   const handleApproveLeave = (leave: Leave) => {
@@ -85,13 +90,15 @@ const LeaveRequests = ({
 
   return (
     <section className="">
-      <header className="flex justify-between items-center border-b pt-2 pb-4"></header>
+      <header className="flex justify-between items-center border-b pt-2 pb-4">
+        {/* <img src="" alt="" /> */}
+      </header>
 
       <main className="mt-5 leave-data">
         <div className="space-y-5">
           {allLeaves && allLeaves.length === 0 ? (
             <div className="not-found">
-              <img className="w-8 h-8" src="/not-found.png" alt="not-found" />
+              <img className="w-28" src="/not-found.png" alt="not-found" />
             </div>
           ) : (
             allLeaves.flatMap((leave, i) => (
@@ -104,15 +111,16 @@ const LeaveRequests = ({
                           <AvatarImage
                             // src={leave.orgMember.user.username}
                             // alt={leave.orgMember.user.username}
-                            src={leave.actionBy?.user.username}
-                            alt={leave.actionBy?.user.username}
+
+                            src={leave.applicant?.user.username}
+                            alt={leave.applicant?.user.username}
                           />
                           <AvatarFallback className="bg-blue-100 text-sky-600 font-gilSemiBold text-sm">
                             {/* {leave.orgMember.user.username
                               .split(" ")
                               .map((n) => n[0])
                               .join("")} */}
-                            {leave.actionBy?.user.username
+                            {leave.applicant?.user.username
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
@@ -122,7 +130,7 @@ const LeaveRequests = ({
                         <div>
                           <h2 className="font-gilSemiBold text-md">
                             {/* {leave.orgMember.user.username} */}
-                            {leave.actionBy?.user.username}
+                            {leave.applicant.user.username}
                           </h2>
                           <div>
                             <div className="font-gilRegular text-sm">
@@ -212,7 +220,16 @@ const LeaveRequests = ({
                             }
                             actionTitle="Reject Leave"
                             loader="Rejecting..."
-                          />
+                          >
+                            <Input
+                              placeholder="Enter the reason of rejection"
+                              value={rejectedReason}
+                              onChange={(e) =>
+                                setRejectedReason(e.target.value)
+                              }
+                              className="mt-3"
+                            />
+                          </AlertDialogCompo>
                         </div>
                       )}
                     </div>

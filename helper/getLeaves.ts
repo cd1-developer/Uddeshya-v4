@@ -17,7 +17,17 @@ export const getLeaves = async () => {
     console.log("Cache MISS: Fetching leaves from DB");
     leaves = await prisma.leave.findMany({
       include: {
-        applicant: true,
+        applicant: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+              },
+            },
+          },
+        },
         actionBy: true,
       },
     });
@@ -29,18 +39,5 @@ export const getLeaves = async () => {
     return leaves;
   } catch (error: any) {
     console.error("Error fetching leaves:", error.message || error);
-
-    // Fallback: attempt DB fetch even if Redis fails
-    try {
-      return await prisma.leave.findMany({
-        include: {
-          applicant: true,
-          actionBy: true,
-        },
-      });
-    } catch (dbError: any) {
-      console.error("DB fetch also failed:", dbError);
-      return null;
-    }
   }
 };

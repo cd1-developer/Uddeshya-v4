@@ -63,6 +63,7 @@ const Core = () => {
       const res = await axios.get(
         `/api/leave/reportManager?reportManagerId=${id}`
       );
+      console.log(res);
 
       const { success, message, data } = res.data;
 
@@ -70,6 +71,7 @@ const Core = () => {
         ErrorToast(message || "Failed to fetch applied leaves.");
         return;
       }
+      // console.log(id);
 
       setAllLeaves(data as Leave[]);
     } catch (error: any) {
@@ -106,9 +108,7 @@ const Core = () => {
     const employee =
       currentUserRole === Role.ADMIN
         ? employees.filter((emp) => !emp.reportManagerId)
-        : employees.filter((emp) => emp.reportManagerId);
-
-    console.log(employee);
+        : employees.filter((emp) => emp.reportManagerId === reportManagerId);
 
     setAssignMembers(employee);
   }, []);
@@ -125,7 +125,7 @@ const Core = () => {
     setTransition(() => {
       fetchAppliedLeaves(id as string);
     });
-  }, [reportManagerId, currentEmpInfo?.id]);
+  }, [reportManagerId, adminInfo?.id]);
 
   return (
     <main>

@@ -72,7 +72,17 @@ export const POST = async (req: NextRequest) => {
     const newAppliedLeave = await prisma.leave.create({
       data: appliedLeaveData,
       include: {
-        applicant: true,
+        applicant: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
+          },
+        },
         actionBy: true,
       },
     });

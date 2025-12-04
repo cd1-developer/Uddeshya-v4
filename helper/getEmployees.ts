@@ -65,7 +65,7 @@ export const getEmployees = async (): Promise<Employee[] | null> => {
         leaveBalances: true,
         EmployeeLatestIncrement: true,
         leavesApplied: true,
-        leavesActioned: true,
+        leavesActioned: {},
       },
     });
 

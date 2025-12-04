@@ -9,37 +9,41 @@ import {
   Employee,
   EmployeeLeaveBalance,
 } from "@/interfaces";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { getBalance } from "../../helper/getBalance";
 import POLICIES from "@/constant/Policies";
 import axios from "axios";
+import { setEmployee } from "@/libs/dataslice";
 
 interface UseUpdateLeaveStatusProps {
   setAllLeaves: React.Dispatch<React.SetStateAction<Leave[]>>;
   setAssignMembers: React.Dispatch<React.SetStateAction<Employee[]>>;
+  rejectedReason?: string;
 }
 const useUpdateLeaveStatus = ({
   setAllLeaves,
   setAssignMembers,
+  rejectedReason,
 }: UseUpdateLeaveStatusProps) => {
   const [isPending, startTransition] = useTransition();
-  //   const leaveTypes = useSelector(
-  //     (state: RootState) => state.dataSlice.leaveTypes
-  //   );
+  const dispatch = useDispatch();
+
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
+  const employees = useSelector((state: RootState) => state.dataSlice.employee);
 
   function updateLeaveStatus(leave: Leave, updatedStatus: LeaveStatus) {
     startTransition(async () => {
       const {
         id,
-        LeaveStatus,
+        // LeaveStatus,
         employeeId,
         startDateTime,
         startAbsentType,
         endDateTime,
         endAbsentType,
         policyName,
+        reason,
       } = leave;
 
       const leavePolicies = POLICIES.find(
@@ -61,7 +65,7 @@ const useUpdateLeaveStatus = ({
           updatedStatus: updatedStatus,
           policyName,
           deductedBalance,
-          rejectReason,
+          rejectReason: rejectedReason,
         });
         const { success, message } = res.data;
         if (!success) {
@@ -70,47 +74,57 @@ const useUpdateLeaveStatus = ({
         }
 
         setAllLeaves((prev) =>
-          prev.map((leave) =>
-            leave.id === id ? { ...leave, leaveStatus: updatedStatus } : leave
+          prev.map((l) =>
+            l.id === id ? { ...l, LeaveStatus: updatedStatus } : l
           )
         );
-        if (updatedStatus === LeaveStatus.Approved) {
-          // If Leave is approved then update the total Balance of the orgMember
-          setAssignMembers((prev: OrganisationMember[]) => {
-            return prev.map((member: OrganisationMember) => {
-              if (member.id === orgMemberId) {
-                // Update Total balance
-                member.totalBalances.map((leaveBalance: TotalBalance) =>
-                  leaveBalance.policyName === leaveType.policyName
-                    ? {
-                        ...leaveBalance,
-                        balance: leaveBalance.balance - deductedBalance,
-                      }
-                    : leaveBalance
-                );
-              }
-              return member;
-            });
-          });
-        }
 
-        // Update the leave status of the leave
-        setAssignMembers((prev: OrganisationMember[]) => {
-          return prev.map((member: OrganisationMember) => {
-            if (member.id === orgMemberId) {
-              // Update Total balance
-              member.leaves.map((appliedLeave: Leaves) =>
+        setAssignMembers((prev) =>
+          prev.map((emp) => {
+            if (emp.id !== employeeId) return emp;
+
+            return {
+              ...emp,
+              leaveBalances:
+                updatedStatus === LeaveStatus.APPROVED
+                  ? emp.leaveBalances.map((b) =>
+                      b.policyName === leavePolicies.policyName &&
+                      b.employeeId === employeeId
+                        ? { ...b, balance: b.balance - deductedBalance }
+                        : b
+                    )
+                  : emp.leaveBalances,
+
+              leavesApplied: emp.leavesApplied.map((appliedLeave) =>
                 appliedLeave.id === id
-                  ? {
-                      ...appliedLeave,
-                      leaveStatus: updatedStatus,
-                    }
+                  ? { ...appliedLeave, LeaveStatus: updatedStatus }
                   : appliedLeave
-              );
-            }
-            return member;
-          });
-        });
+              ),
+            };
+          })
+        );
+        // updated Leave Status in Global employee state
+        const updatedEmployees = employees.map((emp) =>
+          emp.id === employeeId
+            ? {
+                ...emp,
+                leavesApplied: emp.leavesApplied.map((leave) =>
+                  leave.id === id
+                    ? {
+                        ...leave,
+                        LeaveStatus: updatedStatus,
+                        ...(updatedStatus === LeaveStatus.REJECTED && {
+                          rejectReason: rejectedReason,
+                        }),
+                      }
+                    : leave
+                ),
+              }
+            : emp
+        );
+        console.log(updatedEmployees);
+        // set to global employee state
+        dispatch(setEmployee(updatedEmployees));
         successToast(message);
       } catch (error: any) {
         console.error(error.message);

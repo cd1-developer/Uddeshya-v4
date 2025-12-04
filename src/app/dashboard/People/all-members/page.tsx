@@ -80,7 +80,7 @@ const Members = () => {
     (state: RootState) => state.dataSlice.userInfo
   );
   const currentEmp = currentEmployees.find(
-    (emp) => emp.user.id === currentUser.id
+    (emp) => emp.userId === currentUser.id
   );
   // console.log(currentEmp);
 
@@ -184,14 +184,20 @@ const Members = () => {
             Bulk Transition
           </div>
           <div className=" adding-person">
-            {currentEmp?.role === Role.ADMIN && (
+            {/* {currentEmp?.role === Role.ADMIN && (
               <Button
                 onClick={() => setIsOpen(true)}
                 className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
               >
                 <span>Add new person</span>
               </Button>
-            )}
+            )} */}
+            <Button
+              onClick={() => setIsOpen(true)}
+              className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
+            >
+              <span>Add new person</span>
+            </Button>
 
             <DialogCompo
               isOpen={isOpen}

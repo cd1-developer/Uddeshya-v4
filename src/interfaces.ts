@@ -32,7 +32,6 @@ export interface EmployeeLeaveBalance {
   balance: number;
   lastUpdated: Date;
   policyName: string;
-
   // Relation
   employee: Employee;
 }
@@ -42,7 +41,6 @@ export interface EmployeeLatestIncrement {
   policyName: string;
   dateOfIncrement: Date;
   employee_id: string;
-
   // Relation
   employee: Employee;
 }

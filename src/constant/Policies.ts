@@ -5,7 +5,7 @@ const POLICIES: leavePolicy[] = [
   {
     id: "1",
     policyName: "Earned Leave",
-    description: "xyz",
+    description: "XYZ",
     accural: 1,
     accuralFrequency: AccuralFrequency.Monthly,
     sandwich: true,

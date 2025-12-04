@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   Form,
   FormItem,
@@ -27,7 +27,13 @@ import dayjs from "dayjs";
 import { isSameDay } from "date-fns";
 import z, { keyof } from "zod";
 import { getBalance } from "../../../../../../helper/getBalance";
-import { AbsentType, Employee, LeaveStatus, leavePolicy } from "@/interfaces";
+import {
+  AbsentType,
+  Employee,
+  LeaveStatus,
+  leavePolicy,
+  EmployeeStatus,
+} from "@/interfaces";
 import axios from "axios";
 import { successToast } from "@/components/custom/SuccessToast";
 import { ErrorToast } from "@/components/custom/ErrorToast";
@@ -155,6 +161,11 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
     return "Select absent type";
   };
 
+  const employee = employees.find(
+    (emp) => emp.userId === currentUser.id
+  ) as Employee;
+  console.log(employee);
+
   const onSubmit = async (leaveData: CreateLeaveFormValues) => {
     let { startAbsentType, endAbsentType } = leaveData;
 
@@ -166,9 +177,23 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
       (emp) => emp.userId === currentUser.id
     ) as Employee;
 
+    if (employee.status === EmployeeStatus.Probation) {
+      ErrorToast("Oops! You're still on probation.");
+      return;
+    }
+    // const casualLeaveBalance = (employee?.leaveBalances.find(balance => balance.policyName === ))
+    const currentPolicy = POLICIES.find(
+      (policy) => policy.policyName === leaveData.policyName
+    );
+
     const currentBal = (employee?.leaveBalances.find(
       (leaveBalanceInfo) => leaveBalanceInfo.policyName === leaveData.policyName
     )?.balance || 0) as number;
+
+    if (currentPolicy?.maxApply && deductedBalance > currentPolicy.maxApply) {
+      ErrorToast(`You can't apply concurrent ${currentPolicy.maxApply} leaves`);
+      return;
+    }
 
     if (deductedBalance > currentBal) {
       ErrorToast(`Insufficiant leave balance ${currentBal}`);

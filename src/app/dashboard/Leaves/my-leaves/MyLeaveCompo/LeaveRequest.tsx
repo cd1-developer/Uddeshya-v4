@@ -14,7 +14,7 @@ import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
 import { useDispatch } from "react-redux";
 import { setLeave } from "@/libs/dataslice";
-import { AbsentType, Leave, LeaveStatus, Role } from "@/interfaces";
+import { AbsentType, Employee, Leave, LeaveStatus, Role } from "@/interfaces";
 import POLICIES from "@/constant/Policies";
 
 import {
@@ -27,8 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
-import { CurrencyIcon } from "lucide-react";
-import { emit } from "process";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
@@ -39,14 +37,13 @@ const LeaveRequest = () => {
     (state: RootState) => state.dataSlice.userInfo.id
   );
 
-  const employeeId = employees.find((emp) => emp.userId === currentUserId)?.id;
-
+  const employee = employees.find(
+    (emp) => emp.userId === currentUserId
+  ) as Employee;
   // const reportManagerId = useSelector(
   //   (state: RootState) => state.dataSlice.userInfo.employee?.reportManagerId
   // );
-  const reportManagerId = employees.find(
-    (emp) => emp.userId === employeeId
-  )?.reportManagerId;
+  const reportManagerId = employee?.reportManagerId;
 
   // console.log(reportManagerId);
   //   const { orgMembers, orgMemberId, reportManagerId, loading } = useSelector(
@@ -67,7 +64,7 @@ const LeaveRequest = () => {
     resolver: zodResolver(LeaveSchema),
     mode: "onBlur",
     defaultValues: {
-      employeeId,
+      employeeId: employee?.id as string,
       policyName: "",
       startDateTime: undefined,
       endDateTime: undefined,

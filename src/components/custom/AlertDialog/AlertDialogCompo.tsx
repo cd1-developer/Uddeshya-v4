@@ -19,6 +19,7 @@ interface AlertDialogProp {
   onClickHandler: () => void;
   actionTitle: string;
   loader: string;
+  children?: React.ReactNode;
 }
 
 const AlertDialogCompo = ({
@@ -28,6 +29,7 @@ const AlertDialogCompo = ({
   onClickHandler,
   actionTitle,
   loader,
+  children,
 }: AlertDialogProp) => {
   return (
     <div>
@@ -40,6 +42,7 @@ const AlertDialogCompo = ({
             </AlertDialogTitle>
             <AlertDialogDescription className="font-gilRegular">
               {description}
+              {children}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

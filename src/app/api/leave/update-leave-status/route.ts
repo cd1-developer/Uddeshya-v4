@@ -125,37 +125,34 @@ export const POST = async (req: NextRequest) => {
       },
       data: {
         LeaveStatus: updatedStatus,
-        ...(updatedStatus === "REJECTED" && { rejectReason: rejectReason }),
+        ...(updatedStatus === LeaveStatus.REJECTED && {
+          rejectReason: rejectReason,
+        }),
       },
     });
     console.log(`Leave ${leaveId} status updated to ${updatedStatus} in DB.`);
 
-    if (updatedStatus === LeaveStatus.REJECTED) {
-      return NextResponse.json({
-        success: true,
-        message: "Leave rejected successfully",
-      });
-    }
+    if (updatedStatus === LeaveStatus.APPROVED) {
+      // 4. If approved, deduct the balance from the employee's total leave balance.
+      const { success, message } = await updateTotalBalance(
+        employeeId,
+        deductedBalance,
+        policyName
+      );
 
-    // 4. If approved, deduct the balance from the employee's total leave balance.
-    const { success, message } = await updateTotalBalance(
-      employeeId,
-      deductedBalance,
-      policyName
-    );
-
-    // If the database update for balance fails, return an error.
-    if (!success) {
-      // Note: At this point, the leave status is updated, but balance deduction failed.
-      // This might require a manual correction or a more complex rollback mechanism.
-      return NextResponse.json({ success, message }, { status: 500 });
+      // If the database update for balance fails, return an error.
+      if (!success) {
+        // Note: At this point, the leave status is updated, but balance deduction failed.
+        // This might require a manual correction or a more complex rollback mechanism.
+        return NextResponse.json({ success, message }, { status: 500 });
+      }
     }
 
     // 5. Update the Redis cache to reflect the changes.
     await updateRedisCache({
       employeeId,
       leaveId,
-      LeaveStatus: updatedStatus,
+      leaveStatus: updatedStatus,
       deductedBalance,
       policyName,
       rejectReason,
@@ -165,7 +162,10 @@ export const POST = async (req: NextRequest) => {
 
     return NextResponse.json({
       success: true,
-      message: "Leave approved successfully",
+      message:
+        updatedStatus === LeaveStatus.APPROVED
+          ? "Leave Approved Successfully"
+          : "Leave Rejected Successfully",
     });
   } catch (error: any) {
     console.error("Update Leave API Error:", error);
@@ -179,7 +179,7 @@ export const POST = async (req: NextRequest) => {
 type updateRedisCacheType = {
   employeeId: string;
   leaveId: string;
-  LeaveStatus: LeaveStatus;
+  leaveStatus: LeaveStatus;
   deductedBalance?: number;
   policyName: string;
   rejectReason?: string;
@@ -194,7 +194,7 @@ type updateRedisCacheType = {
 const updateRedisCache = async ({
   employeeId,
   leaveId,
-  LeaveStatus,
+  leaveStatus,
   deductedBalance,
   policyName,
   rejectReason,
@@ -209,16 +209,37 @@ const updateRedisCache = async ({
       if (leave.id === leaveId) {
         return {
           ...leave,
-          LeaveStatus,
-          ...(LeaveStatus === "REJECTED" && { rejectReason: rejectReason }),
+          LeaveStatus: leaveStatus,
+          ...(leaveStatus === LeaveStatus.REJECTED && {
+            rejectReason: rejectReason,
+          }),
         };
       }
       return leave;
     });
 
+    let updatedEmployees = employees.map((emp) => {
+      if (emp.id === employeeId) {
+        return {
+          ...emp,
+          leavesApplied: emp.leavesApplied.map((leave) =>
+            leave.id === leaveId
+              ? {
+                  ...leave,
+                  LeaveStatus: leaveStatus,
+                  ...(leaveStatus === LeaveStatus.REJECTED && {
+                    rejectReason: rejectReason,
+                  }),
+                }
+              : leave
+          ),
+        };
+      }
+      return emp;
+    });
     // If the leave was approved, also update the employee's leave balance in the cached employees array.
-    if (LeaveStatus === "APPROVED") {
-      const updatedEmployees = employees.map((emp) => {
+    if (leaveStatus === LeaveStatus.APPROVED) {
+      updatedEmployees = employees.map((emp: Employee) => {
         if (emp.id === employeeId) {
           return {
             ...emp,
@@ -236,9 +257,9 @@ const updateRedisCache = async ({
         }
         return emp;
       });
-      await redis.set("Employees", updatedEmployees);
-      console.log("Redis cache updated for: Employees");
     }
+    await redis.set("Employees", updatedEmployees);
+    console.log("Redis cache updated for: Employees");
 
     // Save the updated leaves array back to Redis.
     await redis.set("leaves", updatedLeaves);
