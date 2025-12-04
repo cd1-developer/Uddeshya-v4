@@ -3,14 +3,17 @@ import { NextResponse } from "next/server";
 import { getYear, format, parse } from "date-fns";
 import POLICIES from "@/constant/Policies";
 import { leavePolicy, AccuralFrequency } from "@/interfaces";
-import { EmployeeLeaveBalance } from "@prisma/client";
+import { EmployeeLeaveBalance, Role } from "@prisma/client";
+import { getEmployees } from "../../../../../helper/getEmployees";
+import { RedisProvider } from "@/libs/RedisProvider";
 
 export const POST = async () => {
   try {
     // 🗓️ Current date setup
     const currentDate = new Date();
     const currentYear = getYear(currentDate);
-    const formattedCurrentDate = "1-October-2025"; //formatDate(currentDate, currentYear); // e.g. "11-November-2025"
+    const formattedCurrentDate = "1-November-2025"; //formatDate(currentDate, currentYear); // e.g. "11-November-2025"
+    const redis = await RedisProvider.getInstance();
 
     // 🧮 Generate monthlyPeriods and qaurterPeriods
     const monthlyPeriod = months(currentYear).map(
@@ -31,22 +34,10 @@ export const POST = async () => {
     }
 
     // 👥 Fetch organisation members (excluding admins)
-    const employees = await prisma.employee.findMany({
-      where: {
-        role: { not: "ADMIN" },
-      },
-      include: {
-        EmployeeLatestIncrement: true,
-        leaveBalances: true,
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const employees = ((await getEmployees()) || []).filter(
+      (emp) => emp.role !== Role.ADMIN
+    );
+    const creditBalanceTask = [];
 
     // ⚙️ Iterate members sequentially for reliable async behavior
     for (const member of employees) {
@@ -58,11 +49,13 @@ export const POST = async () => {
       // If not leave creadited to orgMember then credit the leave
 
       if (latestIncrements.length === 0) {
-        await creditLeaveBalance(
-          monthlyLeaveTypes,
-          member.id,
-          member.leaveBalances,
-          formattedCurrentDate
+        creditBalanceTask.push(
+          creditLeaveBalance(
+            monthlyLeaveTypes,
+            member.id,
+            member.leaveBalances,
+            formattedCurrentDate
+          )
         );
       } else {
         let alreadyCredited = false;
@@ -121,24 +114,29 @@ export const POST = async () => {
         }
 
         if (!alreadyCredited) {
-          await creditLeaveBalance(
-            quarterLeaves,
-            member.id,
-            member.leaveBalances,
-            formattedCurrentDate
+          creditBalanceTask.push(
+            creditLeaveBalance(
+              quarterLeaves,
+              member.id,
+              member.leaveBalances,
+              formattedCurrentDate
+            )
           );
         }
       }
-
-      return NextResponse.json({
-        success: true,
-        message: "Quarterly and Monthly leaves updated successfully",
-      });
     }
+
+    // make Parrel api calling after that i will clear the redis state
+    await Promise.all(creditBalanceTask);
+
+    await redis.del("Employees");
+    await redis.del("leaves");
 
     return NextResponse.json({
       success: true,
-      message: "Monthly leaves updated successfully",
+      message: isQuarterPeriod
+        ? "Quarterly and Monthly leaves updated successfully"
+        : "Monthly leaves updated successfully",
     });
   } catch (error: any) {
     console.error(error);
