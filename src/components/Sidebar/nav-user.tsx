@@ -90,12 +90,6 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
 
-            <DropdownMenuGroup>
-              <DropdownMenuItem className="font-gilMedium">
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="font-gilMedium"

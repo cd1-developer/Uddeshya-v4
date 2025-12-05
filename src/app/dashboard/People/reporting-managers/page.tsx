@@ -40,20 +40,20 @@ const ReportManager = () => {
   const dispatch = useDispatch();
   const [input, setInput] = useState("");
   const [isRemoving, setIsRemoving] = useState(false);
-  const [searchTeamMember, setSearchTeamMember] = useState<string>("");
   const [selectedValue, setSelectedValue] = useState<string>(OPTIONS[0]);
   const employees = useSelector((state: RootState) => state.dataSlice.employee);
-
+  const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
   const reportManager = employees.filter(
     (emp: Employee) => emp.role === Role.REPORT_MANAGER
   );
-  console.log(reportManager);
+
+  const roleOfCurrentUser = employees.find(
+    (emp: Employee) => emp.userId === userInfo.id
+  )?.role;
 
   function handleDropdown(value: string) {
     setSelectedValue(value);
   }
-
-  console.log(reportManager);
 
   const filterReportManagers = useMemo(() => {
     let searchedReportManager = [] as Employee[];
@@ -85,13 +85,6 @@ const ReportManager = () => {
     // );
     return searchedReportManager;
   }, [selectedValue, input, employees]);
-
-  // console.log("Managers:", filterReportManagers);
-  console.log(
-    "Members:",
-    filterReportManagers.map((mem) => mem.assignMembers)
-  );
-  // console.log("Members:", manager.assignMembers);
 
   const handleDeleteMember = (teamMemberId: string) => {
     try {
@@ -287,26 +280,27 @@ const ReportManager = () => {
                                   {teamMember?.user?.email || "No email"}
                                 </h2>
                               </div>
-
-                              <div className="cursor-pointer ml-auto">
-                                <AlertDialogCompo
-                                  triggerButton={<DeleteButton />}
-                                  isDisabled={isRemoving}
-                                  onClickHandler={() =>
-                                    handleDeleteMember(teamMember.id)
-                                  }
-                                  description={
-                                    <Description
-                                      title={
-                                        teamMember?.user?.username ||
-                                        "Unknown User"
-                                      }
-                                    />
-                                  }
-                                  actionTitle="Remove Member"
-                                  loader="Removing..."
-                                />
-                              </div>
+                              {roleOfCurrentUser === Role.ADMIN && (
+                                <div className="cursor-pointer ml-auto">
+                                  <AlertDialogCompo
+                                    triggerButton={<DeleteButton />}
+                                    isDisabled={isRemoving}
+                                    onClickHandler={() =>
+                                      handleDeleteMember(teamMember.id)
+                                    }
+                                    description={
+                                      <Description
+                                        title={
+                                          teamMember?.user?.username ||
+                                          "Unknown User"
+                                        }
+                                      />
+                                    }
+                                    actionTitle="Remove Member"
+                                    loader="Removing..."
+                                  />
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>

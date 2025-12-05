@@ -173,18 +173,21 @@ const Members = () => {
   return (
     <div className="transition-all duration-300">
       <header className="sm:absolute sm:right-3 sm:top-19 block">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 mr-5 cursor-pointer org-chart">
-            <i>
-              <Network className="text-sky-700" size={15} strokeWidth={1.8} />
-            </i>
-            <span className="text-sky-700 text-sm font-gilBold">Org Chart</span>
-          </div>
-          <div className="flex items-center gap-2 font-gilBold border-[1.5px] border-black rounded-sm px-4 py-2 cursor-pointer text-sm transition">
-            Bulk Transition
-          </div>
-          <div className=" adding-person">
-            {/* {currentEmp?.role === Role.ADMIN && (
+        {currentEmp?.role === Role.ADMIN && (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mr-5 cursor-pointer org-chart">
+              <i>
+                <Network className="text-sky-700" size={15} strokeWidth={1.8} />
+              </i>
+              <span className="text-sky-700 text-sm font-gilBold">
+                Org Chart
+              </span>
+            </div>
+            <div className="flex items-center gap-2 font-gilBold border-[1.5px] border-black rounded-sm px-4 py-2 cursor-pointer text-sm transition">
+              Bulk Transition
+            </div>
+            <div className=" adding-person">
+              {/* {currentEmp?.role === Role.ADMIN && (
               <Button
                 onClick={() => setIsOpen(true)}
                 className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
@@ -192,220 +195,225 @@ const Members = () => {
                 <span>Add new person</span>
               </Button>
             )} */}
-            <Button
-              onClick={() => setIsOpen(true)}
-              className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
-            >
-              <span>Add new person</span>
-            </Button>
+              <Button
+                onClick={() => setIsOpen(true)}
+                className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
+              >
+                <span>Add new person</span>
+              </Button>
 
-            <DialogCompo
-              isOpen={isOpen}
-              onOpenChange={() => setIsOpen(false)}
-              title="Add new person"
-            >
-              <Form {...form}>
-                <form
-                  className="space-y-4"
-                  onSubmit={form.handleSubmit(onSubmit)}
-                >
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">
-                          Username
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter member's username"
-                            className="w-full border-[rgba(0,0,0,0.3)] border-1 font-gilMedium"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">
-                          Email
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter member's email"
-                            className="w-full border-1 border-[rgba(0,0,0,0.3)] font-gilMedium"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">
-                          Gender
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl className="w-full">
-                            <SelectTrigger className="font-gilMedium bg-white py-5 border-[rgba(0,0,0,0.3)]">
-                              <SelectValue placeholder="Select the gender" />
-                            </SelectTrigger>
+              <DialogCompo
+                isOpen={isOpen}
+                onOpenChange={() => setIsOpen(false)}
+                title="Add new person"
+              >
+                <Form {...form}>
+                  <form
+                    className="space-y-4"
+                    onSubmit={form.handleSubmit(onSubmit)}
+                  >
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            Username
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter member's username"
+                              className="w-full border-[rgba(0,0,0,0.3)] border-1 font-gilMedium"
+                              {...field}
+                            />
                           </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-                          <SelectContent className="">
-                            <SelectGroup className="font-gilRegular">
-                              <SelectItem value="Male">Male</SelectItem>
-                              <SelectItem value="Female">Female</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">Role</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl className="w-full">
-                            <SelectTrigger className="font-gilMedium bg-white py-5 border-[rgba(0,0,0,0.3)]">
-                              <SelectValue placeholder="Choose the role" />
-                            </SelectTrigger>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            Email
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter member's email"
+                              className="w-full border-1 border-[rgba(0,0,0,0.3)] font-gilMedium"
+                              {...field}
+                            />
                           </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-                          <SelectContent>
-                            <SelectGroup className="font-gilRegular">
-                              <SelectItem value={Role.REPORT_MANAGER}>
-                                Report Manager
-                              </SelectItem>
-                              <SelectItem value={Role.MEMBER}>
-                                Member
-                              </SelectItem>
-                              <SelectItem value={Role.ADMIN}>Admin</SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            Gender
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl className="w-full">
+                              <SelectTrigger className="font-gilMedium bg-white py-5 border-[rgba(0,0,0,0.3)]">
+                                <SelectValue placeholder="Select the gender" />
+                              </SelectTrigger>
+                            </FormControl>
 
-                  <FormField
-                    control={form.control}
-                    name="dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">
-                          Date of birth
-                        </FormLabel>
-                        <FormControl>
-                          <div className="w-full">
-                            <DatePicker
-                              value={field.value}
-                              onChange={field.onChange}
-                              className="w-full"
-                            />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                            <SelectContent className="">
+                              <SelectGroup className="font-gilRegular">
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="joiningDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">
-                          Joining Date
-                        </FormLabel>
-                        <FormControl>
-                          <div className="w-full">
-                            <DatePicker
-                              value={
-                                typeof field.value === "string"
-                                  ? new Date(field.value)
-                                  : field.value
-                              }
-                              onChange={field.onChange}
-                              className="w-full"
-                            />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            Role
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl className="w-full">
+                              <SelectTrigger className="font-gilMedium bg-white py-5 border-[rgba(0,0,0,0.3)]">
+                                <SelectValue placeholder="Choose the role" />
+                              </SelectTrigger>
+                            </FormControl>
 
-                  <FormField
-                    control={form.control}
-                    name="probationEnd"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-gilSemiBold">
-                          probition End
-                        </FormLabel>
-                        <FormControl>
-                          <div className="w-full opacity-70 pointer-events-none">
-                            <DatePicker
-                              value={
-                                typeof field.value === "string"
-                                  ? new Date(field.value)
-                                  : field.value
-                              }
-                              onChange={field.onChange}
-                              className="w-full"
-                            />
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                            <SelectContent>
+                              <SelectGroup className="font-gilRegular">
+                                <SelectItem value={Role.REPORT_MANAGER}>
+                                  Report Manager
+                                </SelectItem>
+                                <SelectItem value={Role.MEMBER}>
+                                  Member
+                                </SelectItem>
+                                <SelectItem value={Role.ADMIN}>
+                                  Admin
+                                </SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
 
-                  <div className="flex items-center justify-end gap-6 btn">
-                    <Button
-                      type="button"
-                      onClick={(e) => {
-                        setIsOpen(false);
-                        form.reset();
-                      }}
-                      className="text-black bg-white cursor-pointer border-1 border-[rgba(0,0,0,0.3)] outline-1 px-4 py-1 text-sm font-gilSemiBold rounded-sm hover:text-white"
-                    >
-                      Cancel
-                    </Button>
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            Date of birth
+                          </FormLabel>
+                          <FormControl>
+                            <div className="w-full">
+                              <DatePicker
+                                value={field.value}
+                                onChange={field.onChange}
+                                className="w-full"
+                              />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="add">
+                    <FormField
+                      control={form.control}
+                      name="joiningDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            Joining Date
+                          </FormLabel>
+                          <FormControl>
+                            <div className="w-full">
+                              <DatePicker
+                                value={
+                                  typeof field.value === "string"
+                                    ? new Date(field.value)
+                                    : field.value
+                                }
+                                onChange={field.onChange}
+                                className="w-full"
+                              />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="probationEnd"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-gilSemiBold">
+                            probition End
+                          </FormLabel>
+                          <FormControl>
+                            <div className="w-full opacity-70 pointer-events-none">
+                              <DatePicker
+                                value={
+                                  typeof field.value === "string"
+                                    ? new Date(field.value)
+                                    : field.value
+                                }
+                                onChange={field.onChange}
+                                className="w-full"
+                              />
+                            </div>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-center justify-end gap-6 btn">
                       <Button
-                        type="submit"
-                        className="flex items-center gap-3 px-4 py-1 text-sm font-gilSemiBold rounded-sm text-white"
-                        disabled={isPending}
+                        type="button"
+                        onClick={(e) => {
+                          setIsOpen(false);
+                          form.reset();
+                        }}
+                        className="text-black bg-white cursor-pointer border-1 border-[rgba(0,0,0,0.3)] outline-1 px-4 py-1 text-sm font-gilSemiBold rounded-sm hover:text-white"
                       >
-                        {isPending ? "Adding..." : "Add"}
+                        Cancel
                       </Button>
+
+                      <div className="add">
+                        <Button
+                          type="submit"
+                          className="flex items-center gap-3 px-4 py-1 text-sm font-gilSemiBold rounded-sm text-white"
+                          disabled={isPending}
+                        >
+                          {isPending ? "Adding..." : "Add"}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </form>
-              </Form>
-            </DialogCompo>
+                  </form>
+                </Form>
+              </DialogCompo>
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       <div className="main">

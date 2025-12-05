@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/sidebar";
 import useCurrentUser from "@/hooks/userData";
 import { TeamSwitcher } from "./team-switcher";
-import { title } from "process";
 
 // This is sample data.
 export const sidebarData = {
@@ -72,12 +71,12 @@ export const sidebarData = {
       url: "/dashboard/profile",
       icon: User2Icon,
     },
-    {
-      title: "My Approvals",
-      compo: "approvals",
-      url: "/dashboard/approvals",
-      icon: StampIcon,
-    },
+    // {
+    //   title: "My Approvals",
+    //   compo: "approvals",
+    //   url: "/dashboard/approvals",
+    //   icon: StampIcon,
+    // },
     {
       title: "People",
       compo: "people",
