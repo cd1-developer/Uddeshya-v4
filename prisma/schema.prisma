@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  username    String
+  email       String    @unique
+  password    String?   // User creates password later on first login
+  dateOfBirth DateTime?
+  gender      Gender?
+  createdAt   DateTime  @default(now())
+  employee    Employee?
+}
+
+model Employee {
+  id               String                 @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String                 @unique @db.ObjectId
+  role             Role
+  reportManagerId  String?                @db.ObjectId
+  joiningDate      DateTime?
+  probationEnd     DateTime
+  status           EmployeeStatus
+  
+  user             User                   @relation(fields: [userId], references: [id])
+  reportManager    Employee?              @relation("AssignMembers", fields: [reportManagerId], references: [id],onDelete: NoAction, onUpdate: NoAction)
+  assignMembers    Employee[]            @relation("AssignMembers")
+  leaveBalances    EmployeeLeaveBalance[] @relation("EmployeeLeaveBalance")
+  EmployeeLatestIncrement EmployeeLatestIncrement[] @relation("LatestIncrement")
+  leavesApplied    Leave[]                @relation("LeaveApplicant")
+  leavesActioned   Leave[]                @relation("LeaveApprover")
+}
+
+
+model EmployeeLeaveBalance {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  employeeId     String @db.ObjectId
+  balance        Int         @default(0)
+  lastUpdated    DateTime    @default(now())
+  employee       Employee    @relation("EmployeeLeaveBalance",fields: [employeeId], references: [id])
+  policyName     String
+}
+
+model EmployeeLatestIncrement {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  policyName String
+  dateOfIncrement DateTime
+  employee_id String @unique @db.ObjectId
+  employee Employee @relation("LatestIncrement",references: [id],fields: [employee_id])
+}
+
+model Leave {
+  id                   String      @id @default(auto()) @map("_id") @db.ObjectId
+  employeeId           String      @db.ObjectId
+  policyName           String
+  startDateTime        DateTime
+  startAbsentType      AbsentType
+  endDateTime          DateTime?
+  endAbsentType        AbsentType?
+  LeaveStatus          LeaveStatus @default(PENDING)
+  reason               String?
+  rejectReason         String?
+  actionByEmployeeId   String? @db.ObjectId
+  actionDate           DateTime?   @default(now())
+  applicant    Employee @relation("LeaveApplicant", fields: [employeeId], references: [id])
+  actionBy     Employee? @relation("LeaveApprover", fields: [actionByEmployeeId], references: [id])
+}
+
+model Holiday {
+  id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  holidayName  String
+  holidayDate  DateTime @unique
+}
+
+
+enum Gender {
+  Male
+  Female
+}
+
+enum Role {
+  ADMIN
+  SUB_ADMIN
+  REPORT_MANAGER
+  MEMBER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AbsentType {
+  FULL_DAY
+  FIRST_HALF
+  SECOND_HALF
+}
+
+enum EmployeeStatus {
+  Active
+  InActive
+  Probation
+}
