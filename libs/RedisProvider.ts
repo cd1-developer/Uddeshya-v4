@@ -18,8 +18,8 @@ export class RedisProvider {
     return RedisProvider.instance;
   }
 
-  async set<T>(key: string, value: T, ttl = 600) {
-    await this.client.set(key, value, { ex: ttl });
+  async set<T>(key: string, value: T) {
+    await this.client.set(key, value);
   }
 
   async get<T>(key: string): Promise<T | null> {
