@@ -98,12 +98,8 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
               <div className="text-right">
                 <button
                   type="button"
-<<<<<<< HEAD
                   className="text-sm text-sky-700 font-gilRegular hover:text-sky-800 transition-colors cursor-pointer"
                   onClick={() => setAuthStep("forgot")}
-=======
-                  className="text-xs md:text-sm text-sky-700 font-gilRegular hover:text-sky-800 transition-colors cursor-pointer"
->>>>>>> 62f3fd9bff5a3aec3306cc0d53a831eee73584fb
                 >
                   Forgot password?
                 </button>

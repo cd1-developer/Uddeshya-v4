@@ -20,31 +20,34 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { set, z } from "zod";
 import axios from "axios";
 import { toast } from "sonner";
 
 import { successToast } from "@/components/custom/SuccessToast";
 import { ErrorToast } from "@/components/custom/ErrorToast";
+import { useSendOtp } from "@/hooks/useSendOtp";
 
 interface OTPVerificationProps {
   email: string;
-  userId: string;
   onBack: () => void;
   title: string;
   description: string;
+  setAuthStep: React.Dispatch<
+    React.SetStateAction<"email" | "login" | "create" | "forgot" | "otp">
+  >;
 }
 
 export function OTPVerification({
   email,
-  userId,
   onBack,
   title,
   description,
+  setAuthStep,
 }: OTPVerificationProps) {
   const [isPending, startTransition] = useTransition();
-  const [isResending, startResending] = useTransition();
-  const [timeLeft, setTimeLeft] = useState(30);
+  const { isPending: isResending, sendOtp } = useSendOtp();
+  const [timeLeft, setTimeLeft] = useState(60);
 
   const FormSchema = z.object({
     code: z.string().min(6, {
@@ -64,38 +67,32 @@ export function OTPVerification({
     }
   }, [timeLeft]);
 
-  function handleResendOtp() {
-    startResending(async () => {
-      try {
-        const res = await axios.post("/api/otp/send-otp", {
-          subject: "Warr Nutritions Login OTP",
-          notifer_email: email,
-        });
-        const { success, message } = res.data;
+  async function handleResendOtp() {
+    try {
+      const response = await sendOtp(email);
 
-        if (success) {
-          toast.success(message, {
-            icon: <CheckCircle className="w-5 h-5 text-green-600" />,
-            style: { border: "1px solid #22C55E", color: "#16A34A" },
-          });
-        } else {
-          toast.error(message || "Failed to resend OTP", {
-            icon: <XCircle className="w-5 h-5 text-red-600" />,
-            style: { border: "1px solid #F87171", color: "#B91C1C" },
-          });
-        }
-      } catch (error: any) {
-        console.log("Error resending OTP:", error);
-        toast.error(
-          error.response?.data?.message ||
-            "Something went wrong while resending OTP",
-          {
-            icon: <XCircle className="w-5 h-5 text-red-600" />,
-            style: { border: "1px solid #F87171", color: "#B91C1C" },
-          }
-        );
+      const { success, message } = response;
+
+      // ❌ Failed to send OTP
+      if (!success) {
+        ErrorToast(message || "Unable to resend OTP. Please try again.");
+        return;
       }
-    });
+
+      // ✅ OTP resent successfully
+      successToast(message || "OTP resent successfully!");
+
+      // Reset countdown timer
+      setTimeLeft(60);
+    } catch (error: any) {
+      // 🔥 Handle unexpected errors (network, runtime, etc.)
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong while resending OTP.";
+
+      ErrorToast(msg);
+    }
   }
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
@@ -103,8 +100,8 @@ export function OTPVerification({
 
     startTransition(async () => {
       try {
-        const res = await axios.post("/api/otp/verify-otp", {
-          userId: userId,
+        const res = await axios.post("/api/auth/verifyOtp", {
+          userId: localStorage.getItem("userId"),
           code,
         });
 
@@ -116,6 +113,7 @@ export function OTPVerification({
         }
 
         localStorage.setItem("userId", "");
+        setAuthStep("create");
 
         successToast(message);
       } catch (error: any) {
@@ -129,15 +127,17 @@ export function OTPVerification({
   }
 
   return (
-    <div className="flex items-center justify-center p-4">
+    <div className="flex items-center justify-center">
       <div>
         {/* Header */}
         <div className="text-center space-y-4 mb-6">
-          <h2 className="text-2xl font-bold text-[#D7223B]">{title}</h2>
+          <h2 className="text-2xl font-bold text-[#1D4ED8]">{title}</h2>
           <p className="text-gray-600">{description}</p>
           <p className="text-sm text-gray-500">
             Code sent to:{" "}
-            <span className="font-medium text-rose-800">{email}</span>
+            <span className="text-sm font-bold bg-gradient-to-r from-sky-700 to-sky-900 bg-clip-text text-transparent">
+              {email}
+            </span>
           </p>
         </div>
 
@@ -151,7 +151,9 @@ export function OTPVerification({
                 name="code"
                 render={({ field }) => (
                   <FormItem className="flex flex-col items-center gap-2">
-                    <FormLabel>One-Time Password</FormLabel>
+                    <FormLabel className="text-blue-900">
+                      One-Time Password
+                    </FormLabel>
                     <FormControl>
                       <InputOTP maxLength={6} {...field}>
                         <InputOTPGroup>
@@ -164,8 +166,8 @@ export function OTPVerification({
                         </InputOTPGroup>
                       </InputOTP>
                     </FormControl>
-                    <FormDescription>
-                      Please enter the one-time password sent to your phone.
+                    <FormDescription className="text-gray-500">
+                      Enter the 6-digit verification code sent to your email.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -177,12 +179,14 @@ export function OTPVerification({
             <Button
               type="submit"
               disabled={isPending}
-              className="w-full bg-gradient-to-br from-[#B50D27] to-[#DA203A] hover:bg-gradient-to-br hover:from-[#D63A4E] hover:to-[#EF5161] text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50"
+              className="
+              w-full h-10 font-gilRegular bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer
+            "
             >
               {isPending ? (
                 <div className="flex items-center justify-center space-x-2">
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Verifying...</span>
+                  <span>Verifying…</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">
@@ -194,13 +198,14 @@ export function OTPVerification({
 
             {/* Resend Code */}
             <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
-                Didn&apos;t receive the code?
-              </p>
+              <p className="text-sm text-gray-600">Didn't receive the code?</p>
+
               {timeLeft > 0 ? (
                 <p className="text-sm text-gray-500">
-                  Resend code in{" "}
-                  <span className="font-medium text-rose-800">{timeLeft}s</span>
+                  Resend in{" "}
+                  <span className="font-semibold bg-gradient-to-r from-sky-700 to-sky-900 bg-clip-text text-transparent">
+                    {timeLeft}s
+                  </span>
                 </p>
               ) : (
                 <Button
@@ -208,7 +213,7 @@ export function OTPVerification({
                   variant="link"
                   onClick={handleResendOtp}
                   disabled={isResending}
-                  className="text-red-800 hp-0"
+                  className="bg-gradient-to-r from-sky-700 to-sky-900 bg-clip-text text-transparent hover:text-blue-900"
                 >
                   {isResending ? (
                     <div className="flex items-center space-x-1">
@@ -228,7 +233,7 @@ export function OTPVerification({
                 type="button"
                 variant="ghost"
                 onClick={onBack}
-                className="text-gray-600 hover:text-[#173C80] transition-colors"
+                className="text-gray-600 hover:text-blue-700 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Login

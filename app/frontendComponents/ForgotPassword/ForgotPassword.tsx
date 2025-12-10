@@ -1,4 +1,4 @@
-import React, { useTransition } from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,32 +10,58 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Mail } from "lucide-react";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { email, z } from "zod";
+import { ErrorToast } from "@/components/custom/ErrorToast";
+import { useSendOtp } from "@/hooks/useSendOtp";
+import { successToast } from "@/components/custom/SuccessToast";
 
 interface ForgotPasswordProp {
+  email: string;
   setAuthStep: React.Dispatch<
     React.SetStateAction<"email" | "login" | "create" | "forgot" | "otp">
   >;
 }
 
 const formSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
+  email: z.email("Enter a valid email address"),
 });
 
-function ForgotPassword({ setAuthStep }: ForgotPasswordProp) {
-  const [isPending, startTransition] = useTransition();
+function ForgotPassword({ email, setAuthStep }: ForgotPasswordProp) {
+  const { isPending, sendOtp } = useSendOtp();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {}
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      // Call the custom hook function
+      const { success, message } = await sendOtp(values.email);
+
+      // ❌ API-level failure
+      if (!success) {
+        ErrorToast(message || "OTP sending failed.");
+        return;
+      }
+
+      // ✅ Success
+      successToast(message || "OTP sent successfully");
+      setAuthStep("otp");
+    } catch (error: any) {
+      // 🔥 Network / unexpected crash
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unexpected error occurred while sending OTP.";
+
+      ErrorToast(msg);
+    }
+  }
 
   return (
     <div className="space-y-8 text-center">
@@ -58,6 +84,7 @@ function ForgotPassword({ setAuthStep }: ForgotPasswordProp) {
                       type="email"
                       placeholder="Enter your email"
                       {...field}
+                      value={email || field.value}
                       className="h-12 font-gilRegular rounded-xl border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
                     />
                   </FormControl>

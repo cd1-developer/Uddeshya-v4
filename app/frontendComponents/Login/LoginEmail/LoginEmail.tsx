@@ -25,6 +25,7 @@ import CreatePassword from "../LoginPassword/CreatePassword";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
 import ForgotPassword from "../../ForgotPassword/ForgotPassword";
+import { OTPVerification } from "../../OtpVerification/OtpVerification";
 
 const formSchema = z.object({
   email: z.email(),
@@ -100,8 +101,20 @@ export default function LoginEmail() {
 
   return (
     <AuthLayout
-      header="Welcome Back"
-      title="Sign in to your leave management account"
+      header={
+        authStep === "forgot"
+          ? "Forgot Password"
+          : authStep === "otp"
+          ? "Verify Your Email"
+          : "Welcome Back"
+      }
+      title={
+        authStep === "forgot"
+          ? "Enter your email and we’ll send you a verification code to reset your password."
+          : authStep === "otp"
+          ? "We’ve sent a 6-digit verification code to your email. Enter it below to continue."
+          : "Sign in to your leave management account"
+      }
       navigateTitle=""
       navigator=""
       navigateTo=""
@@ -163,7 +176,18 @@ export default function LoginEmail() {
       {authStep === "create" && (
         <CreatePassword email={userEmail} setAuthStep={setAuthStep} />
       )}
-      {authStep === "forgot" && <ForgotPassword setAuthStep={setAuthStep} />}
+      {authStep === "forgot" && (
+        <ForgotPassword email={userEmail} setAuthStep={setAuthStep} />
+      )}
+      {authStep === "otp" && (
+        <OTPVerification
+          email={userEmail}
+          setAuthStep={setAuthStep}
+          onBack={() => setAuthStep("forgot")}
+          title=""
+          description=""
+        />
+      )}
     </AuthLayout>
   );
 }
