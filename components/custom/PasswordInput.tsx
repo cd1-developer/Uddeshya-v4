@@ -18,7 +18,7 @@ export default function PasswordInput({
       <Input
         type={showPassword ? "text" : "password"}
         placeholder="•••••••••••••"
-        className={`pr-10  rounded-lg border-gray-300 bg-gray-50 focus:border-[#0047AB] focus:ring-[#0047AB]`}
+        className={`pr-10 text-xs rounded-lg border-gray-300 bg-gray-50 focus:border-[#0047AB] focus:ring-[#0047AB]`}
         {...props}
       />
       <button

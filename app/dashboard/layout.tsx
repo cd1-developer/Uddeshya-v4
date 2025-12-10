@@ -64,7 +64,7 @@ export default function ClientLayout({
   const renderIcon = () => {
     if (!currentPage?.icon) return null;
     const IconComponent = currentPage.icon as ComponentType<LucideProps>;
-    return <IconComponent size={19} strokeWidth={1.4} />;
+    return <IconComponent size={14} strokeWidth={1.5} />;
   };
 
   return (
@@ -74,7 +74,7 @@ export default function ClientLayout({
         <header className="flex items-center justify-between h-16 px-4 border-b">
           <SidebarTrigger className="-ml-1" />
           <div className="org-name">
-            <h2 className="font-gilBold uppercase flex items-center justify-center gap-2.5 text-sky-800 text-xl">
+            <h2 className="font-gilBold uppercase flex items-center justify-center gap-2.5 text-sky-800 text-md md:text-md">
               {/* <span className="mt-2 text-5xl">Akatsuki</span>
               <img src="/akatsuki.gif" className="w-34" alt="" /> */}
               {/* ChhuttiHub */}
@@ -93,15 +93,15 @@ export default function ClientLayout({
           <div className="flex flex-col flex-1 overflow-hidden">
             {/* Header */}
             <header className="bg-white border-b shadow-sm">
-              <div className="px-6 py-4 flex items-center justify-start gap-3">
-                <div className="icon bg-sky-100 w-9 h-9 flex items-center justify-center rounded-md">
+              <div className="px-3 py-3 flex items-center justify-start gap-3">
+                <div className="icon bg-sky-100 w-8 h-8 flex items-center justify-center rounded-md">
                   {Array.isArray(dashboardRoute) ? (
                     <LayoutPanelTop />
                   ) : (
                     renderIcon()
                   )}
                 </div>
-                <h1 className="font-gilSemiBold text-gray-800 text-2xl">
+                <h1 className="font-gilSemiBold text-gray-800 text-lg">
                   {Array.isArray(dashboardRoute)
                     ? "Dashboard"
                     : currentPage?.title}
@@ -109,7 +109,7 @@ export default function ClientLayout({
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto bg-gray-50 p-6">
+            <main className="flex-1 overflow-auto bg-gray-50 p-2 sm:p-2.5 md:p-3">
               {isLoading ? (
                 <div>
                   <ThreeBodyLoader />

@@ -18,9 +18,9 @@ export default function HomePage() {
   const dispatch = useDispatch();
 
   return (
-    <div className="min-h-screen  relative overflow-hidden">
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-4 main">
-        <div className="w-full max-w-4xl text-center">
+    <div className="min-h-screen relative overflow-hidden">
+      <div className=" z-10 flex items-center justify-center main">
+        <div className="w-full">
           <LoginEmail />
         </div>
       </div>

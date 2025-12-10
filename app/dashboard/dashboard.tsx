@@ -8,7 +8,7 @@ import { setEmployee, setHolidays } from "@/libs/dataslice";
 import { RootState } from "@/libs/store";
 import { Button } from "@/components/ui/button";
 import React from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Calendar, Cake, User, CalendarDays } from "lucide-react";
 import { Role } from "@/interfaces";
 import type { DatePickerProps } from "antd";
 import { DatePicker } from "antd";
@@ -35,7 +35,7 @@ const Dashboard = () => {
     (state: RootState) => state.dataSlice.userInfo.id
   );
 
-  const employeeId = employees.find((emp) => emp.userId === currentUserId)?.id;
+  const employeeId = employees?.find((emp) => emp.userId === currentUserId)?.id;
 
   useEffect(() => {
     const fetchLeavesData = async () => {
@@ -66,7 +66,7 @@ const Dashboard = () => {
   }, [employeeId]);
 
   const upComingdateOfBirth = useMemo(() => {
-    if (employees.length === 0 || !employees) {
+    if (employees?.length === 0 || !employees) {
       return [];
     }
     return employees
@@ -90,7 +90,7 @@ const Dashboard = () => {
         dateOfBirth: emp.user.dateOfBirth,
       })) as UpComingDOBType[];
   }, []);
-  const currentUserRole = employees.find(
+  const currentUserRole = employees?.find(
     (emp) => emp.userId === userInfo.id
   )?.role;
 
@@ -158,13 +158,20 @@ const Dashboard = () => {
   return (
     <div className="space-y-8 w-full">
       {/* Header */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <h1 className="text-2xl font-gilSemiBold">Dashboard</h1>
+      <div className="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-gray-200">
+        <div>
+          <h1 className="text-xl md:text-3xl font-gilSemiBold text-gray-900">
+            Dashboard
+          </h1>
+          <p className="text-xs font-gilRegular text-gray-500">
+            Occasions overview
+          </p>
+        </div>
 
         {currentUserRole === "ADMIN" && (
           <Button
             onClick={() => setIsOpen(true)}
-            className="flex items-center font-gilRegular gap-2"
+            className="flex items-center font-gilMedium text-xs cursor-pointer gap-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Occasion
@@ -173,61 +180,196 @@ const Dashboard = () => {
       </div>
 
       {/* Grid Content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Holidays */}
-        <section className="rounded-xl p-5 border shadow-sm bg-white">
-          <h2 className="text-lg font-gilMedium mb-4">All Holidays</h2>
-
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {holidays.length === 0 && (
-              <h2 className="font-gilRegular">😔 No Holidays</h2>
-            )}
-            {holidays.map((holiday) => (
-              <div
-                key={holiday.id}
-                className="flex justify-between items-center border p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
-              >
+        <section className="rounded-xl border border-gray-200 bg-white">
+          <div className="p-5 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Calendar className="w-5 h-5 text-gray-700" />
+                </div>
                 <div>
-                  <p className="font-gilMedium">{holiday.holidayName}</p>
-                  <p className="text-sm font-gilRegular text-gray-600">
-                    {new Date(holiday.holidayDate).toDateString()}
+                  <h2 className="text-md md:text-lg font-gilSemiBold text-gray-900">
+                    All Holidays
+                  </h2>
+                  <p className="text-xs font-gilRegular text-gray-500">
+                    {holidays.length} total
                   </p>
                 </div>
-
-                {currentUserRole === Role.ADMIN && (
-                  <button
-                    onClick={() => removeHoliday(holiday.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
               </div>
-            ))}
+            </div>
+          </div>
+
+          <div className="p-2 max-h-96 overflow-y-auto">
+            {holidays.length === 0 ? (
+              <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg m-2">
+                <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="font-gilMedium text-gray-500">No holidays yet</p>
+                <p className="text-sm font-gilRegular text-gray-400 mt-1">
+                  Add holidays to see them here
+                </p>
+              </div>
+            ) : (
+              holidays.map((holiday) => (
+                <div
+                  key={holiday.id}
+                  className="flex items-center justify-between p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                      <p className="font-gilMedium text-gray-900">
+                        {holiday.holidayName}
+                      </p>
+                    </div>
+                    <p className="text-sm font-gilRegular text-gray-600">
+                      {new Date(holiday.holidayDate).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        }
+                      )}
+                    </p>
+                  </div>
+
+                  {currentUserRole === Role.ADMIN && (
+                    <button
+                      onClick={() => removeHoliday(holiday.id)}
+                      className="ml-3 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      aria-label={`Delete ${holiday.holidayName}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </section>
 
         {/* Birthdays */}
-        <section className="rounded-xl p-5 border shadow-sm bg-white">
-          <h2 className="text-lg font-gilMedium mb-4">Upcoming Birthdays</h2>
+        <section className="rounded-xl border border-gray-200 bg-white">
+          <div className="p-5 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <User className="w-5 h-5 text-gray-700" />
+                </div>
+                <div>
+                  <h2 className="text-md md:text-lg font-gilSemiBold text-gray-900">
+                    Upcoming Birthdays
+                  </h2>
+                  <p className="text-xs font-gilRegular text-gray-500">
+                    {upComingdateOfBirth.length} upcoming
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <div className="space-y-3 max-h-72 overflow-y-auto">
-            {upComingdateOfBirth.length === 0 && (
-              <h2 className="font-gilRegular">🎂 No Upcoming Birthdays</h2>
-            )}
-            {upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
-              <div
-                key={dobInfo.id}
-                className="border p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition"
-              >
-                <p className="font-medium">{dobInfo.username}</p>
-                <p className="text-sm text-gray-600">
-                  {new Date(dobInfo.dateOfBirth).toDateString()}
+          <div className="p-2 max-h-96 overflow-y-auto">
+            {upComingdateOfBirth.length === 0 ? (
+              <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg m-2">
+                <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="font-gilMedium text-gray-500">
+                  No upcoming birthdays
+                </p>
+                <p className="text-sm font-gilRegular text-gray-400 mt-1">
+                  Check back later for celebrations
                 </p>
               </div>
-            ))}
+            ) : (
+              upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
+                <div
+                  key={dobInfo.id}
+                  className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-gray-600" />
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="font-gilSemiBold text-gray-900">
+                      {dobInfo.username}
+                    </p>
+                    <p className="text-sm font-gilRegular text-gray-600">
+                      {new Date(dobInfo.dateOfBirth).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "long",
+                          day: "numeric",
+                        }
+                      )}
+                    </p>
+                  </div>
+
+                  {new Date(dobInfo.dateOfBirth).getDate() ===
+                    new Date().getDate() &&
+                    new Date(dobInfo.dateOfBirth).getMonth() ===
+                      new Date().getMonth() && (
+                      <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
+                        Today
+                      </span>
+                    )}
+                </div>
+              ))
+            )}
           </div>
         </section>
+      </div>
+
+      {/* Simple Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-lg border border-gray-200 bg-white">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-5 h-5 text-gray-600" />
+            <div>
+              <p className="text-sm font-gilRegular text-gray-500">
+                Total Holidays
+              </p>
+              <p className="text-xl font-gilSemiBold text-gray-900">
+                {holidays.length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-lg border border-gray-200 bg-white">
+          <div className="flex items-center gap-3">
+            <User className="w-5 h-5 text-gray-600" />
+            <div>
+              <p className="text-sm font-gilRegular text-gray-500">
+                Upcoming Birthdays
+              </p>
+              <p className="text-xl font-gilSemiBold text-gray-900">
+                {upComingdateOfBirth.length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-lg border border-gray-200 bg-white">
+          <div className="flex items-center gap-3">
+            <CalendarDays className="w-5 h-5 text-gray-600" />
+            <div>
+              <p className="text-sm font-gilRegular text-gray-500">
+                This Month
+              </p>
+              <p className="text-xl font-gilSemiBold text-gray-900">
+                {
+                  upComingdateOfBirth.filter(
+                    (dob) =>
+                      new Date(dob.dateOfBirth).getMonth() ===
+                      new Date().getMonth()
+                  ).length
+                }
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Add Occasion Modal */}

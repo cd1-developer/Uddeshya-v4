@@ -296,7 +296,7 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
       {/* This is the button that opens the dialog */}
       <div
         onClick={() => setIsBulkTransitionOpen(true)}
-        className=" gap-2 font-gilBold border-[1.5px] border-black rounded-sm px-4 py-2 cursor-pointer text-sm transition hover:bg-black hover:text-white"
+        className="whitespace-nowrap gap-2 font-gilBold border-[1.5px] border-black rounded-sm px-4 py-2 cursor-pointer text-xs sm:text-sm transition hover:bg-black hover:text-white text-center"
       >
         Bulk Transition
       </div>
