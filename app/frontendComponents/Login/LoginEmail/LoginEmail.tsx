@@ -14,7 +14,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AuthLayout from "@/components/custom/AuthLayout";
@@ -85,6 +85,18 @@ export default function LoginEmail() {
     });
   }
 
+  const backButton =
+    authStep === "login" || authStep === "create" ? (
+      <Button
+        variant="ghost"
+        className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
+        onClick={() => setAuthStep("email")}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
+      </Button>
+    ) : null;
+
   return (
     <AuthLayout
       header="Welcome Back"
@@ -92,6 +104,7 @@ export default function LoginEmail() {
       navigateTitle="Don't have an account?"
       navigator="/Signup"
       navigateTo=""
+      backButton={backButton}
     >
       {authStep === "email" && (
         <Form {...form}>
@@ -105,14 +118,14 @@ export default function LoginEmail() {
                   <FormItem className="space-y-2">
                     <FormLabel className="text-slate-700 font-gilSemiBold flex items-center gap-2">
                       <Mail className="w-4 h-4 text-sky-600" />
-                      Email Address
+                      <span className="text-sm">Email Address</span>
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email"
                         {...field}
-                        className="h-12 font-gilRegular rounded-xl border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
+                        className="h-10 text-xs font-gilMedium rounded-md border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
                       />
                     </FormControl>
                     <FormMessage />
@@ -124,16 +137,18 @@ export default function LoginEmail() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 font-gilRegular bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
+              className="w-full h-10 font-gilRegular bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
             >
               <h2>
                 {isPending ? (
                   <div className="flex items-center">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin text-xs md:text-sm mr-2"></div>
                     Continuing...
                   </div>
                 ) : (
-                  <div className="flex gap-2 items-center">Continue</div>
+                  <div className="flex gap-2 items-center text-xs md:text-sm">
+                    Continue
+                  </div>
                 )}
               </h2>
             </Button>

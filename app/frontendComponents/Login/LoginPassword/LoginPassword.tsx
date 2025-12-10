@@ -72,21 +72,12 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
     });
   }
   return (
-    <div className="relative">
-      <div className="">
-        <Button
-          variant="ghost"
-          className="text-slate-600 hover:text-white border hover:bg-gradient-to-r from-sky-600 to-sky-800 hover:from-sky-700 hover:to-sky-900"
-          onClick={() => setAuthStep("email")}
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <h2 className="hidden font-gilMedium md:flex">Back to Home</h2>
-        </Button>
-      </div>
-      <div className="">
-        <div className="space-y-2">
+    <>
+      {/* Password form content */}
+      <div className="w-full">
+        <div className="">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="">
               <FormField
                 control={form.control}
                 name="password"
@@ -94,10 +85,10 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
                   <FormItem className="space-y-2">
                     <FormLabel className="text-slate-700  flex items-center gap-2">
                       <Lock className="w-4 h-4 text-sky-600" />
-                      Enter Password
+                      <span className="text-sm">Enter Password</span>
                     </FormLabel>
                     <FormControl>
-                      <PasswordInput {...field} className="" />
+                      <PasswordInput {...field} className="text-xs" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -107,7 +98,7 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
               <div className="text-right">
                 <button
                   type="button"
-                  className="text-sm text-sky-700 font-gilRegular hover:text-sky-800 transition-colors cursor-pointer"
+                  className="text-xs md:text-sm text-sky-700 font-gilRegular hover:text-sky-800 transition-colors cursor-pointer"
                 >
                   Forgot password?
                 </button>
@@ -116,16 +107,18 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full h-12 font-gilRegular bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
+                className="w-full mt-5 h-10 font-gilRegular bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
               >
                 <h2>
                   {isPending ? (
                     <div className="flex items-center">
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full text-xs md:text-sm animate-spin mr-2"></div>
                       Continuing...
                     </div>
                   ) : (
-                    <div className="flex gap-2 items-center">Continue</div>
+                    <div className="flex gap-2 items-center text-xs md:text-sm">
+                      Continue
+                    </div>
                   )}
                 </h2>
               </Button>
@@ -133,7 +126,7 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
           </Form>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

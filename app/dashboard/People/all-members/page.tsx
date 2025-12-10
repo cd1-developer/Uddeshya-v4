@@ -173,7 +173,7 @@ const Members = () => {
         dispatch(setEmployee(updatedOrgMembers));
         setIsOpen(false);
         form.reset();
-        successToast(message);
+        successToast("Member has been added successfully.");
       } catch (error: any) {
         console.error("Full error details:", error);
         ErrorToast("Something went wrong while adding the members");
@@ -185,27 +185,19 @@ const Members = () => {
     <div className="transition-all duration-300 space-y-3">
       <header className="sm:absolute sm:right-3 sm:top-19 block">
         {currentEmp?.role === Role.ADMIN && (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 mr-5 cursor-pointer org-chart">
+          <div className="flex items-center flex-wrap sm:flex-nowrap gap-2">
+            <div className="flex items-center gap-2 mr-5 whitespace-nowrap px-4 py-2 rounded-sm cursor-pointer org-chart">
               <i>
                 <Network className="text-sky-700" size={15} strokeWidth={1.8} />
               </i>
-              <span className="text-sky-700 text-sm font-gilBold">
+              <span className="text-sky-700 text-xs sm:text-sm font-gilBold">
                 Org Chart
               </span>
             </div>
-            <div className="bulk-transition">
+            <div className="bulk-transition flex-1 sm:flex-none">
               <BulkTransition onDataLoaded={handleBulkDataLoaded} />
             </div>
             <div className=" adding-person">
-              {/* {currentEmp?.role === Role.ADMIN && (
-              <Button
-                onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
-              >
-                <span>Add new person</span>
-              </Button>
-            )} */}
               <Button
                 onClick={() => setIsOpen(true)}
                 className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"

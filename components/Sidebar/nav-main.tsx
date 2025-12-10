@@ -63,8 +63,7 @@ export function NavMain({ items }: NavMainProps) {
   const employee = useSelector((state: RootState) => state.dataSlice.employee);
   const user = useSelector((state: RootState) => state.dataSlice.userInfo);
 
-  const currentUser = employee.find((emp) => emp.userId === user.id);
-  // console.log(currentUser);
+  const currentUser = employee?.find((emp) => emp.userId === user.id);
 
   const isNotMember = currentUser?.role !== Role.MEMBER;
 
