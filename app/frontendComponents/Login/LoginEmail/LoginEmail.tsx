@@ -24,6 +24,7 @@ import LoginPassword from "../LoginPassword/LoginPassword";
 import CreatePassword from "../LoginPassword/CreatePassword";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
+import ForgotPassword from "../../ForgotPassword/ForgotPassword";
 
 const formSchema = z.object({
   email: z.email(),
@@ -31,9 +32,9 @@ const formSchema = z.object({
 
 export default function LoginEmail() {
   const [isPending, startTransition] = useTransition();
-  const [authStep, setAuthStep] = useState<"email" | "login" | "create">(
-    "email"
-  );
+  const [authStep, setAuthStep] = useState<
+    "email" | "login" | "create" | "forgot" | "otp"
+  >("email");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,8 +90,8 @@ export default function LoginEmail() {
     <AuthLayout
       header="Welcome Back"
       title="Sign in to your leave management account"
-      navigateTitle="Don't have an account?"
-      navigator="/Signup"
+      navigateTitle=""
+      navigator=""
       navigateTo=""
     >
       {authStep === "email" && (
@@ -147,6 +148,7 @@ export default function LoginEmail() {
       {authStep === "create" && (
         <CreatePassword email={userEmail} setAuthStep={setAuthStep} />
       )}
+      {authStep === "forgot" && <ForgotPassword setAuthStep={setAuthStep} />}
     </AuthLayout>
   );
 }

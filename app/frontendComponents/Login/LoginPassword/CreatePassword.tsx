@@ -23,7 +23,7 @@ import { successToast } from "@/components/custom/SuccessToast";
 interface CreatePasswordProps {
   email: string;
   setAuthStep: React.Dispatch<
-    React.SetStateAction<"email" | "login" | "create">
+    React.SetStateAction<"email" | "login" | "create" | "forgot" | "otp">
   >;
 }
 

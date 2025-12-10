@@ -14,8 +14,19 @@ model User {
   password    String?   // User creates password later on first login
   dateOfBirth DateTime?
   gender      Gender?
+  otp OTP?
   createdAt   DateTime  @default(now())
   employee    Employee?
+}
+
+model OTP{
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
+  code String
+  user User @relation(fields: [userId],references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
 }
 
 model Employee {
