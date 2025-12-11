@@ -172,12 +172,15 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
       <div className="flex items-center gap-4">
         <Input
           type="text"
-          className="w-72"
+          className="w-72 font-gilRegular text-xs "
           placeholder="Search all columns"
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
-        <Funnel className="text-neutral-500 cursor-pointer" strokeWidth={1.5} />
+        <Funnel
+          className="text-neutral-500 cursor-pointer size-5 sm:size-6"
+          strokeWidth={1.5}
+        />
       </div>
 
       <div className=" member mt-5">

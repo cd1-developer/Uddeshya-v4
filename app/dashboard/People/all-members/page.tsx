@@ -202,7 +202,7 @@ const Members = () => {
                 onClick={() => setIsOpen(true)}
                 className="flex items-center gap-2 font-gilBold border-[1.5px] text-white bg-black border-black rounded-sm px-4 py-2 cursor-pointer"
               >
-                <span>Add new person</span>
+                <span className="text-xs sm:text-sm">Add new person</span>
               </Button>
 
               <DialogCompo

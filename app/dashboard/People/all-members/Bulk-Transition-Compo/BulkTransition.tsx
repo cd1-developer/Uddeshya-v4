@@ -290,7 +290,6 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
       setIsProcessing(false);
     }
   };
-
   return (
     <div>
       {/* This is the button that opens the dialog */}
@@ -366,13 +365,15 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
 
           {data.length > 0 && (
             <div className="space-y-6">
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl">✅</div>
+              <div className="bg-green-50 p-2.5 sm:p-4 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="hidden sm:block sm:text-xl">✅</div>
                     <div>
-                      <p className="font-gilSemiBold">Loaded: {fileName}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-gilSemiBold text-sm sm:text-base">
+                        Loaded: {fileName}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                         {data.length} employees ready to add
                       </p>
                     </div>
@@ -381,7 +382,7 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
                     variant="outline"
                     size="sm"
                     onClick={resetDialog}
-                    className="h-8 text-xs"
+                    className="h-8 text-xs mt-3 sm:mt-0 font-gilMedium"
                     disabled={isLoading || isProcessing}
                   >
                     Change File
@@ -390,7 +391,7 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
               </div>
 
               <div className="border rounded-lg overflow-hidden">
-                <div className="bg-gray-800 text-white p-3 font-gilSemiBold">
+                <div className="bg-gray-800 text-white p-3 font-gilSemiBold text-xs sm:text-sm">
                   Data Preview
                 </div>
                 <div className="overflow-x-auto max-h-[400px]">
@@ -422,12 +423,16 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
                     </>
                   ) : isDataAdded ? (
                     <>
-                      <span>✅</span>
-                      <span>Successfully Added {data.length} Employees!</span>
+                      <span className="text-xs sm:text-sm">✅</span>
+                      <span className="text-xs sm:text-sm">
+                        Successfully Added {data.length} Employees!
+                      </span>
                     </>
                   ) : (
                     <>
-                      <span>Add {data.length} Employees to System</span>
+                      <span className="text-xs sm:text-sm">
+                        Add {data.length} Employees to System
+                      </span>
                     </>
                   )}
                 </Button>
