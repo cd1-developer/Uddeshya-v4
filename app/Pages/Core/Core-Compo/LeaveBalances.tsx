@@ -50,13 +50,13 @@ const LeaveBalances = ({
             <h1 className="font-gilSemiBold text-xl sm:text-2xl text-gray-900">
               Leave Summary
             </h1>
-            <p className="text-gray-500 text-sm font-gilRegular">
+            <p className="text-gray-500 text-xs sm:text-sm font-gilRegular">
               Overview of team members' leave balances and status
             </p>
           </div>
-          <div className="flex items-center space-x-2 px-2 md:px-4 py-2 bg-sky-50 rounded-lg border border-sky-100">
-            <User className="w-4 h-4 text-sky-600" />
-            <span className="font-gilMedium text-sky-700 text-sm whitespace-nowrap">
+          <div className="flex items-center space-x-2 px-2 md:px-4 py-1 sm:py-1.5 bg-sky-50 rounded-lg border border-sky-100">
+            <User className="w-3 h-4 sm:w-4 sm:h-4 text-sky-600" />
+            <span className="font-gilMedium text-sky-700 text-xs sm:text-sm mt-1 sm:mt-0 whitespace-nowrap">
               {employeesData.length} Employees
             </span>
           </div>
@@ -67,13 +67,13 @@ const LeaveBalances = ({
         {employeesData && employeesData.length === 0 ? (
           <Card className="text-center py-16 border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-white">
             <CardContent className="max-w-md mx-auto">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center">
-                <Calendar className="w-12 h-12 text-sky-400" />
+              <div className="w-18 h-18 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-5 rounded-full bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center">
+                <Calendar className="w-8 h-8 sm:w-10 sm:h-10 text-sky-400" />
               </div>
-              <h3 className="font-gilSemiBold text-xl text-gray-700 mb-3">
+              <h3 className="font-gilSemiBold text-xl text-gray-700">
                 No Team Members Found
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-gray-400 text-sm mb-6">
                 Add team members to view their leave information and balances.
               </p>
             </CardContent>

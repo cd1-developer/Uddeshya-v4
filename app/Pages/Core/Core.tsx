@@ -132,7 +132,9 @@ const Core = () => {
         <TabsList className="space-x-2">
           {TABS.map((tab, i) => (
             <TabsTrigger key={i} value={tab.tab}>
-              <h3 className="font-gilSemiBold text-[0.95rem]">{tab.tab}</h3>
+              <h3 className="font-gilSemiBold text-xs sm:text-[0.9rem]">
+                {tab.tab}
+              </h3>
             </TabsTrigger>
           ))}
         </TabsList>

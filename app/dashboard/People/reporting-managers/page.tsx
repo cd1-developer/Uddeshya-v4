@@ -24,7 +24,14 @@ import {
 import { Button } from "@/components/ui/button";
 import AlertDialogCompo from "@/components/custom/AlertDialog/AlertDialogCompo";
 
-import { Trash2, UserPlus, Users } from "lucide-react";
+import {
+  Trash2,
+  User2Icon,
+  UserCircle2Icon,
+  UserPlus,
+  UserRoundPlus,
+  Users,
+} from "lucide-react";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import axios from "axios";
 import { forwardRef } from "react";
@@ -179,7 +186,7 @@ const ReportManager = () => {
   return (
     <div>
       <header>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center flex-wrap gap-1 sm:gap-5">
           <input
             className="flex-1 px-2 py-[0.3rem] rounded-md outline-none border font-gilRegular placeholder:tracking-wider placeholder:font-gilRegular placeholder:text-[0.75rem]"
             placeholder="Search Report Manager..."
@@ -197,7 +204,11 @@ const ReportManager = () => {
               <SelectContent>
                 <SelectGroup className="font-gilMedium">
                   {OPTIONS.map((option, i) => (
-                    <SelectItem value={option} key={i}>
+                    <SelectItem
+                      value={option}
+                      key={i}
+                      className="text-xs sm:text-sm"
+                    >
                       {option}
                     </SelectItem>
                   ))}
@@ -210,13 +221,18 @@ const ReportManager = () => {
       <div className="main">
         <ul className="member">
           {filterReportManagers.length === 0 ? (
-            <div className="flex flex-col items-center absolute left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] opacity-50">
-              <span>
-                <UserPlus size={26} strokeWidth={1} />
-              </span>
-              <span className="font-gilMedium text-md">
+            <div className="col-span-2 flex flex-col items-center justify-center py-20">
+              <div className="relative mb-1">
+                <div className="w-15 h-15 bg-gray-100 border text-gray-500 rounded-2xl flex items-center justify-center">
+                  <UserRoundPlus />
+                </div>
+              </div>
+              <h3 className="text-lg font-gilMedium text-gray-400 mb-1">
                 No Report Manager Found
-              </span>
+              </h3>
+              <p className="text-gray-400 text-xs font-gilLight">
+                Start by adding a new report manager
+              </p>
             </div>
           ) : (
             filterReportManagers?.map((manager: Employee) => (
@@ -240,14 +256,20 @@ const ReportManager = () => {
                         </div>
 
                         <div className="w-full">
-                          <div className="flex flex-col items-start sm:flex-row sm:items-center gap-0 sm:gap-2 member">
-                            <h2 className="font-gilSemiBold text-[1rem] sm:text-[1.1rem]">
+                          <div className="flex flex-col items-start sm:flex-row sm:items-center member">
+                            <h2 className="font-gilMedium text-[1rem]">
                               {manager.user.username}
                             </h2>
                           </div>
-                          <div className="text-[0.8rem] mt-1.5 sm:mt-0 font-gilRegular text-gray-600">
+                          <div className="text-xs sm:text-sm sm:mt-0 font-gilRegular text-gray-600">
                             {manager.user.email}
                           </div>
+                        </div>
+
+                        <div className="flex items-center">
+                          <span className="text-gray-600 text-[0.65rem] sm:text-xs whitespace-nowrap font-gilMedium rounded-full">
+                            {manager.assignMembers?.length || 0} members
+                          </span>
                         </div>
                       </AccordionTrigger>
                     </div>

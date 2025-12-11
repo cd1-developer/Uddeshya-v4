@@ -160,7 +160,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-xl md:text-3xl font-gilSemiBold text-gray-900">
+          <h1 className="text-xl md:text-2xl font-gilSemiBold text-gray-900">
             Dashboard
           </h1>
           <p className="text-xs font-gilRegular text-gray-500">

@@ -76,7 +76,7 @@ function ForgotPassword({ email, setAuthStep }: ForgotPasswordProp) {
                 <FormItem className="space-y-2">
                   <FormLabel className="text-slate-700 font-gilSemiBold flex items-center gap-2">
                     <Mail className="w-4 h-4 text-sky-600" />
-                    Email Address
+                    <span className="text-sm">Email Address</span>
                   </FormLabel>
 
                   <FormControl>
@@ -85,7 +85,7 @@ function ForgotPassword({ email, setAuthStep }: ForgotPasswordProp) {
                       placeholder="Enter your email"
                       {...field}
                       value={email || field.value}
-                      className="h-12 font-gilRegular rounded-xl border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
+                      className="h-10 text-xs font-gilRegular rounded-xl border-slate-200 focus:border-sky-500 focus:ring-blue-500/20 transition-all duration-200"
                     />
                   </FormControl>
 
@@ -98,7 +98,7 @@ function ForgotPassword({ email, setAuthStep }: ForgotPasswordProp) {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full h-12 font-gilSemiBold bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
+            className="w-full h-10 font-gilSemiBold bg-gradient-to-r from-sky-700 to-sky-900 hover:from-sky-800 hover:to-sky-900 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 tracking-[0.05rem] cursor-pointer"
           >
             {isPending ? (
               <div className="flex items-center justify-center gap-2">
@@ -106,12 +106,12 @@ function ForgotPassword({ email, setAuthStep }: ForgotPasswordProp) {
                 Sending...
               </div>
             ) : (
-              <span>Send Verification Code</span>
+              <span className="text-xs md:text-sm">Send Verification Code</span>
             )}
           </Button>
 
           {/* Back to Login */}
-          <p className="text-sm text-slate-500 font-gilRegular">
+          <p className="text-xs text-slate-500 font-gilRegular">
             Remember your password?{" "}
             <button
               type="button"

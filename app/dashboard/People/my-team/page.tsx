@@ -26,15 +26,15 @@ const AdminView = ({ data }: { data: AdminViewData }) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
     {/* Unassigned Report Managers */}
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="border-b p-6">
+      <div className="border-b p-4">
         <div className="flex items-center gap-3">
           <UserCog className="" size={24} />
-          <h2 className="text-xl font-gilSemiBold">
+          <h2 className="text-lg font-gilMedium leading-5">
             Unassigned Report Managers
           </h2>
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-2 sm:p-4">
         {data.unassignedReportManagers.length === 0 ? (
           <EmptyState message="All report managers are properly assigned" />
         ) : (
@@ -45,13 +45,15 @@ const AdminView = ({ data }: { data: AdminViewData }) => (
 
     {/* Unassigned Members */}
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="border-b p-6">
+      <div className="border-b p-4">
         <div className="flex items-center gap-3">
           <UserX className="" size={24} />
-          <h2 className="text-xl font-gilSemiBold">Unassigned Members</h2>
+          <h2 className="text-lg font-gilMedium leading-5">
+            Unassigned Members
+          </h2>
         </div>
       </div>
-      <div className="p-6">
+      <div className="p-2 sm:p-4">
         {data.unassignedMembers.length === 0 ? (
           <EmptyState message="All members are assigned to managers" />
         ) : (
@@ -177,15 +179,15 @@ const MemberList = ({ members }: { members: Employee[] }) => (
     {members.map((member) => (
       <div
         key={member.id}
-        className="border border-gray-200 flex items-center justify-between rounded-xl p-5 hover:border-sky-300 transition-colors duration-200"
+        className="border border-gray-200 flex items-center justify-between flex-wrap sm:flex-none rounded-xl p-3 sm:p-4 hover:border-sky-300 transition-colors duration-200"
       >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center font-semibold text-md">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1 sm:gap-3">
+            <div className="w-10 h-10 bg-sky-100 rounded-full uppercase flex items-center justify-center font-gilSemiBold text-md">
               {member.user?.username?.charAt(0) || "U"}
             </div>
             <div>
-              <h3 className="font-gilSemiBold text-gray-900 text-md">
+              <h3 className="font-gilMedium text-gray-900 text-md">
                 {member.user?.username || "Unknown User"}
               </h3>
               <p className="text-gray-600 text-xs font-gilRegular">
@@ -196,7 +198,7 @@ const MemberList = ({ members }: { members: Employee[] }) => (
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-gilMedium bg-sky-100 text-sky-800">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-[0.6rem] sm:text-xs text-center font-gilMedium bg-sky-100 text-sky-800">
             {member.role.replace("_", " ")}
           </span>
         </div>
@@ -255,19 +257,19 @@ const MyTeam = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/30 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50/30 p-2">
+      <div className="mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-sky-100 rounded-lg">
-              <Users className="" size={24} />
+          <div className="flex items-start sm:items-center gap-3 mb-2">
+            <div className="p-4 bg-sky-100 rounded-lg">
+              <Users className="" size={16} strokeWidth={1.8} />
             </div>
             <div>
-              <h1 className="text-3xl font-gilSemiBold text-gray-900">
+              <h1 className="text-xl md:text-2xl font-gilSemiBold text-gray-900 mb-1">
                 {viewData.title}
               </h1>
-              <p className="text-gray-600 font-gilRegular mt-1">
+              <p className="text-gray-600 font-gilRegular text-xs sm:text-[0.8rem]">
                 {viewData.description}
               </p>
             </div>
