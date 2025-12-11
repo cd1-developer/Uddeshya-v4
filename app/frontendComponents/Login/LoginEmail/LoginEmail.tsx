@@ -24,6 +24,8 @@ import LoginPassword from "../LoginPassword/LoginPassword";
 import CreatePassword from "../LoginPassword/CreatePassword";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
+import ForgotPassword from "../../ForgotPassword/ForgotPassword";
+import { OTPVerification } from "../../OtpVerification/OtpVerification";
 
 const formSchema = z.object({
   email: z.email(),
@@ -31,9 +33,9 @@ const formSchema = z.object({
 
 export default function LoginEmail() {
   const [isPending, startTransition] = useTransition();
-  const [authStep, setAuthStep] = useState<"email" | "login" | "create">(
-    "email"
-  );
+  const [authStep, setAuthStep] = useState<
+    "email" | "login" | "create" | "forgot" | "otp"
+  >("email");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,10 +101,22 @@ export default function LoginEmail() {
 
   return (
     <AuthLayout
-      header="Welcome Back"
-      title="Sign in to your leave management account"
-      navigateTitle="Don't have an account?"
-      navigator="/Signup"
+      header={
+        authStep === "forgot"
+          ? "Forgot Password"
+          : authStep === "otp"
+          ? "Verify Your Email"
+          : "Welcome Back"
+      }
+      title={
+        authStep === "forgot"
+          ? "Enter your email and we’ll send you a verification code to reset your password."
+          : authStep === "otp"
+          ? "We’ve sent a 6-digit verification code to your email. Enter it below to continue."
+          : "Sign in to your leave management account"
+      }
+      navigateTitle=""
+      navigator=""
       navigateTo=""
       backButton={backButton}
     >
@@ -161,6 +175,18 @@ export default function LoginEmail() {
       )}
       {authStep === "create" && (
         <CreatePassword email={userEmail} setAuthStep={setAuthStep} />
+      )}
+      {authStep === "forgot" && (
+        <ForgotPassword email={userEmail} setAuthStep={setAuthStep} />
+      )}
+      {authStep === "otp" && (
+        <OTPVerification
+          email={userEmail}
+          setAuthStep={setAuthStep}
+          onBack={() => setAuthStep("forgot")}
+          title=""
+          description=""
+        />
       )}
     </AuthLayout>
   );

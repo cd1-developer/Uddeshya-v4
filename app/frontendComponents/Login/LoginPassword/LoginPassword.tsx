@@ -10,7 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,7 @@ import { successToast } from "@/components/custom/SuccessToast";
 interface LoginPasswordProps {
   email: string;
   setAuthStep: React.Dispatch<
-    React.SetStateAction<"email" | "login" | "create">
+    React.SetStateAction<"email" | "login" | "create" | "forgot" | "otp">
   >;
 }
 const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
@@ -98,7 +98,8 @@ const LoginPassword = ({ email, setAuthStep }: LoginPasswordProps) => {
               <div className="text-right">
                 <button
                   type="button"
-                  className="text-xs md:text-sm text-sky-700 font-gilRegular hover:text-sky-800 transition-colors cursor-pointer"
+                  className="text-sm text-sky-700 font-gilRegular hover:text-sky-800 transition-colors cursor-pointer"
+                  onClick={() => setAuthStep("forgot")}
                 >
                   Forgot password?
                 </button>

@@ -19,6 +19,14 @@ export const findUser = async (userId: string) => {
       where: {
         id: userId,
       },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        dateOfBirth: true,
+        gender: true,
+        createdAt: true,
+      },
     });
 
     // 🔐 Store user into Redis if found in DB
@@ -32,6 +40,8 @@ export const findUser = async (userId: string) => {
 
   // ✔ Determine existence based on query result
   const exists = !!user;
+  const email = user?.email;
+  const username = user?.username;
 
-  return { exists };
+  return { exists, email, username };
 };

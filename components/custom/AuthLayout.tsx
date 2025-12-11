@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar } from "lucide-react";
-
 interface AuthLayoutType {
   header: string;
   title: string;
@@ -24,7 +23,6 @@ function AuthLayout({
   return (
     <div className="h-full">
       {/* Main content */}
-
       <div className="flex items-center justify-center p-4">
         {backButton && (
           <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
@@ -63,7 +61,6 @@ function AuthLayout({
               </p>
             </div>
           </div>
-
           {/* Footer */}
           <div className="text-center text-xs mt-8 md:text-sm font-gilMedium text-slate-500">
             <p>Secure • Reliable • Professional</p>
@@ -73,5 +70,4 @@ function AuthLayout({
     </div>
   );
 }
-
 export default AuthLayout;
