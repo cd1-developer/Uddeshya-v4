@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import { HandFist, Network, SquareCheck } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Network } from "lucide-react";
 import {
   Form,
   FormItem,
@@ -24,7 +24,7 @@ import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { useForm } from "react-hook-form";
 import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import z, { json, object } from "zod";
+import z from "zod";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
@@ -33,9 +33,11 @@ import GetMember from "./People-compo/GetMember";
 import { Role, EmployeeStatus, Gender, Employee } from "@/interfaces";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
-import { setEmployee } from "@/libs/dataslice";
+import { setEmployee, setEmployeeInfoEndCursor } from "@/libs/dataslice";
 import MembersTable from "./Members-Table/MembersTable";
 import BulkTransition from "./Bulk-Transition-Compo/BulkTransition";
+import { Spinner } from "@/components/ui/spinner";
+import { useInView } from "react-intersection-observer";
 
 const addEmployeeSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -72,56 +74,18 @@ type addPeopleFormValues = {
 type Row = Record<string, unknown>;
 
 const Members = () => {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<Row[]>([]);
   const [bulkData, setBulkData] = useState<any[]>([]);
   const [bulkColumns, setBulkColumns] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(true);
 
-  const handleBulkDataLoaded = (data: any[], columns: string[]) => {
-    setBulkData(data);
-    setBulkColumns(columns);
-  };
-  useEffect(() => {
-    const innerHight = window.innerHeight;
-    console.log(innerHight);
-  }, []);
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`/api/Employee/get-employees`);
-
-      const { success, data, message } = response.data;
-
-      if (!success) {
-        ErrorToast(message || "Failed to fetch members");
-        return;
-      }
-      console.log(response.data);
-
-      dispatch(setEmployee(data));
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message;
-      console.error("Error fetching members: ", errorMessage);
-      ErrorToast("Failed to load members");
-    }
-  };
-
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  const currentEmployees = useSelector(
-    (state: RootState) => state.dataSlice.employee
+  const employeeInfoEndCursors = useSelector(
+    (state: RootState) => state.dataSlice.employeeInfoEndCursor
   );
-
-  const currentUser = useSelector(
-    (state: RootState) => state.dataSlice.userInfo
-  );
-  const currentEmp = currentEmployees.find(
-    (emp) => emp.userId === currentUser.id
-  );
-  // console.log(currentEmp);
+  const employees = useSelector((state: RootState) => state.dataSlice.employee);
 
   const form = useForm<addPeopleFormValues>({
     resolver: zodResolver(addEmployeeSchema),
@@ -137,8 +101,60 @@ const Members = () => {
     },
   });
 
-  const dispatch = useDispatch();
   const joinDate = form.watch("joiningDate");
+
+  const { ref, inView } = useInView();
+  const handleBulkDataLoaded = (data: any[], columns: string[]) => {
+    setBulkData(data);
+    setBulkColumns(columns);
+  };
+
+  const fetchEmployees = () => {
+    if (!hasMore || isPending) return;
+
+    let cursor =
+      employeeInfoEndCursors.length > 0 ? employeeInfoEndCursors.at(-1) : 0;
+
+    startTransition(async () => {
+      try {
+        const response = await axios.get(
+          `/api/Employee/get-employees?cursor=${cursor}&limit=9`
+        );
+
+        const {
+          success,
+          data,
+          nextCursor,
+          hasMore: more,
+          message,
+        } = response.data;
+
+        if (!success) {
+          ErrorToast(message || "Failed to fetch members");
+          return;
+        }
+
+        if (more) {
+          dispatch(setEmployeeInfoEndCursor(nextCursor));
+        }
+
+        setHasMore(more);
+
+        dispatch(setEmployee([...employees, ...data]));
+      } catch (error: any) {
+        ErrorToast("Failed to load members");
+      }
+    });
+  };
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
+    if (inView) {
+      fetchEmployees();
+    }
+  }, [inView]);
 
   useEffect(() => {
     if (!joinDate) return;
@@ -152,6 +168,18 @@ const Members = () => {
       shouldDirty: true,
     });
   }, [joinDate, form]);
+
+  const currentEmployees = useSelector(
+    (state: RootState) => state.dataSlice.employee
+  );
+
+  const currentUser = useSelector(
+    (state: RootState) => state.dataSlice.userInfo
+  );
+  const currentEmp = currentEmployees.find(
+    (emp) => emp.userId === currentUser.id
+  );
+  // console.log(currentEmp);
 
   const onSubmit = (memberData: addPeopleFormValues) => {
     startTransition(async () => {
@@ -450,6 +478,11 @@ const Members = () => {
       <div className="main">
         {/* <div className="Get-Member"></div> */}
         <GetMember bulkData={bulkData} bulkColumns={bulkColumns} />
+
+        <div className="flex justify-center items-center mt-2 p-2" ref={ref}>
+          {isPending && <Spinner className="size-6 text-slate-500" />}
+        </div>
+
         {/* {bulkData.length > 0 && (
           <div className="mt-8">
             <div className="flex items-center justify-between mb-4">

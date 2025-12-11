@@ -146,9 +146,9 @@ const Dashboard = () => {
     successToast(message);
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  // useEffect(() => {
+  //   fetchEmployees();
+  // }, []);
 
   useEffect(() => {
     fetchHolidays();

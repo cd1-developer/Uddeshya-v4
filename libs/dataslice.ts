@@ -7,6 +7,10 @@ const initialState = {
   leave: [] as Leave[],
   holiday: [] as Holiday[],
   isLoading: false,
+  employeeInfoEndCursor: [] as (Number | null)[],
+  employeeLeaveEndCursor: [] as (Number | null)[],
+  assignMemberLeaveEndCursor: [] as (Number | null)[],
+  holidayEndCursor: [] as (Number | null)[],
 };
 
 const dataSlice = createSlice({
@@ -28,7 +32,24 @@ const dataSlice = createSlice({
     setIsLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
-
+    setEmployeeInfoEndCursor: (state, action: PayloadAction<Number | null>) => {
+      state.employeeInfoEndCursor.push(action.payload);
+    },
+    setEmployeeLeaveEndCursor: (
+      state,
+      action: PayloadAction<Number | null>
+    ) => {
+      state.employeeLeaveEndCursor.push(action.payload);
+    },
+    setAssignMemberLeaveEndCursor: (
+      state,
+      action: PayloadAction<Number | null>
+    ) => {
+      state.assignMemberLeaveEndCursor.push(action.payload);
+    },
+    setHolidayEndCursor: (state, action: PayloadAction<Number | null>) => {
+      state.holidayEndCursor.push(action.payload);
+    },
     removeState: () => initialState,
   },
 });
@@ -40,6 +61,10 @@ export const {
   setLeave,
   setIsLoading,
   setHolidays,
+  setEmployeeInfoEndCursor,
+  setEmployeeLeaveEndCursor,
+  setAssignMemberLeaveEndCursor,
+  setHolidayEndCursor,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;
