@@ -1,13 +1,16 @@
 import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { Role } from "@prisma/client";
+import { Leave, LeaveStatus, Role } from "@prisma/client";
 import getEmployeeInfo from "@//helper/getEmployeeInfo";
 import validateData from "@//helper/validateData";
 import { getEmployees } from "@//helper/getEmployees";
 import { getLeaves } from "@//helper/getLeaves";
 import { RedisProvider } from "@/libs/RedisProvider";
 import { Employee } from "@/helper/getEmployees";
+import { findWithIndex } from "@/helper/findWithIndex";
+import { assign } from "nodemailer/lib/shared";
+import { report } from "process";
 
 const RoleSchema = z.object({
   role: z.enum(Role, {
@@ -16,7 +19,6 @@ const RoleSchema = z.object({
 });
 
 export const PATCH = async (req: NextRequest) => {
-  const redis = await RedisProvider.getInstance();
   try {
     const { searchParams } = new URL(req.url);
 
@@ -102,15 +104,6 @@ export const PATCH = async (req: NextRequest) => {
       await updateRedisCache(employee as Employee, role);
     } catch (error: any) {
       console.error("Cache update failed:", error.message);
-
-      // Log the error but don't fail the request since DB is already updated
-      // delete the entire redis cache
-      try {
-        await redis.del("Employees");
-        await redis.del("leaves");
-      } catch (deletionError) {
-        console.error("Cache deletion failed:", deletionError);
-      }
     }
 
     return NextResponse.json({
@@ -129,43 +122,96 @@ export const PATCH = async (req: NextRequest) => {
   }
 };
 
+/**
+ * Updates Redis cache when an employee's role changes.
+ *
+ * Special Case:
+ * If an employee is downgraded from REPORT_MANAGER → normal role,
+ * then:
+ *   1. All employees assigned under this manager must be unassigned.
+ *   2. All pending leaves assigned to this manager must be cleared.
+ *   3. The manager's own cached data (assignMembers, leavesApplied) must be reset.
+ *
+ * This ensures cache consistency with DB state and prevents stale references.
+ */
 const updateRedisCache = async (employee: Employee, role: Role) => {
   const employees = (await getEmployees()) || [];
   const leaves = (await getLeaves()) || [];
-  const redis = await RedisProvider.getInstance();
+  const redis = RedisProvider.getInstance();
 
-  let updatedEmployees = employees;
-  let updatedLeaves = leaves;
-  // If the current Role of employee is reportManager and the new Role of employee is not ReportManager then remove
-  // all the assign members to the reportManager and Also unassign the leaves which are pending and which are  applied by
-  // assign members
+  // Locate the employee's index inside the cached employees list
+  const { index: employeeIndex } = findWithIndex(employees, employee.id);
+
+  /**
+   * Build updated employee object:
+   * - Always update the 'role'.
+   * - If the employee was a REPORT_MANAGER but is no longer one,
+   *   then clear:
+   *     - assigned member list
+   *     - leaves applied list
+   */
+  let updatedEmployee = {
+    ...employee,
+    role,
+    ...(employee.role === Role.REPORT_MANAGER &&
+      role !== Role.REPORT_MANAGER && {
+        assignMembers: [],
+        leavesApplied: [],
+      }),
+  };
+
+  /**
+   * If the employee is being downgraded from REPORT_MANAGER → non-manager role:
+   * We must:
+   *    1. Unassign all employees who currently have this manager.
+   *    2. Remove this manager from pending leaves they were responsible for.
+   */
   if (employee.role === Role.REPORT_MANAGER && role !== Role.REPORT_MANAGER) {
-    // Remove the reportManager from the assign members
-    updatedEmployees = updatedEmployees.map((emp) =>
-      emp.reportManagerId === employee.id
-        ? { ...emp, reportManagerId: null, reportManager: null }
-        : emp
-    );
-    // Remove the assignMembers and assignLeaves from the reportManager
-    updatedEmployees = updatedEmployees.map((emp) =>
-      emp.id === employee.id
-        ? { ...emp, assignMembers: [], leavesApplied: [] }
-        : emp
-    );
-    // Remove the reportManagerID from assignLeaves from the reportManager
-    updatedLeaves = updatedLeaves.map((leave) =>
-      leave.actionByEmployeeId === employee.id &&
-      leave.LeaveStatus === "PENDING"
-        ? { ...leave, actionByEmployeeId: null }
-        : leave
+    // ---------------------------------------------
+    // STEP 1: Unassign all employees linked to this manager
+    // ---------------------------------------------
+    await Promise.all(
+      employees.map(async (emp: Employee, index) => {
+        if (emp.reportManagerId === employee.id) {
+          const updatedAssignMembers = {
+            ...emp,
+            reportManagerId: null,
+            reportManager: null,
+          };
+
+          // Return Redis write promise so Promise.all can wait for it
+          return redis.updateListById(
+            "employees:list",
+            index,
+            updatedAssignMembers
+          );
+        }
+      })
     );
 
-    await redis.set("leaves", updatedLeaves);
+    // ---------------------------------------------
+    // STEP 2: Remove manager assignment from all pending leaves
+    // ---------------------------------------------
+    await Promise.all(
+      leaves.map(async (leave: Leave, index) => {
+        if (
+          leave.actionByEmployeeId === employee.id &&
+          leave.LeaveStatus === LeaveStatus.PENDING // ensure case consistency
+        ) {
+          const updatedLeave = {
+            ...leave,
+            actionByEmployeeId: null,
+          };
+
+          // Return Redis write promise
+          return redis.updateListById("leaves:list", index, updatedLeave);
+        }
+      })
+    );
   }
-  // update the role of the Employee
-  updatedEmployees = updatedEmployees.map((emp) =>
-    emp.id === employee.id ? { ...emp, role } : emp
-  );
-  await redis.set("Employees", updatedEmployees);
-  return;
+
+  // ---------------------------------------------
+  // STEP 3: Update the manager's own record in Redis
+  // ---------------------------------------------
+  await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
 };

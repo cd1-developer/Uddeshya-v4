@@ -96,24 +96,22 @@ async function updateRedisCache(
   try {
     // 1. Get all employees from cache (or DB if cache is empty)
     const employees = (await getEmployees()) || [];
-    const redis = await RedisProvider.getInstance();
+    const redis = RedisProvider.getInstance();
 
     // 2. Find the target employee and update their specific leave balance
-    const updatedEmployees = employees.map((employee: Employee) =>
-      employee.id === employee_id
-        ? {
-            ...employee,
-            leaveBalances: employee.leaveBalances.map((balanceInfo) =>
-              balanceInfo.id === leaveBalanceId
-                ? { ...balanceInfo, balance }
-                : balanceInfo
-            ),
-          }
-        : employee
-    );
-
-    // 3. Save the entire updated employee list back to Redis
-    await redis.set("Employees", updatedEmployees);
+    employees.map(async (employee: Employee, index) => {
+      if (employee.id === employee_id) {
+        const updatedEmployee = {
+          ...employee,
+          leaveBalances: employee.leaveBalances.map((balanceInfo) =>
+            balanceInfo.id === leaveBalanceId
+              ? { ...balanceInfo, balance }
+              : balanceInfo
+          ),
+        };
+        await redis.updateListById("employees:list", index, updatedEmployee);
+      }
+    });
   } catch (error) {
     // Log the error but don't re-throw, as the primary DB operation succeeded.
     // A cache miss on the next request will self-heal this.

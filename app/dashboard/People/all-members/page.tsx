@@ -82,6 +82,34 @@ const Members = () => {
     setBulkData(data);
     setBulkColumns(columns);
   };
+  useEffect(() => {
+    const innerHight = window.innerHeight;
+    console.log(innerHight);
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(`/api/Employee/get-employees`);
+
+      const { success, data, message } = response.data;
+
+      if (!success) {
+        ErrorToast(message || "Failed to fetch members");
+        return;
+      }
+      console.log(response.data);
+
+      dispatch(setEmployee(data));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error("Error fetching members: ", errorMessage);
+      ErrorToast("Failed to load members");
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
   const currentEmployees = useSelector(
     (state: RootState) => state.dataSlice.employee

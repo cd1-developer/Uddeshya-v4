@@ -94,13 +94,14 @@ const updatedEmployeesCache = async (
   employeeId: string,
   reportManagerId: string
 ) => {
-  const redis = await RedisProvider.getInstance();
+  const redis = RedisProvider.getInstance();
   const employees = (await getEmployees()) || [];
   const leaves = (await getLeaves()) || [];
 
-  let updatedEmployees = employees.map((emp) =>
-    emp.id === reportManagerId
-      ? {
+  await Promise.all(
+    employees.map(async (emp, index) => {
+      if (emp.id === reportManagerId) {
+        const updatedReportManager = {
           ...emp,
           // Remove the all Pending leaves of the assign members
           leavesApplied: emp.leavesApplied.map((leave: Leave) =>
@@ -113,23 +114,39 @@ const updatedEmployeesCache = async (
           assignMembers: emp.assignMembers.filter(
             (member: Employee) => member.id != employeeId
           ),
-        }
-      : emp
+        };
+        return redis.updateListById(
+          "employees:list",
+          index,
+          updatedReportManager
+        );
+      }
+      // remove the reportManager info from the assing member
+      if (emp.id === employeeId) {
+        const updatedEmployee = {
+          ...emp,
+          reportManagerId: null,
+          reportManager: null,
+        };
+        return redis.updateListById("employees:list", index, updatedEmployee);
+      }
+    })
   );
-  // remove the reportManager info from the assing member
-  updatedEmployees = updatedEmployees.map((emp) =>
-    emp.id === employeeId
-      ? { ...emp, reportManagerId: null, reportManager: null }
-      : emp
-  );
+
   // Remove the reportManager from the assing members applied leaves
 
-  let updatedLeaves = leaves.map((leave) =>
-    leave.employeeId === employeeId && leave.LeaveStatus === LeaveStatus.PENDING
-      ? { ...leave, actionByEmployeeId: null }
-      : leave
+  await Promise.all(
+    leaves.map(async (leave, index) => {
+      if (
+        leave.employeeId === employeeId &&
+        leave.LeaveStatus === LeaveStatus.PENDING
+      ) {
+        const updatedLeave = {
+          ...leave,
+          actionByEmployeeId: null,
+        };
+        return redis.updateListById("leaves:list", index, updatedLeave);
+      }
+    })
   );
-
-  await redis.set("Employees", updatedEmployees);
-  await redis.set("leaves", updatedLeaves);
 };

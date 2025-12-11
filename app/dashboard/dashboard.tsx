@@ -34,12 +34,14 @@ const Dashboard = () => {
   const currentUserId = useSelector(
     (state: RootState) => state.dataSlice.userInfo.id
   );
+  let currentEmployee = employees?.find((emp) => emp.userId === currentUserId);
 
-  const employeeId = employees?.find((emp) => emp.userId === currentUserId)?.id;
+  const employeeId = currentEmployee?.id;
 
   useEffect(() => {
     const fetchLeavesData = async () => {
       if (!employeeId) return;
+      if (currentEmployee.role === Role.ADMIN) return;
 
       try {
         const response = await axios.get(
@@ -106,8 +108,9 @@ const Dashboard = () => {
         ErrorToast(message || "Failed to fetch members");
         return;
       }
+      console.log(response.data);
 
-      dispatch(setEmployee(data));
+      //dispatch(setEmployee(data));
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message;
       console.error("Error fetching members: ", errorMessage);

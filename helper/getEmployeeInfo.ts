@@ -1,4 +1,4 @@
-import { Employee } from "@/helper/getEmployees";
+import { Employee, getEmployees } from "@/helper/getEmployees";
 import { prisma } from "@/libs/prisma";
 import { RedisProvider } from "@/libs/RedisProvider";
 
@@ -8,10 +8,9 @@ import { RedisProvider } from "@/libs/RedisProvider";
  * Falls back to database when cache does not have the data.
  */
 const getEmployeeInfo = async (id: string) => {
-  const redis = await RedisProvider.getInstance();
   try {
     // 🔹 Try to get all employees from Redis/cache
-    const allEmployee = await redis.get<Employee[]>("Employees");
+    const allEmployee = await getEmployees();
 
     // ❌ Cache MISS → Fetch only required employee from database
     if (!allEmployee) {
