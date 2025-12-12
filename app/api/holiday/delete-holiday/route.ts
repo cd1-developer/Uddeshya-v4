@@ -43,13 +43,7 @@ export const DELETE = async (req: NextRequest) => {
 };
 
 const updateHolidayCache = async (holidayId: string) => {
-  const redis = await RedisProvider.getInstance();
+  const redis = RedisProvider.getInstance();
 
-  const holidays = (await redis.get<Holiday[]>("holidays")) || [];
-
-  const updatedHolidays = holidays.filter(
-    (holiday) => holiday.id !== holidayId
-  );
-
-  await redis.set("holidays", updatedHolidays);
+  await redis.removeFromListById("holiday:list", holidayId);
 };

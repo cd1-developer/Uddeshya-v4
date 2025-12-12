@@ -80,6 +80,12 @@ export interface Holiday {
   holidayDate: Date;
 }
 
+export interface UpComingDOBType {
+  id: string;
+  username: string;
+  dateOfBirth: Date;
+}
+
 // ------------------ ENUMS ------------------
 
 export enum Role {

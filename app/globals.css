@@ -2,6 +2,30 @@
 @import "swiper/css";
 @import "tw-animate-css";
 
+/* Smooth scrollbar for all scrollable components */
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* gray-300 */
+  border-radius: 9999px;
+}
+
+.scrollbar-custom:hover::-webkit-scrollbar-thumb {
+  background: #9ca3af; /* gray-400 */
+}
+
+/* Firefox */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

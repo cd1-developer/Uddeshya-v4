@@ -8,7 +8,7 @@ const PUBLIC_FRONTEND_ROUTES = ["/"];
 
 const PRIVATE_BACKEND_ROUTES = [
   "/api/balance",
-  // "/api/Employee",
+  "/api/Employee",
   "/api/holiday",
   "/api/leave",
   "/api/reportManager",

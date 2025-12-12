@@ -13,6 +13,9 @@ export type Employee = Prisma.EmployeeGetPayload<{
         id: true;
         username: true;
         email: true;
+        dateOfBirth: true;
+        gender: true;
+        createdAt: true;
       };
     };
     reportManager: true;
@@ -53,6 +56,9 @@ export const getEmployees = async (): Promise<Employee[]> => {
             id: true,
             username: true,
             email: true,
+            dateOfBirth: true,
+            gender: true,
+            createdAt: true,
           },
         },
         reportManager: true,
