@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useTransition } from "react";
-import { Funnel } from "lucide-react";
+import { styled, keyframes, setup } from "goober";
+import { Funnel, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import {
@@ -36,7 +37,7 @@ interface BulkTransitionData {
   bulkData: any[];
   bulkColumns: string[];
 }
-
+setup(React.createElement);
 const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -131,7 +132,10 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
     };
 
     return (
-      <Badge variant={getRoleVarient(role)} className="font-gilSemiBold">
+      <Badge
+        variant={getRoleVarient(role)}
+        className="font-gilMedium text-xs px-4 py-1"
+      >
         {role}
       </Badge>
     );
@@ -150,7 +154,10 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
     };
 
     return (
-      <Badge variant={getStatusVarient(status)} className="font-gilSemiBold">
+      <Badge
+        variant={getStatusVarient(status)}
+        className="font-gilMedium text-[0.65rem]"
+      >
         {status}
       </Badge>
     );
@@ -172,7 +179,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
       <div className="flex items-center gap-4">
         <Input
           type="text"
-          className="w-72 font-gilRegular text-xs "
+          className="w-72 font-gilRegular text-xs pb-0"
           placeholder="Search all columns"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -182,8 +189,304 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
           strokeWidth={1.5}
         />
       </div>
+      {/* Mobile View - Card Layout */}
+      <div className="md:hidden space-y-4 mt-6">
+        {filterEmployees.length > 0 ? (
+          filterEmployees.map((member: Employee, i) => (
+            <div
+              key={i}
+              className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200 ${
+                member.role === Role.REPORT_MANAGER &&
+                roleOfCurrentUser === Role.ADMIN
+                  ? "cursor-pointer border-l-4 border-l-blue-500"
+                  : ""
+              }`}
+              onClick={() => {
+                if (
+                  roleOfCurrentUser === Role.ADMIN &&
+                  member.role === Role.REPORT_MANAGER
+                ) {
+                  setIsOpen(true);
+                  setSelectedUserId(member.userId);
+                }
+              }}
+            >
+              {/* Header with Avatar and Basic Info */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-sm">
+                    <span className="font-gilSemiBold text-blue-700 text-sm">
+                      {Avatar(member.user?.username || "N/A")}
+                    </span>
+                  </div>
+                  {member.role === Role.ADMIN && (
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">A</span>
+                    </div>
+                  )}
+                  {member.role === Role.REPORT_MANAGER && (
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-sky-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">R</span>
+                    </div>
+                  )}
+                </div>
 
-      <div className=" member mt-5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-gilSemiBold text-base text-gray-900 truncate">
+                      {member.user?.username || "No user linked"}
+                    </h3>
+                    <StatusBadge status={member.status} />
+                  </div>
+                  <p className="font-gilLight text-xs text-gray-500 truncate mb-2">
+                    {member.user?.email || "No email"}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <RoleBadge role={member.role} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Dates Section */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg
+                      className="w-4 h-4 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="font-gilRegular text-xs text-gray-500">
+                      Joining
+                    </span>
+                  </div>
+                  <p className="font-gilMedium text-sm text-gray-900">
+                    {member.joiningDate
+                      ? format(new Date(member.joiningDate), "dd MMM, yyyy")
+                      : "-"}
+                  </p>
+                </div>
+
+                <div
+                  className={`rounded-lg p-3 ${
+                    member.probationEnd &&
+                    new Date(member.probationEnd.toString()) < new Date()
+                      ? "bg-green-50"
+                      : "bg-amber-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg
+                      className={`w-4 h-4 ${
+                        member.probationEnd &&
+                        new Date(member.probationEnd.toString()) < new Date()
+                          ? "text-green-600"
+                          : "text-amber-600"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span
+                      className={`font-gilRegular text-xs ${
+                        member.probationEnd &&
+                        new Date(member.probationEnd.toString()) < new Date()
+                          ? "text-green-600"
+                          : "text-amber-600"
+                      }`}
+                    >
+                      Probation
+                    </span>
+                  </div>
+                  <p
+                    className={`font-gilMedium text-sm ${
+                      member.probationEnd &&
+                      new Date(member.probationEnd.toString()) < new Date()
+                        ? "text-green-700"
+                        : "text-amber-700"
+                    }`}
+                  >
+                    {member.probationEnd ? (
+                      new Date(member.probationEnd.toString()) < new Date() ? (
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          Completed
+                        </span>
+                      ) : (
+                        format(
+                          new Date(member.probationEnd.toString()),
+                          "dd MMM, yyyy"
+                        )
+                      )
+                    ) : (
+                      "-"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Section */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex-1">
+                  {/* Role Change for Admin */}
+                  {roleOfCurrentUser === "ADMIN" && member.role !== "ADMIN" && (
+                    <div className="relative">
+                      <Select
+                        value={member.role}
+                        onValueChange={(value) =>
+                          handleRoleChange(member.id, value)
+                        }
+                        disabled={updatingMemberId === member.id}
+                      >
+                        <SelectTrigger
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full cursor-pointer border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-gilMedium text-sm text-gray-700">
+                              Change Role
+                            </span>
+                            {/* <svg
+                              className="w-4 h-4 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg> */}
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem
+                              value="MEMBER"
+                              className="font-gilMedium text-sm hover:bg-blue-50"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                Member
+                              </div>
+                            </SelectItem>
+                            <SelectItem
+                              value="REPORT_MANAGER"
+                              className="font-gilMedium text-sm hover:bg-blue-50"
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
+                                Report Manager
+                              </div>
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Assign Button for Report Managers */}
+                {roleOfCurrentUser === Role.ADMIN &&
+                  member.role === Role.REPORT_MANAGER && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsOpen(true);
+                        setSelectedUserId(member.userId);
+                      }}
+                      className="ml-3 px-4 py-2 bg-gradient-to-r from-sky-500 to-sky-600 text-white font-gilMedium text-sm rounded-lg hover:from-sky-600 hover:to-sky-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Assign
+                    </button>
+                  )}
+              </div>
+
+              {/* Status Indicator */}
+              {member.role === Role.REPORT_MANAGER &&
+                roleOfCurrentUser === Role.ADMIN && (
+                  <div className="mt-3 flex items-center justify-end">
+                    <div className="flex items-center gap-1 text-sky-600 text-xs font-gilMedium">
+                      <span>Click to assign members</span>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-12 px-4 bg-white rounded-xl border border-gray-200">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="font-gilSemiBold text-lg text-gray-800 mb-2">
+              No employees found
+            </h3>
+            <p className="font-gilLight text-gray-500 text-sm">
+              {input
+                ? "Try adjusting your search"
+                : "Start by adding team members"}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View - Table Layout */}
+      <div className="hidden md:block member mt-5">
         <Table className="border-t border-l border-b">
           <TableHeader className="">
             <TableRow>

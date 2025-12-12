@@ -32,10 +32,10 @@ export default function LeavePoliciesPage() {
     <div className=" bg-gray-50">
       {/* Header */}
       <div className="mb-8 header">
-        <h1 className="text-3xl font-gilSemiBold text-gray-900 mb-2">
+        <h1 className="font-gilSemiBold text-xl md:text-2xl mb-1">
           Leave Policies
         </h1>
-        <p className="text-gray-600 font-gilRegular">
+        <p className="text-gray-500 text-xs sm:text-sm font-gilRegular">
           Manage and review your organization's leave policies and accrual
           settings
         </p>
@@ -44,7 +44,7 @@ export default function LeavePoliciesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-md mb-6">
-            <div className="flex justify-between items-center border-b p-6 mb-6">
+            <div className="flex justify-between items-center border-b p-4 mb-6">
               <h2 className="text-lg font-gilMedium text-gray-800">
                 All Policies
               </h2>

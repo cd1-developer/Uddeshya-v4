@@ -141,75 +141,85 @@ const LeaveRequest = () => {
           </Select>
         </div>
 
-        <div className="sm:hidden space-y-4 mt-3">
-          {leaveData && leaveData.length === 0 ? (
-            <div>
-              <div className="flex flex-col items-center justify-center">
-                <img
-                  src="/not-found.png"
-                  alt="image not found"
-                  className="w-18 h-18"
-                />
-                <p className="font-gilMedium text-xl">No requests found</p>
-                <p className="text-gray-500 font-gilLight text-sm">
-                  Couldn't find any requests
-                </p>
-              </div>
+        <div className="sm:hidden space-y-3 mt-3">
+          {!leaveData || leaveData.length === 0 ? (
+            <div className="text-center py-10 px-4">
+              <img
+                src="/not-found.png"
+                alt="No requests"
+                className="w-16 h-16 mx-auto mb-3 opacity-70"
+              />
+              <p className="font-gilMedium text-gray-700 mb-1">
+                No leave requests
+              </p>
+              <p className="text-gray-500 text-sm">
+                Start by creating a request
+              </p>
             </div>
           ) : (
             leaveData.map((leave, i) => (
               <div
-                key={i}
-                className="bg-white rounded-xl shadow-sm border space-y-1 border-gray-100"
+                key={leave.id || i}
+                className="bg-white rounded-lg border border-gray-200 p-4"
               >
-                <div>
-                  <div className="font-gilSemiBold px-5 py-3 text-[1.1rem] border-b policy-name">
+                {/* Top Row: Policy + Status */}
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-gilSemiBold text-gray-800 text-sm">
                     {leave.policyName}
-                  </div>
-                  <div className="date-days space-y-1 px-5 py-1">
-                    <div className="relative group w-fit">
-                      <div className="font-gilRegular cursor-pointer text-sm">
-                        {format(new Date(leave.startDateTime), "dd MMM")} {"-"}{" "}
-                        {format(new Date(leave.endDateTime as Date), "dd MMM")}
-                      </div>
-                      <span className="bg-slate-50 border border-slate-200 text-slate-800 font-gilRegular text-xs px-3 py-1 rounded-full opacity-0 scale-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-left pointer-events-none absolute whitespace-nowrap bottom-1 left-28">
-                        Start Date & End Date
-                      </span>
-                    </div>
+                  </h3>
+                  <span
+                    className={`text-xs font-gilMedium px-2 py-1 rounded-full ${
+                      leave.LeaveStatus === LeaveStatus.APPROVED
+                        ? "bg-green-100 text-green-800"
+                        : leave.LeaveStatus === LeaveStatus.REJECTED
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {leave.LeaveStatus}
+                  </span>
+                </div>
 
-                    <div className="bg-slate-100 font-gilRegular text-xs inline-block px-5 py-1 border rounded-2xl">
+                {/* Middle Row: Dates */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1">
+                    <div className="text-sm font-gilMedium text-gray-700">
+                      {format(new Date(leave.startDateTime), "MMM dd")} -{" "}
+                      {format(new Date(leave.endDateTime as Date), "MMM dd")}
+                    </div>
+                    <div className="text-xs text-gray-500">
                       {differenceInDays(
                         new Date(leave.endDateTime as Date),
                         new Date(leave.startDateTime)
-                      ) +
-                        1 ===
-                      1
-                        ? differenceInDays(
-                            new Date(leave.endDateTime as Date),
-                            new Date(leave.startDateTime)
-                          ) +
-                          1 +
-                          " Day"
-                        : differenceInDays(
-                            new Date(leave.endDateTime as Date),
-                            new Date(leave.startDateTime)
-                          ) +
-                          1 +
-                          " Days"}
+                      ) + 1}{" "}
+                      days
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-row-reverse items-end justify-between mt-5 px-5 pb-3">
-                  <div className="border border-sky-200 px-4 inline-flex items-center gap-1.5 bg-sky-50 text-sky-800 text-sm font-gilMedium rounded-full py-3">
-                    {leave.LeaveStatus}
-                    <ChevronRight size={17} />
-                  </div>
-                  <div className="font-gilRegular text-sm">{leave.reason}</div>
+
+                {/* Reason (Shortened) */}
+                <div className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {leave.reason}
+                </div>
+
+                {/* Bottom Row: Absent Type */}
+                <div className="text-xs text-gray-500 flex justify-between items-center">
+                  <span className="font-gilMedium">
+                    {leave.startAbsentType === AbsentType.FIRST_HALF
+                      ? "First Half"
+                      : leave.startAbsentType === AbsentType.SECOND_HALF
+                      ? "Second Half"
+                      : "Full Day"}
+                  </span>
+                  <span>
+                    {format(new Date(leave.startDateTime), "dd/MM/yy")}
+                  </span>
                 </div>
               </div>
             ))
           )}
         </div>
+
         <div className="hidden sm:block">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
