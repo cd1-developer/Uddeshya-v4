@@ -130,8 +130,8 @@ export const POST = async () => {
     // make Parrel api calling after that i will clear the redis state
     await Promise.all(creditBalanceTask);
 
-    await redis.del("Employees");
-    await redis.del("leaves");
+    await redis.del("employees:list");
+    await redis.del("leaves:list");
 
     return NextResponse.json({
       success: true,

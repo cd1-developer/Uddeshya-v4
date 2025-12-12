@@ -4,7 +4,7 @@ import { User } from "@/interfaces";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
-  const redis = await RedisProvider.getInstance();
+  const redis = RedisProvider.getInstance();
   try {
     const { searchParams } = new URL(req.url);
     const { id } = Object.fromEntries(searchParams.entries());

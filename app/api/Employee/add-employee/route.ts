@@ -118,7 +118,8 @@ export const POST = async (req: NextRequest) => {
     }
 
     // Step 14: Cache the newly created employee data by adding it to the 'Employees' list in Redis.
-    await redis.addToList<Employee>("Employees", newEmployee);
+    await redis.addToList("employees:list", newEmployee as Employee);
+
     // Step 15: Notifiy User when new added to the organisation
     await NotifyUser(email as string, newEmployee.user.username);
 

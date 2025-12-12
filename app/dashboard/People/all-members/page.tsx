@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import { HandFist, Network, SquareCheck } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Network } from "lucide-react";
 import {
   Form,
   FormItem,
@@ -24,7 +24,7 @@ import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { useForm } from "react-hook-form";
 import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import z, { json, object } from "zod";
+import z from "zod";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
@@ -36,7 +36,9 @@ import { successToast } from "@/components/custom/SuccessToast";
 import { setEmployee } from "@/libs/dataslice";
 import MembersTable from "./Members-Table/MembersTable";
 import BulkTransition from "./Bulk-Transition-Compo/BulkTransition";
-
+import { Spinner } from "@/components/ui/spinner";
+import { useInView } from "react-intersection-observer";
+import useFetchEmployees from "@/hooks/useFetchEmployees";
 const addEmployeeSchema = z.object({
   username: z.string().min(1, "Username is required"),
   email: z.string({ error: "Email is required" }),
@@ -72,28 +74,12 @@ type addPeopleFormValues = {
 type Row = Record<string, unknown>;
 
 const Members = () => {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [data, setData] = useState<Row[]>([]);
   const [bulkData, setBulkData] = useState<any[]>([]);
   const [bulkColumns, setBulkColumns] = useState<string[]>([]);
-
-  const handleBulkDataLoaded = (data: any[], columns: string[]) => {
-    setBulkData(data);
-    setBulkColumns(columns);
-  };
-
-  const currentEmployees = useSelector(
-    (state: RootState) => state.dataSlice.employee
-  );
-
-  const currentUser = useSelector(
-    (state: RootState) => state.dataSlice.userInfo
-  );
-  const currentEmp = currentEmployees.find(
-    (emp) => emp.userId === currentUser.id
-  );
-  // console.log(currentEmp);
+  const { isPending: isLoading, fetchEmployees } = useFetchEmployees();
 
   const form = useForm<addPeopleFormValues>({
     resolver: zodResolver(addEmployeeSchema),
@@ -109,8 +95,19 @@ const Members = () => {
     },
   });
 
-  const dispatch = useDispatch();
   const joinDate = form.watch("joiningDate");
+
+  const { ref, inView } = useInView();
+  const handleBulkDataLoaded = (data: any[], columns: string[]) => {
+    setBulkData(data);
+    setBulkColumns(columns);
+  };
+
+  useEffect(() => {
+    if (inView) {
+      fetchEmployees();
+    }
+  }, [inView]);
 
   useEffect(() => {
     if (!joinDate) return;
@@ -124,6 +121,18 @@ const Members = () => {
       shouldDirty: true,
     });
   }, [joinDate, form]);
+
+  const currentEmployees = useSelector(
+    (state: RootState) => state.dataSlice.employee
+  );
+
+  const currentUser = useSelector(
+    (state: RootState) => state.dataSlice.userInfo
+  );
+  const currentEmp = currentEmployees.find(
+    (emp) => emp.userId === currentUser.id
+  );
+  // console.log(currentEmp);
 
   const onSubmit = (memberData: addPeopleFormValues) => {
     startTransition(async () => {
@@ -422,6 +431,11 @@ const Members = () => {
       <div className="main">
         {/* <div className="Get-Member"></div> */}
         <GetMember bulkData={bulkData} bulkColumns={bulkColumns} />
+
+        <div className="flex justify-center items-center mt-2 p-2" ref={ref}>
+          {isLoading && <Spinner className="size-6 text-slate-500" />}
+        </div>
+
         {/* {bulkData.length > 0 && (
           <div className="mt-8">
             <div className="flex items-center justify-between mb-4">

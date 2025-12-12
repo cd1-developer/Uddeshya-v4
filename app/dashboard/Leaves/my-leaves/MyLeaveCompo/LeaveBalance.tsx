@@ -1,19 +1,16 @@
-import React, { useId } from "react";
-import { PencilLine } from "lucide-react";
 import { useSelector } from "react-redux";
 import {
   Table,
   TableHeader,
   TableBody,
-  TableFooter,
   TableHead,
   TableRow,
   TableCell,
-  TableCaption,
 } from "@/components/ui/table";
 import { RootState } from "@/libs/store";
 import { EmployeeLeaveBalance, LeaveStatus } from "@/interfaces";
-import { all } from "axios";
+import POLICIES from "@/constant/Policies";
+
 // import { TotalBalance } from "@/libs/Dataslice";
 
 const leaveBalanceHeader = [
@@ -29,13 +26,11 @@ const LeaveBalance = () => {
   const employees = useSelector((state: RootState) => state.dataSlice.employee);
   const userId = useSelector((state: RootState) => state.dataSlice.userInfo.id);
 
-  const totalBalance = employees.find((emp) => emp.userId === userId)
-    ?.leaveBalances as EmployeeLeaveBalance[];
+  const leaves = useSelector((state: RootState) => state.dataSlice.leave);
+
   // ?.totalBalances as TotalBalance[];
 
-  const currentEmployeeLeaveBalance = employees.find(
-    (emp) => emp.userId === userId
-  );
+  const currentEmployee = employees.find((emp) => emp.userId === userId);
   // const allLeaveInfo = [];
 
   let allLeaveInfo: {
@@ -46,52 +41,40 @@ const LeaveBalance = () => {
     pending: number;
   }[] = [];
 
-  if (
-    currentEmployeeLeaveBalance &&
-    currentEmployeeLeaveBalance.leaveBalances
-  ) {
-    currentEmployeeLeaveBalance.leaveBalances.forEach((item) => {
-      const leaveType = item.policyName;
-      // console.log(type);
-      // filter leaves based on type
-      const approved =
-        currentEmployeeLeaveBalance.leavesApplied?.filter(
-          (lv) =>
-            lv.policyName === leaveType &&
-            lv.LeaveStatus === LeaveStatus.APPROVED
-        ).length || 0;
+  POLICIES.map((policy) => {
+    const leaveType = policy.policyName;
+    let policyBalance =
+      currentEmployee?.leaveBalances.find(
+        (balance: EmployeeLeaveBalance) => balance.policyName === leaveType
+      )?.balance || 0;
 
-      const rejected =
-        currentEmployeeLeaveBalance.leavesApplied?.filter(
-          (lv) =>
-            lv.policyName === leaveType &&
-            lv.LeaveStatus === LeaveStatus.REJECTED
-        ).length || 0;
+    let approved =
+      leaves.filter(
+        (leave) =>
+          leave.LeaveStatus === LeaveStatus.APPROVED &&
+          leave.policyName === leaveType
+      ).length || 0;
+    let rejected =
+      leaves.filter(
+        (leave) =>
+          leave.LeaveStatus === LeaveStatus.REJECTED &&
+          leave.policyName === leaveType
+      ).length || 0;
+    let pending =
+      leaves.filter(
+        (leave) =>
+          leave.LeaveStatus === LeaveStatus.PENDING &&
+          leave.policyName === leaveType
+      ).length || 0;
 
-      const pending =
-        currentEmployeeLeaveBalance.leavesApplied?.filter(
-          (lv) =>
-            lv.policyName === leaveType &&
-            lv.LeaveStatus === LeaveStatus.PENDING
-        ).length || 0;
-
-      allLeaveInfo.push({
-        policyName: leaveType,
-        balance: item.balance,
-        approved,
-        rejected,
-        pending,
-      });
+    allLeaveInfo.push({
+      policyName: leaveType,
+      balance: policyBalance,
+      approved,
+      rejected,
+      pending,
     });
-  }
-  console.log(allLeaveInfo);
-
-  // const orgMember = useSelector(
-  //   (state: RootState) => state.dataSlice.organisationMember
-  // );
-  // const leaveType = useSelector(
-  //   (state: RootState) => state.dataSlice.leaveTypes
-  // );
+  });
 
   return (
     <div className="w-full">
@@ -114,7 +97,10 @@ const LeaveBalance = () => {
                   </span>
                 </div>
               </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
@@ -160,7 +146,10 @@ const LeaveBalance = () => {
           </div>
         )}
       </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
       {/* Desktop View (Table) - Hidden on mobile */}
       <div className="hidden md:block">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

@@ -7,6 +7,7 @@ import { RedisProvider } from "@/libs/RedisProvider";
 import { getLeaves } from "@/helper/getLeaves";
 
 import { getEmployees, type Employee } from "@/helper/getEmployees";
+import { findWithIndex } from "@/helper/findWithIndex";
 
 /**
  * Zod schema for validating the request body when updating a leave status.
@@ -129,7 +130,11 @@ export const POST = async (req: NextRequest) => {
     });
     console.log(`Leave ${leaveId} status updated to ${updatedStatus} in DB.`);
 
-    if (updatedStatus === LeaveStatus.APPROVED) {
+    if (
+      updatedStatus === LeaveStatus.APPROVED &&
+      leave.policyName !== "Exam Leave" &&
+      leave.policyName !== "Exam Leave"
+    ) {
       // 4. If approved, deduct the balance from the employee's total leave balance.
       const { success, message } = await updateTotalBalance(
         employeeId,
@@ -183,10 +188,19 @@ type updateRedisCacheType = {
   leaves: Leave[];
   employees: Employee[];
 };
-
 /**
- * Updates the 'leaves' and 'Employees' data in the Redis cache after a status change.
- * This ensures that subsequent reads will get the most up-to-date information without hitting the DB.
+ * Updates Redis cache after a leave request status changes.
+ * This ensures API reads remain fast and consistent with the DB state.
+ *
+ * Redis holds:
+ *  - leaves:list → list of all leave records
+ *  - employees:list → list of employees with nested leave data
+ *
+ * @param employeeId - ID of the employee whose data is updated
+ * @param leaveId - ID of the leave that was modified
+ * @param leaveStatus - New status (Approved/Rejected)
+ * @param deductedBalance - Balance deduction (only for approved leaves)
+ * @param policyName - Policy under which balance was updated
  */
 const updateRedisCache = async ({
   employeeId,
@@ -199,73 +213,83 @@ const updateRedisCache = async ({
   employees,
 }: updateRedisCacheType) => {
   try {
-    const redis = await RedisProvider.getInstance();
+    const redis = RedisProvider.getInstance();
 
-    // Update the specific leave in the leaves array.
-    const updatedLeaves = leaves.map((leave) => {
-      if (leave.id === leaveId) {
-        return {
-          ...leave,
-          LeaveStatus: leaveStatus,
-          ...(leaveStatus === LeaveStatus.REJECTED && {
-            rejectReason: rejectReason,
-          }),
-        };
-      }
-      return leave;
-    });
+    // Find employee + leave inside the cached arrays
+    const { value: leave, index: leaveIndex } = findWithIndex(leaves, leaveId);
+    const { value: employee, index: employeeIndex } = findWithIndex(
+      employees,
+      employeeId
+    );
+    const { value: reportManager, index: reportManagerIndex } = findWithIndex(
+      employees,
+      (employee as Employee).reportManagerId as string
+    );
 
-    let updatedEmployees = employees.map((emp) => {
-      if (emp.id === employeeId) {
-        return {
-          ...emp,
-          leavesApplied: emp.leavesApplied.map((leave: Leave) =>
-            leave.id === leaveId
+    // Updated leave object for cache
+    const updatedLeave: Leave = {
+      ...leave,
+      LeaveStatus: leaveStatus,
+      ...(leaveStatus === LeaveStatus.REJECTED && { rejectReason }),
+    };
+
+    // Updated employee object with:
+    //  - updated leave status inside leavesApplied[]
+    //  - updated balance (only if approved)
+    const updatedEmployee: Employee = {
+      ...employee,
+      leavesApplied: employee.leavesApplied.map((lv: Leave) =>
+        lv.id === leaveId
+          ? {
+              ...lv,
+              LeaveStatus: leaveStatus,
+              ...(leaveStatus === LeaveStatus.REJECTED && { rejectReason }),
+            }
+          : lv
+      ),
+      ...(leaveStatus === LeaveStatus.APPROVED && {
+        leaveBalances: employee.leaveBalances.map(
+          (balance: EmployeeLeaveBalance) =>
+            balance.policyName === policyName
               ? {
-                  ...leave,
-                  LeaveStatus: leaveStatus,
-                  ...(leaveStatus === LeaveStatus.REJECTED && {
-                    rejectReason: rejectReason,
-                  }),
+                  ...balance,
+                  balance:
+                    (balance.balance as number) - (deductedBalance as number),
                 }
-              : leave
-          ),
-        };
-      }
-      return emp;
-    });
-    // If the leave was approved, also update the employee's leave balance in the cached employees array.
-    if (leaveStatus === LeaveStatus.APPROVED) {
-      updatedEmployees = employees.map((emp: Employee) => {
-        if (emp.id === employeeId) {
-          return {
-            ...emp,
-            leaveBalances: emp.leaveBalances.map(
-              (balance: EmployeeLeaveBalance) => {
-                if (balance.policyName === policyName) {
-                  return {
-                    ...balance,
-                    balance:
-                      (balance.balance as number) - (deductedBalance as number),
-                  };
-                }
-                return balance;
-              }
-            ),
-          };
-        }
-        return emp;
-      });
-    }
-    await redis.set("Employees", updatedEmployees);
-    console.log("Redis cache updated for: Employees");
+              : balance
+        ),
+      }),
+    };
+    // update the ReportManager leave Actioned
+    const updatedReportManager: Employee = {
+      ...reportManager,
+      leavesActioned: reportManager.leavesActioned.map((leave: Leave) =>
+        leave.id === leaveId
+          ? {
+              ...leave,
+              LeaveStatus: leaveStatus,
+              ...(leaveStatus === LeaveStatus.REJECTED && { rejectReason }),
+            }
+          : leave
+      ),
+    };
 
-    // Save the updated leaves array back to Redis.
-    await redis.set("leaves", updatedLeaves);
-    console.log("Redis cache updated for: leaves");
+    // Update Redis lists at specific index positions
+    await redis.updateListById("leaves:list", leaveIndex, updatedLeave);
+    await redis.updateListById(
+      "employees:list",
+      employeeIndex,
+      updatedEmployee
+    );
+    await redis.updateListById(
+      "employees:list",
+      reportManagerIndex,
+      updatedReportManager
+    );
+
+    console.log("Redis cache updated for leave + employee record");
   } catch (error) {
-    // Log the error, but don't throw, as the primary DB operation was successful.
-    // The cache will self-heal on the next miss.
-    console.error("Failed to update Redis cache:", error);
+    // Cache failures should not block main workflow.
+    console.error("Redis cache update failed:", error);
   }
 };

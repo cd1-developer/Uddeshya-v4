@@ -4,6 +4,7 @@ import getEmployeeInfo from "@/helper/getEmployeeInfo";
 import { RedisProvider } from "@/libs/RedisProvider";
 import { Employee } from "@/helper/getEmployees";
 import { getEmployees } from "@/helper/getEmployees";
+import { findWithIndex } from "@/helper/findWithIndex";
 
 /**
  * API endpoint to assign a reporting manager to one or more employees.
@@ -102,43 +103,73 @@ export const POST = async (req: NextRequest) => {
 };
 
 /**
- * Updates the "Employees" list in the Redis cache after a report manager assignment.
- * This function ensures the cached data is consistent with the database changes.
- 
- * @param reportManagerInfo The full object of the reporting manager.
- * @param employeesInfo An array of employee objects that were assigned to the manager.
+ * Updates Redis cache when employees are assigned to a report manager.
+ *
+ * This function ensures cache consistency by:
+ *  1. Updating the manager's `assignMembers` list.
+ *  2. Updating each assigned employee to reference their new report manager.
+ *
+ * Both updates happen in Redis without refetching all data, preserving performance.
+ *
+ * @param reportManagerInfo - The full employee object of the manager.
+ * @param employeesInfo - List of employees newly assigned to this manager.
  */
 async function updateReportManagerInCache(
   reportManagerInfo: Employee,
   employeesInfo: Employee[]
 ) {
-  // Fetch the entire list of employees from the cache/source.
-  const employess = await getEmployees();
-  const redis = await RedisProvider.getInstance();
+  // Fetch all employees from cache for lookup + updates.
+  const employees = await getEmployees();
+  const redis = RedisProvider.getInstance();
 
-  // First pass: Update the reporting manager's `assignMembers` list.
-  let updatedEmployees = employess?.map((employee) =>
-    employee.id === reportManagerInfo.id
-      ? {
-          ...employee,
-          // Add the newly assigned employees to the manager's list of direct reports.
-          assignMembers: [...(employee.assignMembers ?? []), ...employeesInfo],
-        }
-      : employee
-  );
+  /**
+   * We loop over all employees involved in assignment:
+   *
+   *  - If employee === reportManager:
+   *        → Update their `assignMembers` array to include all assigned employees.
+   *
+   *  - If employee is one of the assigned employees:
+   *        → Set `reportManagerId` and embed full manager object.
+   *
+   * Promise.all ensures all Redis updates execute in parallel for optimal performance.
+   */
+  await Promise.all(
+    employeesInfo.map(async (emp: Employee) => {
+      const { index } = findWithIndex(employees as Employee[], emp.id);
 
-  // Second pass: Update the `reportManager` field for each assigned employee.
-  updatedEmployees = updatedEmployees?.map((employee) =>
-    employeesInfo.some((emp) => emp.id === employee.id)
-      ? // Set the report manager details on the employee object.
-        {
-          ...employee,
+      // ---------------------------------------------
+      // CASE 1: Update each assigned employee with their manager reference
+      // ---------------------------------------------
+      if (employeesInfo.some((selectedEmp) => emp.id === selectedEmp.id)) {
+        const updatedEmployee = {
+          ...emp,
           reportManagerId: reportManagerInfo.id,
           reportManager: reportManagerInfo,
-        }
-      : employee
+        };
+
+        return redis.updateListById("employees:list", index, updatedEmployee);
+      }
+    })
   );
 
-  // Write the fully updated employee list back to the Redis cache.
-  await redis.set("Employees", updatedEmployees);
+  employees.map((emp: Employee, index) => {
+    if (emp.id === reportManagerInfo.id) {
+      // ---------------------------------------------
+      // CASE 1: Update manager's "assignMembers" list
+      // ---------------------------------------------
+      if (emp.id === reportManagerInfo.id) {
+        const updatedReportManager = {
+          ...emp,
+          // Ensure append behavior (avoid overwriting existing members)
+          assignMembers: [...(emp.assignMembers ?? []), ...employeesInfo],
+        };
+
+        return redis.updateListById(
+          "employees:list",
+          index,
+          updatedReportManager
+        );
+      }
+    }
+  });
 }

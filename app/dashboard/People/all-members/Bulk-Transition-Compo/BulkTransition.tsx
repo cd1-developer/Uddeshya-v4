@@ -24,7 +24,6 @@ type Row = Record<string, unknown>;
 
 const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
   const [isBulkTransitionOpen, setIsBulkTransitionOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [data, setData] = useState<Row[]>([]);
@@ -100,7 +99,6 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
     setFileName(null);
     setIsDataAdded(false);
     setColumns([]);
-    setIsProcessing(false);
   };
 
   //!       <-------------- Calling the API for inserting data in Bulk ------------->
@@ -149,7 +147,6 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
           },
         ];
 
-        console.log(earnedLeaveBalance, casualLeaveBalance, leaveBalanceInfo);
         // Convert joiningDate to Date object
         const joiningDate = new Date(String(joiningDateValue));
 
@@ -216,7 +213,6 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
       if (successfulCreations.length === 0) {
         ErrorToast("Failed to create any users");
         setIsLoading(false);
-        setIsProcessing(false);
         return;
       }
 
@@ -279,6 +275,7 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
           }`
         );
         setIsDataAdded(true);
+        setIsBulkTransitionOpen(false);
       } else {
         ErrorToast("Failed to add any employees");
       }
@@ -287,7 +284,6 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
       ErrorToast(error.message || "Failed to add employees");
     } finally {
       setIsLoading(false);
-      setIsProcessing(false);
     }
   };
   return (
@@ -302,7 +298,7 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
       <DialogCompo
         isOpen={isBulkTransitionOpen}
         onOpenChange={(open) => {
-          if (isProcessing) {
+          if (isLoading) {
             // Optionally show a message that operation is in progress
             ErrorToast("Please wait while employees are being added...");
             return; // Don't close the dialog
@@ -382,8 +378,13 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
                     variant="outline"
                     size="sm"
                     onClick={resetDialog}
+<<<<<<< HEAD
                     className="h-8 text-xs mt-3 sm:mt-0 font-gilMedium"
                     disabled={isLoading || isProcessing}
+=======
+                    className="h-8 text-xs"
+                    disabled={isLoading}
+>>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
                   >
                     Change File
                   </Button>
@@ -405,18 +406,14 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
                     handleAddData();
                     setIsBulkTransitionOpen(false);
                   }}
-                  disabled={isDataAdded || isLoading || isProcessing}
+                  disabled={isDataAdded || isLoading}
                   className={`flex items-center gap-3 px-8 py-3 font-gilSemiBold rounded-lg cursor-pointer transition-all ${
                     isDataAdded
                       ? "bg-green-600 hover:bg-green-600 cursor-default"
                       : "bg-sky-500 hover:bg-sky-600"
-                  } ${
-                    isLoading || isProcessing
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                  } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {isLoading || isProcessing ? (
+                  {isLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       <span>Adding {data.length} employees...</span>

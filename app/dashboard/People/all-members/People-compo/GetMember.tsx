@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 import React, { useEffect, useMemo, useState, useTransition } from "react";
 import { styled, keyframes, setup } from "goober";
 import { Funnel, ChevronRight } from "lucide-react";
+=======
+import { useMemo, useState } from "react";
+import { Funnel } from "lucide-react";
+>>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import {
@@ -22,15 +27,15 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { setEmployee } from "@/libs/dataslice";
-import { Employee, EmployeeStatus, User } from "@/interfaces";
+import { Employee, LeaveStatus } from "@/interfaces";
 import { toast } from "sonner";
-import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
+
 import { Badge } from "@/components/ui/badge";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { format } from "date-fns";
 import { Role } from "@/interfaces";
 import AssignMember from "../ReportManager/AssignMember/AssignMembers";
-import { SelectValue } from "@radix-ui/react-select";
+
 // import AssingMember from "@/components/ReportManager/AssingMember/AssingMember";
 
 interface BulkTransitionData {
@@ -55,13 +60,45 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
 
   const updateMemberRole = async (memberId: string, newRole: string) => {
     setUpdatingMemberId(memberId);
+    const selectedEmployee = employees.find(
+      (emp: Employee) => emp.id === memberId
+    );
 
     const previousMembers = [...employees];
 
-    const updateMembers = employees.map((member) =>
-      member.id === memberId ? { ...member, role: newRole as any } : member
+    let updateMembers = employees.map((member: Employee) =>
+      member.id === memberId
+        ? {
+            ...member,
+            role: newRole as any,
+            // Remove the assign member from the reportManager
+            // unassing the all the PENDING leaves applied by the assign members
+            ...(member.role === Role.REPORT_MANAGER &&
+              newRole !== Role.REPORT_MANAGER && {
+                assignMembers: [],
+                leavesActioned: member.leavesActioned?.filter(
+                  (leave) => leave.LeaveStatus !== LeaveStatus.PENDING
+                ),
+              }),
+          }
+        : member
     );
-    dispatch(setEmployee(updateMembers));
+    // Remove the reportManager from the assing Members
+    if (
+      selectedEmployee?.role === Role.REPORT_MANAGER &&
+      newRole !== Role.REPORT_MANAGER
+    ) {
+      updateMembers = updateMembers.map((member: Employee) => {
+        if (member.reportManagerId === memberId) {
+          return {
+            ...member,
+            reportManagerId: null,
+            reportManager: null,
+          };
+        }
+        return member;
+      });
+    }
 
     try {
       const response = await axios.patch(
@@ -74,6 +111,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
       const { success, message, data } = response.data;
 
       if (success) {
+        dispatch(setEmployee(updateMembers));
         toast.success(message || "Role updated successfully", {
           position: "bottom-right",
           duration: 2000,

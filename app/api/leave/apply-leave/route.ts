@@ -5,7 +5,8 @@ import { LeaveSchema } from "@//schemas/leave.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { Leave } from "@prisma/client";
 import { RedisProvider } from "@/libs/RedisProvider";
-import { getEmployees } from "@/helper/getEmployees";
+import { Employee, getEmployees } from "@/helper/getEmployees";
+import { findWithIndex } from "@/helper/findWithIndex";
 
 /**
  * API endpoint for an employee to apply for a leave.
@@ -129,35 +130,40 @@ async function updateLeavesInfoInCache(
   reportManagerId: string,
   leave: Leave
 ) {
-  const redis = await RedisProvider.getInstance();
+  const redis = RedisProvider.getInstance();
 
-  const employeess = (await getEmployees()) || [];
+  const employees = (await getEmployees()) || [];
+
+  const { value: employee, index: employeeIndex } = findWithIndex(
+    employees,
+    employeeId
+  );
+
+  const { value: reportManager, index: reportManagerIndex } = findWithIndex(
+    employees,
+    reportManagerId
+  );
 
   // 1. Add the new leave to the global 'leaves' list in the cache.
-  await redis.addToList<Leave>("leaves", leave);
-
+  await redis.addToList("leaves:list", leave);
   // 2. Find the applicant in the cached employees list and add the new leave
   //    to their 'leavesApplied' array.
-  let updatedEmployees = employeess.map((employee) =>
-    employee.id === employeeId
-      ? {
-          ...employee,
-          leavesApplied: [...employee.leavesApplied, leave],
-        }
-      : employee
-  );
+  let updatedEmployee: Employee = {
+    ...employee,
+    leavesApplied: [...employee.leavesApplied, leave],
+  };
 
   // 3. Find the reporting manager and add the new leave to their 'leavesActioned'
   //    array, so they can see it in their queue for approval/rejection.
-  updatedEmployees = updatedEmployees.map((employee) =>
-    employee.id === reportManagerId
-      ? {
-          ...employee,
-          leavesActioned: [...employee.leavesActioned, leave],
-        }
-      : employee
+  console.log(`Report Manager Index: ${reportManagerIndex}`);
+  let updatedReportManager = {
+    ...reportManager,
+    leavesActioned: [...reportManager.leavesActioned, leave],
+  };
+  await redis.updateListById(
+    "employees:list",
+    reportManagerIndex,
+    updatedReportManager
   );
-
-  // 4. Save the modified employee list back to the Redis cache.
-  await redis.set("Employees", updatedEmployees);
+  await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
 }

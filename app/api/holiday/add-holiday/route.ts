@@ -29,7 +29,7 @@ export const POST = async (req: NextRequest) => {
       },
     });
 
-    await redis.addToList("holidays", newHoliday);
+    await redis.addToList("holiday:list", newHoliday);
 
     return NextResponse.json({
       success: true,

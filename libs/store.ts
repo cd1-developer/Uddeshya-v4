@@ -7,7 +7,18 @@ import storage from "redux-persist/lib/storage";
 const persistConfig = {
   key: "root",
   storage,
+<<<<<<< HEAD
   whitelist: ["userInfo", "employee", "leave"],
+=======
+  whitelist: [
+    "userInfo",
+    "employee",
+    "setEmployeeInfoEndCursor",
+    "setEmployeeLeaveEndCursor",
+    "setAssignMemberLeaveEndCursor",
+    "setHolidayEndCursor",
+  ],
+>>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
 };
 
 const rootReducer = combineReducers({

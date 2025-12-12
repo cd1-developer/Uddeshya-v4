@@ -193,7 +193,11 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
       return;
     }
 
-    if (deductedBalance > currentBal) {
+    if (
+      currentPolicy?.policyName !== "Un-Paid Leave" &&
+      currentPolicy?.policyName !== "Exam Leave" &&
+      deductedBalance > currentBal
+    ) {
       ErrorToast(`Insufficiant leave balance ${currentBal}`);
       return;
     }

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { getHolidays } from "@//helper/getHolidays";
+import { Holiday } from "@prisma/client";
 
 export const GET = async () => {
   try {
-    const { success, message, holidays } = await getHolidays();
+    const { success, message, holidays } =
+      (await getHolidays()) || ([] as Holiday[]);
     if (!success) {
       return NextResponse.json({
         success,

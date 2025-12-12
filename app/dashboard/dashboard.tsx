@@ -9,7 +9,7 @@ import { RootState } from "@/libs/store";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { Plus, Trash2, Calendar, Cake, User, CalendarDays } from "lucide-react";
-import { Role } from "@/interfaces";
+import { Employee, Role } from "@/interfaces";
 import type { DatePickerProps } from "antd";
 import { DatePicker } from "antd";
 import { Holiday } from "@prisma/client";
@@ -18,28 +18,57 @@ import { successToast } from "@/components/custom/SuccessToast";
 import { Input } from "@/components/ui/input";
 import { setLeave } from "@/libs/dataslice";
 import dayjs from "dayjs";
-
-type UpComingDOBType = {
-  id: string;
-  username: string;
-  dateOfBirth: Date;
-};
+import useFetchEmployees from "@/hooks/useFetchEmployees";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { UpComingDOBType } from "@/interfaces";
 const Dashboard = () => {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [upComingdateOfBirth, setUpComingDataOfBirth] = useState<
+    UpComingDOBType[]
+  >([]);
+  const { fetchEmployees } = useFetchEmployees();
 
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
   const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
   const employees = useSelector((state: RootState) => state.dataSlice.employee);
-  const currentUserId = useSelector(
-    (state: RootState) => state.dataSlice.userInfo.id
-  );
 
-  const employeeId = employees?.find((emp) => emp.userId === currentUserId)?.id;
+  const employeeId = employee?.id;
+
+  const currentUserRole = employee?.role;
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!userInfo || !userInfo.id) return;
+
+    async function fetchEmployeeInfo() {
+      try {
+        const res = await axios.get(
+          `/api/Employee/get-employee?userId=${userInfo.id}`
+        );
+
+        const { success, message, data } = res.data;
+
+        if (!success) {
+          ErrorToast(message);
+          return;
+        }
+
+        setEmployee(data);
+      } catch (err) {
+        ErrorToast("Failed to load employee data");
+      }
+    }
+
+    fetchEmployeeInfo();
+  }, [userInfo]);
 
   useEffect(() => {
     const fetchLeavesData = async () => {
       if (!employeeId) return;
+      if (employee.role === Role.ADMIN) return;
 
       try {
         const response = await axios.get(
@@ -65,55 +94,27 @@ const Dashboard = () => {
     });
   }, [employeeId]);
 
-  const upComingdateOfBirth = useMemo(() => {
-    if (employees?.length === 0 || !employees) {
-      return [];
-    }
-    return employees
-      .filter((emp) => {
-        if (!emp.user.dateOfBirth) {
-          return false;
+  useEffect(() => {
+    async function fetchBirthDays() {
+      try {
+        const res = await axios.get("/api/Employee/get-upcoming-birthdays");
+
+        const { success, message, data } = res.data;
+
+        if (!success) {
+          ErrorToast(message || "Failed to load birthdays");
+          return;
         }
-        const today = new Date();
-        const dateFromDOB = new Date(emp.user.dateOfBirth).getDate();
-        const monthFromDOB = new Date(emp.user.dateOfBirth).getMonth();
-        const currentYear = today.getFullYear();
-        // date of birth based on current year
-        const birthDay = new Date(currentYear, monthFromDOB, dateFromDOB);
-        if (birthDay >= today) {
-          return true;
-        }
-      })
-      .map((emp) => ({
-        id: emp.id,
-        username: emp.user.username,
-        dateOfBirth: emp.user.dateOfBirth,
-      })) as UpComingDOBType[];
-  }, []);
-  const currentUserRole = employees?.find(
-    (emp) => emp.userId === userInfo.id
-  )?.role;
 
-  const dispatch = useDispatch();
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`/api/Employee/get-employees`);
-
-      const { success, data, message } = response.data;
-
-      if (!success) {
-        ErrorToast(message || "Failed to fetch members");
-        return;
+        setUpComingDataOfBirth(data);
+      } catch (error: any) {
+        console.error("Error fetching upcoming birthdays:", error);
+        ErrorToast("Something went wrong while fetching birthdays");
       }
-
-      dispatch(setEmployee(data));
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message;
-      console.error("Error fetching members: ", errorMessage);
-      ErrorToast("Failed to load members");
     }
-  };
+
+    fetchBirthDays();
+  }, []);
 
   const fetchHolidays = () => {
     startTransition(async () => {
@@ -201,52 +202,65 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="p-2 max-h-96 overflow-y-auto">
-            {holidays.length === 0 ? (
-              <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg m-2">
-                <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="font-gilMedium text-gray-500">No holidays yet</p>
-                <p className="text-sm font-gilRegular text-gray-400 mt-1">
-                  Add holidays to see them here
-                </p>
-              </div>
-            ) : (
-              holidays.map((holiday) => (
-                <div
-                  key={holiday.id}
-                  className="flex items-center justify-between p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                      <p className="font-gilMedium text-gray-900">
-                        {holiday.holidayName}
+          <div className="relative">
+            {/* Fade at top */}
+            <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
+
+            <ScrollArea className="p-2 max-h-75 overflow-y-auto scrollbar-custom">
+              {holidays.length === 0 ? (
+                <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg m-2">
+                  <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                  <p className="font-gilMedium text-gray-500">
+                    No holidays yet
+                  </p>
+                  <p className="text-sm font-gilRegular text-gray-400 mt-1">
+                    Add holidays to see them here
+                  </p>
+                </div>
+              ) : (
+                holidays.map((holiday) => (
+                  <div
+                    key={holiday.id}
+                    className="flex items-center justify-between p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                        <p className="font-gilMedium text-gray-900">
+                          {holiday.holidayName}
+                        </p>
+                      </div>
+
+                      <p className="text-sm font-gilRegular text-gray-600">
+                        {new Date(holiday.holidayDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
                       </p>
                     </div>
-                    <p className="text-sm font-gilRegular text-gray-600">
-                      {new Date(holiday.holidayDate).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}
-                    </p>
-                  </div>
 
-                  {currentUserRole === Role.ADMIN && (
-                    <button
-                      onClick={() => removeHoliday(holiday.id)}
-                      className="ml-3 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                      aria-label={`Delete ${holiday.holidayName}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
+                    {currentUserRole === Role.ADMIN && (
+                      <button
+                        onClick={() => removeHoliday(holiday.id)}
+                        className="ml-3 p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label={`Delete ${holiday.holidayName}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+
+              <ScrollBar />
+            </ScrollArea>
+
+            {/* Fade at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
           </div>
         </section>
 
@@ -270,53 +284,64 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="p-2 max-h-96 overflow-y-auto">
-            {upComingdateOfBirth.length === 0 ? (
-              <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg m-2">
-                <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="font-gilMedium text-gray-500">
-                  No upcoming birthdays
-                </p>
-                <p className="text-sm font-gilRegular text-gray-400 mt-1">
-                  Check back later for celebrations
-                </p>
-              </div>
-            ) : (
-              upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
-                <div
-                  key={dobInfo.id}
-                  className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-gray-600" />
-                  </div>
+          <div className="relative">
+            {/* Top fade shadow */}
+            <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-white to-transparent pointer-events-none z-10" />
 
-                  <div className="flex-1">
-                    <p className="font-gilSemiBold text-gray-900">
-                      {dobInfo.username}
-                    </p>
-                    <p className="text-sm font-gilRegular text-gray-600">
-                      {new Date(dobInfo.dateOfBirth).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
-                    </p>
-                  </div>
-
-                  {new Date(dobInfo.dateOfBirth).getDate() ===
-                    new Date().getDate() &&
-                    new Date(dobInfo.dateOfBirth).getMonth() ===
-                      new Date().getMonth() && (
-                      <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
-                        Today
-                      </span>
-                    )}
+            <div className="p-2 max-h-96 overflow-y-auto scrollbar-custom">
+              {upComingdateOfBirth.length === 0 ? (
+                <div className="p-8 text-center border border-dashed border-gray-200 rounded-lg m-2">
+                  <User className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                  <p className="font-gilMedium text-gray-500">
+                    No upcoming birthdays
+                  </p>
+                  <p className="text-sm font-gilRegular text-gray-400 mt-1">
+                    Check back later for celebrations
+                  </p>
                 </div>
-              ))
-            )}
+              ) : (
+                upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
+                  <div
+                    key={dobInfo.id}
+                    className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    {/* Avatar */}
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+
+                    {/* User info */}
+                    <div className="flex-1">
+                      <p className="font-gilSemiBold text-gray-900">
+                        {dobInfo.username}
+                      </p>
+                      <p className="text-sm font-gilRegular text-gray-600">
+                        {new Date(dobInfo.dateOfBirth).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Today badge */}
+                    {new Date(dobInfo.dateOfBirth).getDate() ===
+                      new Date().getDate() &&
+                      new Date(dobInfo.dateOfBirth).getMonth() ===
+                        new Date().getMonth() && (
+                        <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
+                          Today
+                        </span>
+                      )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Bottom fade shadow */}
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
           </div>
         </section>
       </div>
