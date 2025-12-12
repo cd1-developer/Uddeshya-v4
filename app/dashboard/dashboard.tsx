@@ -9,7 +9,7 @@ import { RootState } from "@/libs/store";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { Plus, Trash2, Calendar, Cake, User, CalendarDays } from "lucide-react";
-import { Role } from "@/interfaces";
+import { Employee, Role } from "@/interfaces";
 import type { DatePickerProps } from "antd";
 import { DatePicker } from "antd";
 import { Holiday } from "@prisma/client";
@@ -18,6 +18,7 @@ import { successToast } from "@/components/custom/SuccessToast";
 import { Input } from "@/components/ui/input";
 import { setLeave } from "@/libs/dataslice";
 import dayjs from "dayjs";
+import useFetchEmployees from "@/hooks/useFetchEmployees";
 
 type UpComingDOBType = {
   id: string;
@@ -27,45 +28,14 @@ type UpComingDOBType = {
 const Dashboard = () => {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const { fetchEmployees } = useFetchEmployees();
 
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
   const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
   const employees = useSelector((state: RootState) => state.dataSlice.employee);
-  const currentUserId = useSelector(
-    (state: RootState) => state.dataSlice.userInfo.id
-  );
-  let currentEmployee = employees?.find((emp) => emp.userId === currentUserId);
 
-  const employeeId = currentEmployee?.id;
-
-  useEffect(() => {
-    const fetchLeavesData = async () => {
-      if (!employeeId) return;
-      if (currentEmployee.role === Role.ADMIN) return;
-
-      try {
-        const response = await axios.get(
-          `/api/leave/employee?employeeId=${employeeId}`
-        );
-
-        const { success, data, message } = response.data;
-
-        if (!success) {
-          ErrorToast(message || "Failed to fetch members");
-          return;
-        }
-
-        dispatch(setLeave(data));
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message;
-        console.error("Error fetching members: ", errorMessage);
-        ErrorToast("Failed to load Leaves ");
-      }
-    };
-    startTransition(() => {
-      fetchLeavesData();
-    });
-  }, [employeeId]);
+  const employeeId = employee?.id;
 
   const upComingdateOfBirth = useMemo(() => {
     if (employees?.length === 0 || !employees) {
@@ -92,31 +62,63 @@ const Dashboard = () => {
         dateOfBirth: emp.user.dateOfBirth,
       })) as UpComingDOBType[];
   }, []);
-  const currentUserRole = employees?.find(
-    (emp) => emp.userId === userInfo.id
-  )?.role;
+  const currentUserRole = employee?.role;
 
   const dispatch = useDispatch();
 
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`/api/Employee/get-employees`);
+  useEffect(() => {
+    if (!userInfo || !userInfo.id) return;
 
-      const { success, data, message } = response.data;
+    async function fetchEmployeeInfo() {
+      try {
+        const res = await axios.get(
+          `/api/Employee/get-employee?userId=${userInfo.id}`
+        );
 
-      if (!success) {
-        ErrorToast(message || "Failed to fetch members");
-        return;
+        const { success, message, data } = res.data;
+
+        if (!success) {
+          ErrorToast(message);
+          return;
+        }
+
+        setEmployee(data);
+      } catch (err) {
+        ErrorToast("Failed to load employee data");
       }
-      console.log(response.data);
-
-      //dispatch(setEmployee(data));
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message;
-      console.error("Error fetching members: ", errorMessage);
-      ErrorToast("Failed to load members");
     }
-  };
+
+    fetchEmployeeInfo();
+  }, [userInfo]);
+
+  useEffect(() => {
+    const fetchLeavesData = async () => {
+      if (!employeeId) return;
+      if (employee.role === Role.ADMIN) return;
+
+      try {
+        const response = await axios.get(
+          `/api/leave/employee?employeeId=${employeeId}`
+        );
+
+        const { success, data, message } = response.data;
+
+        if (!success) {
+          ErrorToast(message || "Failed to fetch members");
+          return;
+        }
+
+        dispatch(setLeave(data));
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message;
+        console.error("Error fetching members: ", errorMessage);
+        ErrorToast("Failed to load Leaves ");
+      }
+    };
+    startTransition(() => {
+      fetchLeavesData();
+    });
+  }, [employeeId]);
 
   const fetchHolidays = () => {
     startTransition(async () => {
@@ -146,9 +148,9 @@ const Dashboard = () => {
     successToast(message);
   };
 
-  // useEffect(() => {
-  //   fetchEmployees();
-  // }, []);
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
   useEffect(() => {
     fetchHolidays();

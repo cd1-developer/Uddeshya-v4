@@ -130,7 +130,11 @@ export const POST = async (req: NextRequest) => {
     });
     console.log(`Leave ${leaveId} status updated to ${updatedStatus} in DB.`);
 
-    if (updatedStatus === LeaveStatus.APPROVED) {
+    if (
+      updatedStatus === LeaveStatus.APPROVED &&
+      leave.policyName !== "Exam Leave" &&
+      leave.policyName !== "Exam Leave"
+    ) {
       // 4. If approved, deduct the balance from the employee's total leave balance.
       const { success, message } = await updateTotalBalance(
         employeeId,
@@ -217,6 +221,10 @@ const updateRedisCache = async ({
       employees,
       employeeId
     );
+    const { value: reportManager, index: reportManagerIndex } = findWithIndex(
+      employees,
+      (employee as Employee).reportManagerId as string
+    );
 
     // Updated leave object for cache
     const updatedLeave: Leave = {
@@ -252,6 +260,19 @@ const updateRedisCache = async ({
         ),
       }),
     };
+    // update the ReportManager leave Actioned
+    const updatedReportManager: Employee = {
+      ...reportManager,
+      leavesActioned: reportManager.leavesActioned.map((leave: Leave) =>
+        leave.id === leaveId
+          ? {
+              ...leave,
+              LeaveStatus: leaveStatus,
+              ...(leaveStatus === LeaveStatus.REJECTED && { rejectReason }),
+            }
+          : leave
+      ),
+    };
 
     // Update Redis lists at specific index positions
     await redis.updateListById("leaves:list", leaveIndex, updatedLeave);
@@ -259,6 +280,11 @@ const updateRedisCache = async ({
       "employees:list",
       employeeIndex,
       updatedEmployee
+    );
+    await redis.updateListById(
+      "employees:list",
+      reportManagerIndex,
+      updatedReportManager
     );
 
     console.log("Redis cache updated for leave + employee record");

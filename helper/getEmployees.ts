@@ -33,8 +33,9 @@ export const getEmployees = async (): Promise<Employee[]> => {
   const redis = RedisProvider.getInstance();
   try {
     let employees = await redis.getList<Employee>("employees:list");
+
     // If the Employees Exits, it's a cache hit.
-    if (employees) {
+    if (employees.length > 0) {
       console.log("Cache HIT ✅: Employees from Redis");
       // Retrieve the full list of employees from Redis.
 

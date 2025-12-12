@@ -138,6 +138,23 @@ async function updateReportManagerInCache(
       const { index } = findWithIndex(employees as Employee[], emp.id);
 
       // ---------------------------------------------
+      // CASE 1: Update each assigned employee with their manager reference
+      // ---------------------------------------------
+      if (employeesInfo.some((selectedEmp) => emp.id === selectedEmp.id)) {
+        const updatedEmployee = {
+          ...emp,
+          reportManagerId: reportManagerInfo.id,
+          reportManager: reportManagerInfo,
+        };
+
+        return redis.updateListById("employees:list", index, updatedEmployee);
+      }
+    })
+  );
+
+  employees.map((emp: Employee, index) => {
+    if (emp.id === reportManagerInfo.id) {
+      // ---------------------------------------------
       // CASE 1: Update manager's "assignMembers" list
       // ---------------------------------------------
       if (emp.id === reportManagerInfo.id) {
@@ -153,19 +170,6 @@ async function updateReportManagerInCache(
           updatedReportManager
         );
       }
-
-      // ---------------------------------------------
-      // CASE 2: Update each assigned employee with their manager reference
-      // ---------------------------------------------
-      if (employeesInfo.some((selectedEmp) => emp.id === selectedEmp.id)) {
-        const updatedEmployee = {
-          ...emp,
-          reportManagerId: reportManagerInfo.id,
-          reportManager: reportManagerInfo,
-        };
-
-        return redis.updateListById("employees:list", index, updatedEmployee);
-      }
-    })
-  );
+    }
+  });
 }

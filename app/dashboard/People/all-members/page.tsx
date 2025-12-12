@@ -33,12 +33,12 @@ import GetMember from "./People-compo/GetMember";
 import { Role, EmployeeStatus, Gender, Employee } from "@/interfaces";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { successToast } from "@/components/custom/SuccessToast";
-import { setEmployee, setEmployeeInfoEndCursor } from "@/libs/dataslice";
+import { setEmployee } from "@/libs/dataslice";
 import MembersTable from "./Members-Table/MembersTable";
 import BulkTransition from "./Bulk-Transition-Compo/BulkTransition";
 import { Spinner } from "@/components/ui/spinner";
 import { useInView } from "react-intersection-observer";
-
+import useFetchEmployees from "@/hooks/useFetchEmployees";
 const addEmployeeSchema = z.object({
   username: z.string().min(1, "Username is required"),
   email: z.string({ error: "Email is required" }),
@@ -77,15 +77,9 @@ const Members = () => {
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [data, setData] = useState<Row[]>([]);
   const [bulkData, setBulkData] = useState<any[]>([]);
   const [bulkColumns, setBulkColumns] = useState<string[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-
-  const employeeInfoEndCursors = useSelector(
-    (state: RootState) => state.dataSlice.employeeInfoEndCursor
-  );
-  const employees = useSelector((state: RootState) => state.dataSlice.employee);
+  const { isPending: isLoading, fetchEmployees } = useFetchEmployees();
 
   const form = useForm<addPeopleFormValues>({
     resolver: zodResolver(addEmployeeSchema),
@@ -108,47 +102,6 @@ const Members = () => {
     setBulkData(data);
     setBulkColumns(columns);
   };
-
-  const fetchEmployees = () => {
-    if (!hasMore || isPending) return;
-
-    let cursor =
-      employeeInfoEndCursors.length > 0 ? employeeInfoEndCursors.at(-1) : 0;
-
-    startTransition(async () => {
-      try {
-        const response = await axios.get(
-          `/api/Employee/get-employees?cursor=${cursor}&limit=9`
-        );
-
-        const {
-          success,
-          data,
-          nextCursor,
-          hasMore: more,
-          message,
-        } = response.data;
-
-        if (!success) {
-          ErrorToast(message || "Failed to fetch members");
-          return;
-        }
-
-        if (more) {
-          dispatch(setEmployeeInfoEndCursor(nextCursor));
-        }
-
-        setHasMore(more);
-
-        dispatch(setEmployee([...employees, ...data]));
-      } catch (error: any) {
-        ErrorToast("Failed to load members");
-      }
-    });
-  };
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
 
   useEffect(() => {
     if (inView) {
@@ -480,7 +433,7 @@ const Members = () => {
         <GetMember bulkData={bulkData} bulkColumns={bulkColumns} />
 
         <div className="flex justify-center items-center mt-2 p-2" ref={ref}>
-          {isPending && <Spinner className="size-6 text-slate-500" />}
+          {isLoading && <Spinner className="size-6 text-slate-500" />}
         </div>
 
         {/* {bulkData.length > 0 && (

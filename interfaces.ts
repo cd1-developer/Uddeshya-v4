@@ -12,13 +12,13 @@ export interface Employee {
   id: string;
   userId: string;
   role: Role;
-  reportManagerId?: string;
+  reportManagerId?: string | null;
   joiningDate?: Date;
   probationEnd: String;
   status: EmployeeStatus;
   // Relations
   user: User;
-  reportManager?: Employee;
+  reportManager?: Employee | null;
   assignMembers: Employee[];
   leaveBalances: EmployeeLeaveBalance[];
   employeeLatestIncrement: EmployeeLatestIncrement[];

@@ -148,15 +148,17 @@ const updateRedisCache = async (employee: Employee, role: Role) => {
    * - If the employee was a REPORT_MANAGER but is no longer one,
    *   then clear:
    *     - assigned member list
-   *     - leaves applied list
+   *     - unassing the all the PENDING leaves applied by the assign members
    */
-  let updatedEmployee = {
+  let updatedEmployee: Employee = {
     ...employee,
     role,
     ...(employee.role === Role.REPORT_MANAGER &&
       role !== Role.REPORT_MANAGER && {
         assignMembers: [],
-        leavesApplied: [],
+        leavesActioned: employee.leavesActioned.filter(
+          (leave) => leave.LeaveStatus !== LeaveStatus.PENDING
+        ),
       }),
   };
 

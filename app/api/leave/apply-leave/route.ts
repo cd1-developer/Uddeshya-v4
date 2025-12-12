@@ -139,6 +139,11 @@ async function updateLeavesInfoInCache(
     employeeId
   );
 
+  const { value: reportManager, index: reportManagerIndex } = findWithIndex(
+    employees,
+    reportManagerId
+  );
+
   // 1. Add the new leave to the global 'leaves' list in the cache.
   await redis.addToList("leaves:list", leave);
   // 2. Find the applicant in the cached employees list and add the new leave
@@ -150,16 +155,15 @@ async function updateLeavesInfoInCache(
 
   // 3. Find the reporting manager and add the new leave to their 'leavesActioned'
   //    array, so they can see it in their queue for approval/rejection.
-  employees.map(async (employee, index) => {
-    if (employee.id === reportManagerId) {
-      let updatedReportManager = {
-        ...employee,
-        leavesActioned: [...employee.leavesActioned, leave],
-      };
-
-      await redis.updateListById("employees:list", index, updatedReportManager);
-    }
-  });
-
+  console.log(`Report Manager Index: ${reportManagerIndex}`);
+  let updatedReportManager = {
+    ...reportManager,
+    leavesActioned: [...reportManager.leavesActioned, leave],
+  };
+  await redis.updateListById(
+    "employees:list",
+    reportManagerIndex,
+    updatedReportManager
+  );
   await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
 }

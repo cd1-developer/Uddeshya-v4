@@ -73,6 +73,7 @@ export class RedisProvider {
 
     const items = await this.lrange(key, start, end);
     let nextCursor = end + 1 < total ? end + 1 : null;
+
     return {
       success: true,
       data: items,
