@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
@@ -81,10 +81,6 @@ const LeaveRequest = () => {
     <section className="">
       <header className="flex justify-between items-center border-b pt-2 pb-4">
         <h1 className="font-gilSemiBold text-xl md:text-2xl">Leave Request</h1>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
         <div className="create-req">
           <Button
             onClick={() => setIsOpen(true)}
@@ -127,10 +123,6 @@ const LeaveRequest = () => {
             </SelectContent>
           </Select>
         </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
         <div className="sm:hidden space-y-3 mt-3">
           {!leaveData || leaveData.length === 0 ? (
             <div className="text-center py-10 px-4">
@@ -169,10 +161,6 @@ const LeaveRequest = () => {
                     {leave.LeaveStatus}
                   </span>
                 </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
                 {/* Middle Row: Dates */}
                 <div className="flex items-center gap-3 mb-3">
                   <div className="flex-1">
@@ -189,18 +177,10 @@ const LeaveRequest = () => {
                     </div>
                   </div>
                 </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
                 {/* Reason (Shortened) */}
                 <div className="text-sm text-gray-600 mb-3 line-clamp-2">
                   {leave.reason}
                 </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
                 {/* Bottom Row: Absent Type */}
                 <div className="text-xs text-gray-500 flex justify-between items-center">
                   <span className="font-gilMedium">
@@ -218,10 +198,6 @@ const LeaveRequest = () => {
             ))
           )}
         </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
         <div className="hidden sm:block">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
@@ -233,10 +209,6 @@ const LeaveRequest = () => {
                 <th className="text-left p-3 font-gilRegular">Status</th>
               </tr>
             </thead>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
             <tbody>
               {leaveData && leaveData.length === 0 ? (
                 <tr>

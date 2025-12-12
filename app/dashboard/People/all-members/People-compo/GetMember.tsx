@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 import React, { useEffect, useMemo, useState, useTransition } from "react";
 import { styled, keyframes, setup } from "goober";
 import { Funnel, ChevronRight } from "lucide-react";
-=======
-import { useMemo, useState } from "react";
-import { Funnel } from "lucide-react";
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import {
