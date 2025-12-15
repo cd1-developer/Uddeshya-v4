@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 import { signupSchema } from "@/schemas/auth-schema";
 import bcrypt from "bcryptjs";
-import z from "zod";
+import z, { success } from "zod";
+import { message } from "antd";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -27,6 +28,19 @@ export const POST = async (req: NextRequest) => {
 
     const { username, email, password, gender, dateOfBirth } =
       validation.data as z.infer<typeof signupSchema>;
+
+    const isUserExist = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+
+    if (isUserExist) {
+      return NextResponse.json({
+        success: false,
+        message: `The email address ${email} is already registered. Please try another one.`,
+      });
+    }
 
     // 🧩 Handle optional fields cleanly
     const personalInfo = {

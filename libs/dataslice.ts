@@ -61,6 +61,9 @@ const dataSlice = createSlice({
     setHolidayEndCursor: (state, action: PayloadAction<number | null>) => {
       state.holidayEndCursor.push(action.payload);
     },
+    updateEmployeeRole: (state, action: PayloadAction<Employee[]>) => {
+      state.employee = action.payload;
+    },
     removeState: () => initialState,
   },
 });
@@ -76,6 +79,7 @@ export const {
   setEmployeeLeaveEndCursor,
   setAssignMemberLeaveEndCursor,
   setHolidayEndCursor,
+  updateEmployeeRole,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

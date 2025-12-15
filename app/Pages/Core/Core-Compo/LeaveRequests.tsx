@@ -6,7 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { AbsentType, Leave, Holiday, Employee } from "@/interfaces";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  User,
+  ChevronRight,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import AlertDialogCompo from "@/components/custom/AlertDialog/AlertDialogCompo";
 import { LeaveStatus } from "@/interfaces";
 
@@ -101,7 +109,7 @@ const LeaveRequests = ({
             //   <img className="w-28" src="/not-found.png" alt="not-found" />
             // </div>
 
-            <Card className=" py-16 border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+            <Card className="py-16 border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-white">
               <CardContent className="max-w-md mx-auto">
                 {/* <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-sky-50 to-blue-50 flex items-center justify-center">
                   <Calendar className="w-12 h-12 text-sky-400" />
@@ -117,79 +125,72 @@ const LeaveRequests = ({
           ) : (
             allLeaves.flatMap((leave, i) => (
               <div key={i}>
-                <Card>
-                  <CardHeader className="pb-2">
+                <Card className="py-3">
+                  <CardHeader className="pb-3 px-2 md:px-6 pt-2 md:pt-6">
                     <div className="flex items-start justify-between">
-                      <div className="flex space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            // src={leave.orgMember.user.username}
-                            // alt={leave.orgMember.user.username}
+                      <div className="flex items-start space-x-4">
+                        <div className="relative">
+                          <Avatar className="w-12 h-12 rounded-xl border-2 border-white shadow-md bg-gradient-to-br from-slate-100 to-slate-200">
+                            <AvatarImage
+                              src={leave.applicant?.user.username}
+                              alt={leave.applicant?.user.username}
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-slate-200 to-slate-300 text-slate-700 font-gilSemiBold rounded-xl">
+                              {leave.applicant?.user.username
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white border border-slate-200 flex items-center justify-center">
+                            <User className="h-3 w-3 text-slate-500" />
+                          </div>
+                        </div>
 
-                            src={leave.applicant?.user.username}
-                            alt={leave.applicant?.user.username}
-                          />
-                          <AvatarFallback className="bg-blue-100 text-sky-600 font-gilSemiBold text-sm">
-                            {/* {leave.orgMember.user.username
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")} */}
-                            {leave.applicant?.user.username
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div>
-                          <h2 className="font-gilSemiBold text-md">
-                            {/* {leave.orgMember.user.username} */}
-                            {leave.applicant.user.username}
-                          </h2>
-                          <div>
-                            <div className="font-gilRegular text-sm">
+                        <div className="space-y-1">
+                          <div className="flex items-center flex-wrap -space-y-1 space-x-2">
+                            <h2 className="font-gilSemiBold text-slate-900 text-lg">
+                              {leave.applicant.user.username}
+                            </h2>
+                            <ChevronRight className="h-4 w-4 text-slate-400" />
+                            <span className="text-slate-700 font-gilMedium text-sm sm:text-md">
                               {leave.policyName}
-                            </div>
-                            <p className="text-xs text-slate-500 font-gilRegular mt-2">
-                              {getExactTime(leave)}
-                            </p>
-                            <p className="italic font-gilRegular text-[0.8rem]">
-                              {/* {(leave.startAbsentType === DayType.FirstHalf ||
-                                (leave.startAbsentType === DayType.SecondHalf &&
-                                  leave.endAbsentType === "")) &&
-                                "Half Day"} */}
+                            </span>
+                          </div>
 
-                              {(leave.startAbsentType ===
-                                AbsentType.FIRST_HALF ||
-                                (leave.startAbsentType ===
-                                  AbsentType.SECOND_HALF &&
-                                  !leave.endAbsentType)) &&
-                                "Half Day"}
-                            </p>
+                          <div className="flex items-center flex-wrap space-x-4 mt-2 sm:mt-0 text-sm text-slate-600">
+                            <div className="flex items-center space-x-1">
+                              <span className="font-gilMedium text-xs">
+                                {getExactTime(leave)}
+                              </span>
+                            </div>
+                            {(leave.startAbsentType === AbsentType.FIRST_HALF ||
+                              (leave.startAbsentType ===
+                                AbsentType.SECOND_HALF &&
+                                !leave.endAbsentType)) && (
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span className="text-slate-500 font-gilRegular">
+                                  Half Day
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        {/* <Badge
-                          className={`text-xs ${getStatusColor(
-                            leave.leaveStatus
-                          )}`}
-                        >
-                          {getStatusIcon(leave.leaveStatus)}
-                          <span className="ml-1 capitalize">
-                            {leave.leaveStatus}
-                          </span>
-                        </Badge> */}
 
-                        <Badge
-                          className={`text-xs ${getStatusColor(
-                            leave.LeaveStatus
-                          )}`}
-                        >
+                      <Badge
+                        variant="outline"
+                        className={` 
+                          "px-3 py-1.5 rounded-lg font-medium border shadow-sm",
+                          ${getStatusColor(leave.LeaveStatus)}
+                        `}
+                      >
+                        <div className="flex items-center space-x-1.5">
                           {getStatusIcon(leave.LeaveStatus)}
-                          <span className="ml-1">{leave.LeaveStatus}</span>
-                        </Badge>
-                      </div>
+                          <span>{leave.LeaveStatus}</span>
+                        </div>
+                      </Badge>
                     </div>
                   </CardHeader>
 
@@ -209,6 +210,7 @@ const LeaveRequests = ({
                           <AlertDialogCompo
                             triggerButton={<ApproveButton />}
                             isDisabled={isPending}
+                            isLoading={isPending}
                             onClickHandler={() => handleApproveLeave(leave)}
                             description={
                               <Description title={leave.policyName} />
@@ -227,7 +229,8 @@ const LeaveRequests = ({
                           </Button> */}
                           <AlertDialogCompo
                             triggerButton={<RejectButton />}
-                            isDisabled={isPending}
+                            isDisabled={!rejectedReason.trim()}
+                            isLoading={isPending}
                             onClickHandler={() => handleRejectLeave(leave)}
                             description={
                               <Description title={leave.policyName} />
@@ -242,6 +245,7 @@ const LeaveRequests = ({
                                 setRejectedReason(e.target.value)
                               }
                               className="mt-3"
+                              required
                             />
                           </AlertDialogCompo>
                         </div>

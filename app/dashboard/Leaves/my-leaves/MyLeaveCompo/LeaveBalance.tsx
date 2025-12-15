@@ -97,10 +97,6 @@ const LeaveBalance = () => {
                   </span>
                 </div>
               </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
@@ -146,10 +142,6 @@ const LeaveBalance = () => {
           </div>
         )}
       </div>
-<<<<<<< HEAD
-
-=======
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
       {/* Desktop View (Table) - Hidden on mobile */}
       <div className="hidden md:block">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

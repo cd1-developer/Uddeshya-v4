@@ -58,6 +58,14 @@ const useUpdateLeaveStatus = ({
         leavePolicies,
         holidays,
       });
+
+      if (
+        updatedStatus === LeaveStatus.REJECTED &&
+        (rejectedReason === "" || !rejectedReason)
+      ) {
+        ErrorToast("Reason of rejection is required");
+        return;
+      }
       try {
         const res = await axios.post("/api/leave/update-leave-status", {
           leaveId: id,

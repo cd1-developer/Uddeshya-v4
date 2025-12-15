@@ -91,7 +91,7 @@ export const POST = async (req: NextRequest) => {
     // 6. Update the Redis cache with the new leave information.
     await updateLeavesInfoInCache(
       employeeId,
-      employee.reportManagerId as string,
+      actionByEmployeeId,
       newAppliedLeave
     );
 

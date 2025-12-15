@@ -235,7 +235,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
   return (
     <div className="">
       <div className="flex justify-center flex-col">
-        <p className="text-gray-600 font-gilRegular mb-3">
+        <p className="text-gray-600 font-gilRegular text-sm mb-3">
           Assign team members to report to{" "}
           <span className="font-gilSemiBold text-gray-900">
             {selectedReportManager?.user.username || "Selected Manager"}
@@ -244,14 +244,14 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
 
         {/* Search Input */}
         <div ref={searchContainerRef} className="relative">
-          <div className=" flex items-center gap-2 mb-3 border border-gray-300 rounded-lg px-3 py-2 transition-all bg-gray-50">
+          <div className=" flex items-center gap-2 mb-3 border border-gray-300 rounded-lg px-3 py-1.5 transition-all bg-gray-50">
             <UserPlus size={18} className="text-gray-500" />
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Search and add people..."
-              className="w-full bg-transparent font-gilRegular outline-none placeholder:text-gray-400 placeholder:font-gilThin"
+              className="w-full bg-transparent font-gilRegular outline-none placeholder:text-gray-400 placeholder:font-gilLight placeholder:text-xs"
             />
           </div>
 
@@ -268,7 +268,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
                 {filteredUnassignedMembers?.map((employee: Employee) => (
                   <ul key={employee.id}>
                     <li
-                      className={`relative cursor-pointer border rounded-md p-2 flex items-center gap-4 ${
+                      className={`relative cursor-pointer border rounded-md p-2 flex items-center gap-2 sm:gap-4 ${
                         selectedEmployees.some(
                           (emp) => emp.id === employee.id
                         ) && "bg-sky-100"
@@ -278,7 +278,7 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
                         toggleMemberSelection(employee);
                       }}
                     >
-                      <div>
+                      <div className="pb-0">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback className="font-gilSemiBold text-gray-700">
                             {String(
@@ -289,14 +289,27 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
                       </div>
 
                       <div>
-                        <h2 className="font-gilSemiBold">
+                        <h2 className="font-gilSemiBold -mb-1">
                           {employee.user.username}
                         </h2>
-                        <h3 className="font-gilMedium text-gray-700 text-sm">
+                        <h3 className="font-gilMedium text-gray-600 text-xs sm:text-sm">
                           {employee.user.email}
                         </h3>
-                        <p className="font-gilRegular text-gray-600 text-[0.7rem]">
-                          Role: {employee.role}
+                        <p className=" mt-1">
+                          <span className="font-gilSemiBold text-[0.65rem] sm:text-xs">
+                            Role:
+                          </span>{" "}
+                          <span
+                            className={`font-gilMedium text-gray-600 text-[0.6rem] sm:text-[0.7rem] px-2 py-1 pb-0 rounded-full ${
+                              employee.role === Role.REPORT_MANAGER
+                                ? "bg-amber-100"
+                                : employee.role === Role.MEMBER
+                                ? "bg-green-200"
+                                : ""
+                            }`}
+                          >
+                            {employee.role}
+                          </span>
                         </p>
                       </div>
 
@@ -338,13 +351,13 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
       </div>
       <div className="mt-8 flex justify-end-safe items-center gap-3">
         <button
-          className="cursor-pointer border px-3 py-1.5 rounded-sm font-gilMedium"
+          className="cursor-pointer border px-3 py-1.5 pb-1 rounded-sm text-sm sm:text-base font-gilMedium"
           onClick={() => isOpen(false)}
         >
           Cancel
         </button>
         <button
-          className="bg-sky-700 hover:bg-sky-800 text-white font-medium rounded-lg px-5 py-2 cursor-pointer
+          className="bg-sky-700 hover:bg-sky-800 text-white rounded-lg px-5 py-2 pb-1 cursor-pointer
                  transition-all duration-200 active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           onClick={assignMember}
           disabled={selectedEmployees.length === 0}
@@ -352,13 +365,17 @@ function AssignMember({ userId, isOpen }: AssingMemberProps) {
           {isPending ? (
             <>
               <Loader2 size={18} className="animate-spin text-white" />
-              <span className="font-gilMedium">Assigning...</span>
+              <span className="font-gilMedium text-sm sm:text-base">
+                Assigning...
+              </span>
             </>
           ) : (
             <>
               {/* 👤 Normal button state */}
               <UserPlus size={18} strokeWidth={1.5} className="text-white" />
-              <span className="font-gilMedium">Assign Member</span>
+              <span className="font-gilMedium text-sm sm:text-base">
+                Assign Member
+              </span>
             </>
           )}
         </button>

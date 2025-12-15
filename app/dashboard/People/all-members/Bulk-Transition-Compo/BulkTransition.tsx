@@ -378,13 +378,8 @@ const BulkTransition = ({ onDataLoaded }: BulkTransitionProps) => {
                     variant="outline"
                     size="sm"
                     onClick={resetDialog}
-<<<<<<< HEAD
                     className="h-8 text-xs mt-3 sm:mt-0 font-gilMedium"
-                    disabled={isLoading || isProcessing}
-=======
-                    className="h-8 text-xs"
                     disabled={isLoading}
->>>>>>> d1490de3a4e9bc796b57f92a06b44eaa92a368c8
                   >
                     Change File
                   </Button>

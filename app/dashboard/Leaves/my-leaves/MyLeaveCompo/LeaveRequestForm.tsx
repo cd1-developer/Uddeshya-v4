@@ -167,19 +167,17 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
   const onSubmit = async (leaveData: CreateLeaveFormValues) => {
     let { startAbsentType, endAbsentType } = leaveData;
 
-    // const employee = employees.find(
-    //   (member) => member.id === leaveData.employeeId
-    // );
-
     const employee = employees.find(
       (emp) => emp.userId === currentUser.id
     ) as Employee;
 
     if (employee.status === EmployeeStatus.Probation) {
-      ErrorToast("Oops! You're still on probation.");
+      ErrorToast(
+        "Leave application is not allowed during the probation period."
+      );
       return;
     }
-    // const casualLeaveBalance = (employee?.leaveBalances.find(balance => balance.policyName === ))
+
     const currentPolicy = POLICIES.find(
       (policy) => policy.policyName === leaveData.policyName
     );
@@ -189,7 +187,9 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
     )?.balance || 0) as number;
 
     if (currentPolicy?.maxApply && deductedBalance > currentPolicy.maxApply) {
-      ErrorToast(`You can't apply concurrent ${currentPolicy.maxApply} leaves`);
+      ErrorToast(
+        `You can apply a maximum of ${currentPolicy.maxApply} consecutive leave(s) under this policy.`
+      );
       return;
     }
 
@@ -198,14 +198,16 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
       currentPolicy?.policyName !== "Exam Leave" &&
       deductedBalance > currentBal
     ) {
-      ErrorToast(`Insufficiant leave balance ${currentBal}`);
+      ErrorToast(
+        `Insufficient leave balance. Available balance: ${currentBal}.`
+      );
       return;
     }
 
     const payload = {
       ...leaveData,
       startAbsentType,
-      endAbsentType: endAbsentType,
+      endAbsentType,
     };
 
     try {
@@ -218,12 +220,17 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
         setIsOpen(false);
         form.reset();
       } else {
-        ErrorToast(message || "Something went wrong while creating leave.");
+        ErrorToast(
+          message ||
+            "Unable to apply leave at the moment. Please try again later."
+        );
         dispatch(setLeave([]));
       }
     } catch (error: any) {
       console.error("Error creating leave:", error);
-      ErrorToast(error);
+      ErrorToast(
+        "Something went wrong while submitting your leave request. Please try again."
+      );
     }
   };
 

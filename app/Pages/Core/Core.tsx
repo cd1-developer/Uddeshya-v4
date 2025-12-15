@@ -65,6 +65,7 @@ const Core = () => {
       );
 
       const { success, message, data } = res.data;
+      console.log(data);
 
       if (!success) {
         ErrorToast(message || "Failed to fetch applied leaves.");

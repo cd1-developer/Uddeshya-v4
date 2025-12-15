@@ -221,10 +221,13 @@ const updateRedisCache = async ({
       employees,
       employeeId
     );
+
     const { value: reportManager, index: reportManagerIndex } = findWithIndex(
       employees,
-      (employee as Employee).reportManagerId as string
+      (leave as Leave).actionByEmployeeId as string
     );
+
+    console.log({ leaveIndex, employeeIndex, reportManagerIndex });
 
     // Updated leave object for cache
     const updatedLeave: Leave = {

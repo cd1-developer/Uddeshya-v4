@@ -1,5 +1,4 @@
 import React from "react";
-import { Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -20,6 +19,7 @@ interface AlertDialogProp {
   actionTitle: string;
   loader: string;
   children?: React.ReactNode;
+  isLoading: boolean;
 }
 
 const AlertDialogCompo = ({
@@ -30,6 +30,7 @@ const AlertDialogCompo = ({
   actionTitle,
   loader,
   children,
+  isLoading,
 }: AlertDialogProp) => {
   return (
     <div>
@@ -54,7 +55,7 @@ const AlertDialogCompo = ({
               disabled={isDisabled}
               className="text-white font-gilRegular cursor-pointer"
             >
-              {isDisabled ? (
+              {isLoading ? (
                 <div className="flex items-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   {loader}

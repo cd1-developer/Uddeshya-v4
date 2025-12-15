@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState, useTransition } from "react";
 import { styled, keyframes, setup } from "goober";
-import { Funnel, ChevronRight } from "lucide-react";
+import {
+  Funnel,
+  ChevronRight,
+  UserRound,
+  UsersRound,
+  Plus,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import {
@@ -21,7 +27,7 @@ import {
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
-import { setEmployee } from "@/libs/dataslice";
+import { setEmployee, updateEmployeeRole } from "@/libs/dataslice";
 import { Employee, LeaveStatus } from "@/interfaces";
 import { toast } from "sonner";
 
@@ -30,6 +36,8 @@ import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
 import { format } from "date-fns";
 import { Role } from "@/interfaces";
 import AssignMember from "../ReportManager/AssignMember/AssignMembers";
+import { ErrorToast } from "@/components/custom/ErrorToast";
+import { successToast } from "@/components/custom/SuccessToast";
 
 // import AssingMember from "@/components/ReportManager/AssingMember/AssingMember";
 
@@ -102,19 +110,12 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
           role: newRole,
         }
       );
-
       const { success, message, data } = response.data;
-
-      if (success) {
-        dispatch(setEmployee(updateMembers));
-        toast.success(message || "Role updated successfully", {
-          position: "bottom-right",
-          duration: 2000,
-          className: "bg-green-600 text-white border border-green-500",
-        });
-      } else {
-        throw new Error(message || "Failed to update role");
+      if (!success) {
+        ErrorToast(message || "Failed to update role");
       }
+      dispatch(updateEmployeeRole(updateMembers));
+      successToast(message || "Role updated successfully");
     } catch (error: any) {
       dispatch(setEmployee(previousMembers));
 
@@ -167,7 +168,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
     return (
       <Badge
         variant={getRoleVarient(role)}
-        className="font-gilMedium text-xs px-4 py-1"
+        className="font-gilMedium text-[0.7rem] sm:text-xs px-4 py-1 pb-0.5"
       >
         {role}
       </Badge>
@@ -189,7 +190,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
     return (
       <Badge
         variant={getStatusVarient(status)}
-        className="font-gilMedium text-[0.65rem]"
+        className="font-gilMedium text-[0.65rem] sm:text-xs"
       >
         {status}
       </Badge>
@@ -228,7 +229,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
           filterEmployees.map((member: Employee, i) => (
             <div
               key={i}
-              className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200 ${
+              className={`bg-white rounded-xl shadow-md border border-[rgba(0,0,0,0.2)] p-4 hover:shadow-md transition-shadow duration-200 ${
                 member.role === Role.REPORT_MANAGER &&
                 roleOfCurrentUser === Role.ADMIN
                   ? "cursor-pointer border-l-4 border-l-blue-500"
@@ -248,7 +249,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
               <div className="flex items-start gap-3 mb-4">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-sm">
-                    <span className="font-gilSemiBold text-blue-700 text-sm">
+                    <span className="font-gilSemiBold text-sky-700 text-sm">
                       {Avatar(member.user?.username || "N/A")}
                     </span>
                   </div>
@@ -265,7 +266,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between">
                     <h3 className="font-gilSemiBold text-base text-gray-900 truncate">
                       {member.user?.username || "No user linked"}
                     </h3>
@@ -297,7 +298,7 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    <span className="font-gilRegular text-xs text-gray-500">
+                    <span className="font-gilRegular mt-0.5 text-xs text-gray-500">
                       Joining
                     </span>
                   </div>
@@ -335,8 +336,9 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
+
                     <span
-                      className={`font-gilRegular text-xs ${
+                      className={`font-gilRegular mt-0.5 text-xs ${
                         member.probationEnd &&
                         new Date(member.probationEnd.toString()) < new Date()
                           ? "text-green-600"
@@ -394,19 +396,6 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
                             <span className="font-gilMedium text-sm text-gray-700">
                               Change Role
                             </span>
-                            {/* <svg
-                              className="w-4 h-4 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg> */}
                           </div>
                         </SelectTrigger>
                         <SelectContent>
@@ -445,28 +434,18 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
                         setIsOpen(true);
                         setSelectedUserId(member.userId);
                       }}
-                      className="ml-3 px-4 py-2 bg-gradient-to-r from-sky-500 to-sky-600 text-white font-gilMedium text-sm rounded-lg hover:from-sky-600 hover:to-sky-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                      className="ml-3 px-3 py-1.5 bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-lg hover:from-sky-600 hover:to-sky-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      Assign
+                      <Plus size={16} />
+                      <p className="mt-0.5 font-gilMedium text-xs sm:text-sm">
+                        Assign
+                      </p>
                     </button>
                   )}
               </div>
 
               {/* Status Indicator */}
-              {member.role === Role.REPORT_MANAGER &&
+              {/* {member.role === Role.REPORT_MANAGER &&
                 roleOfCurrentUser === Role.ADMIN && (
                   <div className="mt-3 flex items-center justify-end">
                     <div className="flex items-center gap-1 text-sky-600 text-xs font-gilMedium">
@@ -486,27 +465,15 @@ const Current = ({ bulkData, bulkColumns }: BulkTransitionData) => {
                       </svg>
                     </div>
                   </div>
-                )}
+                )} */}
             </div>
           ))
         ) : (
           <div className="text-center py-12 px-4 bg-white rounded-xl border border-gray-200">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+            <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+              <UsersRound className="text-gray-700" size={30} />
             </div>
-            <h3 className="font-gilSemiBold text-lg text-gray-800 mb-2">
+            <h3 className="font-gilSemiBold text-lg text-gray-800">
               No employees found
             </h3>
             <p className="font-gilLight text-gray-500 text-sm">
