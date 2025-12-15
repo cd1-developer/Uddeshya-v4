@@ -311,6 +311,7 @@ const ReportManager = () => {
                                   <AlertDialogCompo
                                     triggerButton={<DeleteButton />}
                                     isDisabled={isRemoving}
+                                    isLoading={isRemoving}
                                     onClickHandler={() =>
                                       handleDeleteMember(teamMember.id)
                                     }
