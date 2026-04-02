@@ -2,7 +2,7 @@ import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 import validateData from "@//helper/validateData";
-import { RedisProvider } from "@/libs/RedisProvider";
+// import { RedisProvider } from "@/libs/RedisProvider";
 import { Holiday } from "@/interfaces";
 
 const HolidaySchema = z.object({
@@ -30,7 +30,7 @@ export const PATCH = async (req: NextRequest) => {
     if (!id) {
       return NextResponse.json(
         { success: false, message: "Holiday ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,8 +38,8 @@ export const PATCH = async (req: NextRequest) => {
     const { success, message, data } = validateData(HolidaySchema, body);
     const validData = Object.fromEntries(
       Object.entries(data as z.infer<typeof HolidaySchema>).filter(
-        ([_, value]) => value !== undefined
-      )
+        ([_, value]) => value !== undefined,
+      ),
     );
 
     if (!success) {
@@ -50,7 +50,7 @@ export const PATCH = async (req: NextRequest) => {
       where: { id },
       data: validData,
     });
-    await updatedHolidaysCache(id, validData);
+    //  await updatedHolidaysCache(id, validData);
 
     return NextResponse.json({
       success: true,
@@ -65,22 +65,22 @@ export const PATCH = async (req: NextRequest) => {
         message: "Failed to update holiday",
         error: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
 
-const updatedHolidaysCache = async (
-  holidayId: string,
-  dataToUpdate: z.infer<typeof HolidaySchema>
-) => {
-  const redis = await RedisProvider.getInstance();
+// const updatedHolidaysCache = async (
+//   holidayId: string,
+//   dataToUpdate: z.infer<typeof HolidaySchema>,
+// ) => {
+//   const redis = await RedisProvider.getInstance();
 
-  const holidays = (await redis.get<Holiday[]>("holidays")) || [];
+//   const holidays = (await redis.get<Holiday[]>("holidays")) || [];
 
-  const updatedHolidays = holidays.map((holiday) =>
-    holiday.id === holidayId ? { ...holiday, ...dataToUpdate } : holiday
-  );
+//   const updatedHolidays = holidays.map((holiday) =>
+//     holiday.id === holidayId ? { ...holiday, ...dataToUpdate } : holiday,
+//   );
 
-  await redis.set("holidays", updatedHolidays);
-};
+//   await redis.set("holidays", updatedHolidays);
+// };

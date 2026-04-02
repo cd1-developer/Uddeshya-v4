@@ -1,7 +1,7 @@
 import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import getEmployeeInfo from "@/helper/getEmployeeInfo";
-import { RedisProvider } from "@/libs/RedisProvider";
+// import { RedisProvider } from "@/libs/RedisProvider";
 import { Employee } from "@/helper/getEmployees";
 import { getEmployees } from "@/helper/getEmployees";
 import { findWithIndex } from "@/helper/findWithIndex";
@@ -30,7 +30,7 @@ export const POST = async (req: NextRequest) => {
           success: false,
           message: "Report manager ID and employee ID are required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -40,7 +40,7 @@ export const POST = async (req: NextRequest) => {
     const employeesInfo = (await Promise.all(
       selectedEmployeesId
         .map((employeeId) => getEmployeeInfo(employeeId))
-        .filter((emp) => emp !== null)
+        .filter((emp) => emp !== null),
     )) as Employee[];
 
     // 4. Ensure the report manager exists.
@@ -50,7 +50,7 @@ export const POST = async (req: NextRequest) => {
           success: false,
           message: "Report manager not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -61,7 +61,7 @@ export const POST = async (req: NextRequest) => {
           success: false,
           message: "Employees not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -79,10 +79,10 @@ export const POST = async (req: NextRequest) => {
     });
 
     // 7. Update the Redis cache to reflect the changes.
-    await updateReportManagerInCache(
-      reportManagerInfo as Employee,
-      employeesInfo as Employee[]
-    );
+    // await updateReportManagerInCache(
+    //   reportManagerInfo as Employee,
+    //   employeesInfo as Employee[],
+    // );
 
     return NextResponse.json({
       success: true,
@@ -97,7 +97,7 @@ export const POST = async (req: NextRequest) => {
         message: "Failed to assign report manager",
         error: error.message || "Unknown server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -114,62 +114,62 @@ export const POST = async (req: NextRequest) => {
  * @param reportManagerInfo - The full employee object of the manager.
  * @param employeesInfo - List of employees newly assigned to this manager.
  */
-async function updateReportManagerInCache(
-  reportManagerInfo: Employee,
-  employeesInfo: Employee[]
-) {
-  // Fetch all employees from cache for lookup + updates.
-  const employees = await getEmployees();
-  const redis = RedisProvider.getInstance();
+// async function updateReportManagerInCache(
+//   reportManagerInfo: Employee,
+//   employeesInfo: Employee[],
+// ) {
+//   // Fetch all employees from cache for lookup + updates.
+//   const employees = await getEmployees();
+//   const redis = RedisProvider.getInstance();
 
-  /**
-   * We loop over all employees involved in assignment:
-   *
-   *  - If employee === reportManager:
-   *        → Update their `assignMembers` array to include all assigned employees.
-   *
-   *  - If employee is one of the assigned employees:
-   *        → Set `reportManagerId` and embed full manager object.
-   *
-   * Promise.all ensures all Redis updates execute in parallel for optimal performance.
-   */
-  await Promise.all(
-    employeesInfo.map(async (emp: Employee) => {
-      const { index } = findWithIndex(employees as Employee[], emp.id);
+//   /**
+//    * We loop over all employees involved in assignment:
+//    *
+//    *  - If employee === reportManager:
+//    *        → Update their `assignMembers` array to include all assigned employees.
+//    *
+//    *  - If employee is one of the assigned employees:
+//    *        → Set `reportManagerId` and embed full manager object.
+//    *
+//    * Promise.all ensures all Redis updates execute in parallel for optimal performance.
+//    */
+//   await Promise.all(
+//     employeesInfo.map(async (emp: Employee) => {
+//       const { index } = findWithIndex(employees as Employee[], emp.id);
 
-      // ---------------------------------------------
-      // CASE 1: Update each assigned employee with their manager reference
-      // ---------------------------------------------
-      if (employeesInfo.some((selectedEmp) => emp.id === selectedEmp.id)) {
-        const updatedEmployee = {
-          ...emp,
-          reportManagerId: reportManagerInfo.id,
-          reportManager: reportManagerInfo,
-        };
+//       // ---------------------------------------------
+//       // CASE 1: Update each assigned employee with their manager reference
+//       // ---------------------------------------------
+//       if (employeesInfo.some((selectedEmp) => emp.id === selectedEmp.id)) {
+//         const updatedEmployee = {
+//           ...emp,
+//           reportManagerId: reportManagerInfo.id,
+//           reportManager: reportManagerInfo,
+//         };
 
-        return redis.updateListById("employees:list", index, updatedEmployee);
-      }
-    })
-  );
+//         return redis.updateListById("employees:list", index, updatedEmployee);
+//       }
+//     }),
+//   );
 
-  employees.map((emp: Employee, index) => {
-    if (emp.id === reportManagerInfo.id) {
-      // ---------------------------------------------
-      // CASE 1: Update manager's "assignMembers" list
-      // ---------------------------------------------
-      if (emp.id === reportManagerInfo.id) {
-        const updatedReportManager = {
-          ...emp,
-          // Ensure append behavior (avoid overwriting existing members)
-          assignMembers: [...(emp.assignMembers ?? []), ...employeesInfo],
-        };
+//   employees.map((emp: Employee, index) => {
+//     if (emp.id === reportManagerInfo.id) {
+//       // ---------------------------------------------
+//       // CASE 1: Update manager's "assignMembers" list
+//       // ---------------------------------------------
+//       if (emp.id === reportManagerInfo.id) {
+//         const updatedReportManager = {
+//           ...emp,
+//           // Ensure append behavior (avoid overwriting existing members)
+//           assignMembers: [...(emp.assignMembers ?? []), ...employeesInfo],
+//         };
 
-        return redis.updateListById(
-          "employees:list",
-          index,
-          updatedReportManager
-        );
-      }
-    }
-  });
-}
+//         return redis.updateListById(
+//           "employees:list",
+//           index,
+//           updatedReportManager,
+//         );
+//       }
+//     }
+//   });
+// }

@@ -24,7 +24,7 @@ export const GET = async () => {
         message: "Failed to fetch holidays",
         error: error.message || error,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

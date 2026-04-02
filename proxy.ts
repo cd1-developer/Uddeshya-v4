@@ -7,7 +7,7 @@ import type { NextRequest } from "next/server";
 const PUBLIC_FRONTEND_ROUTES = ["/"];
 
 const PRIVATE_BACKEND_ROUTES = [
-  "/api/balance",
+  // "/api/balance",
   "/api/Employee",
   "/api/holiday",
   "/api/leave",

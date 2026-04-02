@@ -4,7 +4,7 @@ import z from "zod";
 import { LeaveSchema } from "@//schemas/leave.schema";
 import { NextRequest, NextResponse } from "next/server";
 import { Leave } from "@prisma/client";
-import { RedisProvider } from "@/libs/RedisProvider";
+//import { RedisProvider } from "@/libs/RedisProvider";
 import { Employee, getEmployees } from "@/helper/getEmployees";
 import { findWithIndex } from "@/helper/findWithIndex";
 
@@ -54,7 +54,7 @@ export const POST = async (req: NextRequest) => {
     if (!employee) {
       return NextResponse.json(
         { success: false, message: "Employee not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -89,11 +89,11 @@ export const POST = async (req: NextRequest) => {
     });
 
     // 6. Update the Redis cache with the new leave information.
-    await updateLeavesInfoInCache(
-      employeeId,
-      actionByEmployeeId,
-      newAppliedLeave
-    );
+    // await updateLeavesInfoInCache(
+    //   employeeId,
+    //   actionByEmployeeId,
+    //   newAppliedLeave,
+    // );
 
     return NextResponse.json(
       {
@@ -101,7 +101,7 @@ export const POST = async (req: NextRequest) => {
         data: newAppliedLeave,
         message: "Leave applied successfully",
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     // 7. Handle any unexpected errors during the process.
@@ -112,7 +112,7 @@ export const POST = async (req: NextRequest) => {
         message: "Failed to apply leave",
         error: error.message || "Unknown server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -125,45 +125,45 @@ export const POST = async (req: NextRequest) => {
  * @param reportManagerId The ID of the employee's reporting manager.
  * @param leave The newly created leave object.
  */
-async function updateLeavesInfoInCache(
-  employeeId: string,
-  reportManagerId: string,
-  leave: Leave
-) {
-  const redis = RedisProvider.getInstance();
+// async function updateLeavesInfoInCache(
+//   employeeId: string,
+//   reportManagerId: string,
+//   leave: Leave,
+// ) {
+//   const redis = RedisProvider.getInstance();
 
-  const employees = (await getEmployees()) || [];
+//   const employees = (await getEmployees()) || [];
 
-  const { value: employee, index: employeeIndex } = findWithIndex(
-    employees,
-    employeeId
-  );
+//   const { value: employee, index: employeeIndex } = findWithIndex(
+//     employees,
+//     employeeId,
+//   );
 
-  const { value: reportManager, index: reportManagerIndex } = findWithIndex(
-    employees,
-    reportManagerId
-  );
+//   const { value: reportManager, index: reportManagerIndex } = findWithIndex(
+//     employees,
+//     reportManagerId,
+//   );
 
-  // 1. Add the new leave to the global 'leaves' list in the cache.
-  await redis.addToList("leaves:list", leave);
-  // 2. Find the applicant in the cached employees list and add the new leave
-  //    to their 'leavesApplied' array.
-  let updatedEmployee: Employee = {
-    ...employee,
-    leavesApplied: [...employee.leavesApplied, leave],
-  };
+//   // 1. Add the new leave to the global 'leaves' list in the cache.
+//   await redis.addToList("leaves:list", leave);
+//   // 2. Find the applicant in the cached employees list and add the new leave
+//   //    to their 'leavesApplied' array.
+//   let updatedEmployee: Employee = {
+//     ...employee,
+//     leavesApplied: [...employee.leavesApplied, leave],
+//   };
 
-  // 3. Find the reporting manager and add the new leave to their 'leavesActioned'
-  //    array, so they can see it in their queue for approval/rejection.
-  console.log(`Report Manager Index: ${reportManagerIndex}`);
-  let updatedReportManager = {
-    ...reportManager,
-    leavesActioned: [...reportManager.leavesActioned, leave],
-  };
-  await redis.updateListById(
-    "employees:list",
-    reportManagerIndex,
-    updatedReportManager
-  );
-  await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
-}
+//   // 3. Find the reporting manager and add the new leave to their 'leavesActioned'
+//   //    array, so they can see it in their queue for approval/rejection.
+//   console.log(`Report Manager Index: ${reportManagerIndex}`);
+//   let updatedReportManager = {
+//     ...reportManager,
+//     leavesActioned: [...reportManager.leavesActioned, leave],
+//   };
+//   await redis.updateListById(
+//     "employees:list",
+//     reportManagerIndex,
+//     updatedReportManager,
+//   );
+//   await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
+// }

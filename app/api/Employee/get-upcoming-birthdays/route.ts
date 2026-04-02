@@ -16,7 +16,6 @@ export const GET = async () => {
     const upComingBirthDays = employees
       .filter((emp: Employee) => {
         const dob = emp?.user?.dateOfBirth;
-        console.log(dob);
 
         if (!dob) return false;
 
@@ -24,7 +23,7 @@ export const GET = async () => {
         const birthdayThisYear = new Date(
           currentYear,
           birthDate.getMonth(),
-          birthDate.getDate()
+          birthDate.getDate(),
         );
 
         return birthdayThisYear >= today;
@@ -45,7 +44,7 @@ export const GET = async () => {
         message: "Failed to fetch upcoming birthdays",
         error: error?.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

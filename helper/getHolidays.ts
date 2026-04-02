@@ -1,27 +1,27 @@
 import { prisma } from "@/libs/prisma";
-import { RedisProvider } from "@/libs/RedisProvider";
+//import { RedisProvider } from "@/libs/RedisProvider";
 import { Holiday } from "@prisma/client";
 
 export const getHolidays = async () => {
-  const redis = RedisProvider.getInstance();
+  //  const redis = RedisProvider.getInstance();
 
   try {
     // Try reading from Redis cache
-    const cached = await redis.getList<Holiday>("holiday:list");
+    // const cached = await redis.getList<Holiday>("holiday:list");
 
-    let holidays: Holiday[] = [];
+    //let holidays: Holiday[] = [];
 
     // Validate Redis data before using it
-    if (cached && Array.isArray(cached)) {
-      holidays = cached as Holiday[];
-    }
+    // if (cached && Array.isArray(cached)) {
+    //   holidays = cached as Holiday[];
+    // }
 
-    if (holidays.length > 0) {
-      return {
-        success: true,
-        holidays,
-      };
-    }
+    // if (holidays.length > 0) {
+    //   return {
+    //     success: true,
+    //     holidays,
+    //   };
+    // }
 
     // Fallback to Prisma DB
     const dbHolidays = await prisma.holiday.findMany();

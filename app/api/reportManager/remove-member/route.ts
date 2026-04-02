@@ -1,7 +1,7 @@
 import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import getEmployeeInfo from "@/helper/getEmployeeInfo";
-import { RedisProvider } from "@/libs/RedisProvider";
+// import { RedisProvider } from "@/libs/RedisProvider";
 import { getEmployees } from "@/helper/getEmployees";
 import { getLeaves } from "@/helper/getLeaves";
 import { Employee, Leave, LeaveStatus } from "@prisma/client";
@@ -19,7 +19,7 @@ export const DELETE = async (req: NextRequest) => {
           success: false,
           message: "Report manager ID and employee ID are required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,7 +34,7 @@ export const DELETE = async (req: NextRequest) => {
           success: false,
           message: "Report manager not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -44,7 +44,7 @@ export const DELETE = async (req: NextRequest) => {
           success: false,
           message: "Employee not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
     // If all Wells then update DB and then Udpate the redis Cache
@@ -71,7 +71,7 @@ export const DELETE = async (req: NextRequest) => {
     }
 
     // Step-2 : Update the Redis Cache
-    await updatedEmployeesCache(employeeId, reportManagerId);
+    //  await updatedEmployeesCache(employeeId, reportManagerId);
 
     return NextResponse.json({
       success: true,
@@ -85,68 +85,68 @@ export const DELETE = async (req: NextRequest) => {
         message: "Failed to unassign report manager",
         error: error.message || "Unknown server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
 
-const updatedEmployeesCache = async (
-  employeeId: string,
-  reportManagerId: string
-) => {
-  const redis = RedisProvider.getInstance();
-  const employees = (await getEmployees()) || [];
-  const leaves = (await getLeaves()) || [];
+// const updatedEmployeesCache = async (
+//   employeeId: string,
+//   reportManagerId: string,
+// ) => {
+//   const redis = RedisProvider.getInstance();
+//   const employees = (await getEmployees()) || [];
+//   const leaves = (await getLeaves()) || [];
 
-  await Promise.all(
-    employees.map(async (emp, index) => {
-      if (emp.id === reportManagerId) {
-        const updatedReportManager = {
-          ...emp,
-          // Remove the all Pending leaves of the assign members
-          leavesApplied: emp.leavesApplied.map((leave: Leave) =>
-            leave.actionByEmployeeId === employeeId &&
-            leave.LeaveStatus === LeaveStatus.PENDING
-              ? { ...leave, actionByEmployeeId: null }
-              : leave
-          ),
-          // Remove the assing member from the reportManager
-          assignMembers: emp.assignMembers.filter(
-            (member: Employee) => member.id != employeeId
-          ),
-        };
-        return redis.updateListById(
-          "employees:list",
-          index,
-          updatedReportManager
-        );
-      }
-      // remove the reportManager info from the assing member
-      if (emp.id === employeeId) {
-        const updatedEmployee = {
-          ...emp,
-          reportManagerId: null,
-          reportManager: null,
-        };
-        return redis.updateListById("employees:list", index, updatedEmployee);
-      }
-    })
-  );
+//   await Promise.all(
+//     employees.map(async (emp, index) => {
+//       if (emp.id === reportManagerId) {
+//         const updatedReportManager = {
+//           ...emp,
+//           // Remove the all Pending leaves of the assign members
+//           leavesApplied: emp.leavesApplied.map((leave: Leave) =>
+//             leave.actionByEmployeeId === employeeId &&
+//             leave.LeaveStatus === LeaveStatus.PENDING
+//               ? { ...leave, actionByEmployeeId: null }
+//               : leave,
+//           ),
+//           // Remove the assing member from the reportManager
+//           assignMembers: emp.assignMembers.filter(
+//             (member: Employee) => member.id != employeeId,
+//           ),
+//         };
+//         return redis.updateListById(
+//           "employees:list",
+//           index,
+//           updatedReportManager,
+//         );
+//       }
+//       // remove the reportManager info from the assing member
+//       if (emp.id === employeeId) {
+//         const updatedEmployee = {
+//           ...emp,
+//           reportManagerId: null,
+//           reportManager: null,
+//         };
+//         return redis.updateListById("employees:list", index, updatedEmployee);
+//       }
+//     }),
+//   );
 
-  // Remove the reportManager from the assing members applied leaves
+//   // Remove the reportManager from the assing members applied leaves
 
-  await Promise.all(
-    leaves.map(async (leave, index) => {
-      if (
-        leave.employeeId === employeeId &&
-        leave.LeaveStatus === LeaveStatus.PENDING
-      ) {
-        const updatedLeave = {
-          ...leave,
-          actionByEmployeeId: null,
-        };
-        return redis.updateListById("leaves:list", index, updatedLeave);
-      }
-    })
-  );
-};
+//   await Promise.all(
+//     leaves.map(async (leave, index) => {
+//       if (
+//         leave.employeeId === employeeId &&
+//         leave.LeaveStatus === LeaveStatus.PENDING
+//       ) {
+//         const updatedLeave = {
+//           ...leave,
+//           actionByEmployeeId: null,
+//         };
+//         return redis.updateListById("leaves:list", index, updatedLeave);
+//       }
+//     }),
+//   );
+// };
