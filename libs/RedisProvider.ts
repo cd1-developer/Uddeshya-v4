@@ -48,7 +48,7 @@ export class RedisProvider {
   }
   async getList<T>(key: string) {
     let items = (await this.client.lrange(key, 0, -1)).map(
-      (item) => item
+      (item) => item,
     ) as T[];
 
     return items;
@@ -58,7 +58,7 @@ export class RedisProvider {
     key: string,
     cursor: number,
     limit: number,
-    fetcher: () => Promise<T[]>
+    fetcher: () => Promise<T[]>,
   ) {
     let total = await this.llen(key);
     if (total === 0) {

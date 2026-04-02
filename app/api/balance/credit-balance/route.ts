@@ -16,7 +16,7 @@ export const POST = async () => {
 
     // 🧮 Generate monthlyPeriods and qaurterPeriods
     const monthlyPeriod = months(currentYear).map(
-      (month) => `1-${month}-${currentYear}`,
+      (month) => `${currentDate.getDate()}-${month}-${currentYear}`,
     );
 
     const quarterPeriods = monthlyPeriod.filter((_, index) => index % 3 === 0);
