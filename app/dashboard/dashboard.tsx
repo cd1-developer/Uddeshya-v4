@@ -21,6 +21,8 @@ import dayjs from "dayjs";
 import useFetchEmployees from "@/hooks/useFetchEmployees";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { UpComingDOBType } from "@/interfaces";
+import { sortBirthDay } from "@/helper/SortBirthDay";
+
 const Dashboard = () => {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +34,6 @@ const Dashboard = () => {
 
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
   const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
-  const employees = useSelector((state: RootState) => state.dataSlice.employee);
 
   const employeeId = employee?.id;
 
@@ -46,7 +47,7 @@ const Dashboard = () => {
     async function fetchEmployeeInfo() {
       try {
         const res = await axios.get(
-          `/api/Employee/get-employee?userId=${userInfo.id}`
+          `/api/Employee/get-employee?userId=${userInfo.id}`,
         );
 
         const { success, message, data } = res.data;
@@ -72,7 +73,7 @@ const Dashboard = () => {
 
       try {
         const response = await axios.get(
-          `/api/leave/employee?employeeId=${employeeId}`
+          `/api/leave/employee?employeeId=${employeeId}`,
         );
 
         const { success, data, message } = response.data;
@@ -99,7 +100,7 @@ const Dashboard = () => {
       try {
         const res = await axios.get("/api/Employee/get-upcoming-birthdays");
 
-        const { success, message, data } = res.data;
+        let { success, message, data } = res.data;
 
         if (!success) {
           ErrorToast(message || "Failed to load birthdays");
@@ -146,9 +147,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
-
-  useEffect(() => {
     fetchHolidays();
   }, []);
 
@@ -238,7 +236,7 @@ const Dashboard = () => {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                          }
+                          },
                         )}
                       </p>
                     </div>
@@ -300,43 +298,45 @@ const Dashboard = () => {
                   </p>
                 </div>
               ) : (
-                upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
-                  <div
-                    key={dobInfo.id}
-                    className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    {/* Avatar */}
-                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-600" />
-                    </div>
+                sortBirthDay(upComingdateOfBirth).map(
+                  (dobInfo: UpComingDOBType) => (
+                    <div
+                      key={dobInfo.id}
+                      className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      {/* Avatar */}
+                      <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-gray-600" />
+                      </div>
 
-                    {/* User info */}
-                    <div className="flex-1">
-                      <p className="font-gilSemiBold text-gray-900">
-                        {dobInfo.username}
-                      </p>
-                      <p className="text-sm font-gilRegular text-gray-600">
-                        {new Date(dobInfo.dateOfBirth).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "long",
-                            day: "numeric",
-                          }
+                      {/* User info */}
+                      <div className="flex-1">
+                        <p className="font-gilSemiBold text-gray-900">
+                          {dobInfo.username}
+                        </p>
+                        <p className="text-sm font-gilRegular text-gray-600">
+                          {new Date(dobInfo.dateOfBirth).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Today badge */}
+                      {new Date(dobInfo.dateOfBirth).getDate() ===
+                        new Date().getDate() &&
+                        new Date(dobInfo.dateOfBirth).getMonth() ===
+                          new Date().getMonth() && (
+                          <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
+                            Today
+                          </span>
                         )}
-                      </p>
                     </div>
-
-                    {/* Today badge */}
-                    {new Date(dobInfo.dateOfBirth).getDate() ===
-                      new Date().getDate() &&
-                      new Date(dobInfo.dateOfBirth).getMonth() ===
-                        new Date().getMonth() && (
-                        <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
-                          Today
-                        </span>
-                      )}
-                  </div>
-                ))
+                  ),
+                )
               )}
             </div>
 
@@ -388,7 +388,7 @@ const Dashboard = () => {
                   upComingdateOfBirth.filter(
                     (dob) =>
                       new Date(dob.dateOfBirth).getMonth() ===
-                      new Date().getMonth()
+                      new Date().getMonth(),
                   ).length
                 }
               </p>
@@ -442,7 +442,7 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
     const isHolidayExist = holidays.some(
       (holiday: Holiday) =>
         format(holiday.holidayDate, "yyyy-MM-dd") ===
-        format(holidayDate, "yyyy-MM-dd")
+        format(holidayDate, "yyyy-MM-dd"),
     );
 
     if (!isHolidayExist) {
@@ -487,8 +487,8 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
       ErrorToast(
         `${format(
           holidayDate,
-          "yyyy-MM-dd"
-        )} already exist in Occasion Calender`
+          "yyyy-MM-dd",
+        )} already exist in Occasion Calender`,
       );
     }
   }
