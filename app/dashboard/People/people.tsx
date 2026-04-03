@@ -1,7 +1,7 @@
 import React from "react";
 
-const People = () => {
-  return <div>People</div>;
-};
+function people() {
+  return <div>people</div>;
+}
 
-export default People;
+export default people;

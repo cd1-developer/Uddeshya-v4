@@ -15,6 +15,7 @@ function removeDuplicates(data: Employee[]) {
 const initialState = {
   userInfo: {} as User,
   employee: [] as Employee[],
+  employeeInfo: {} as Employee,
   leave: [] as Leave[],
   holiday: [] as Holiday[],
   isLoading: false,
@@ -34,6 +35,9 @@ const dataSlice = createSlice({
     setEmployee: (state, action: PayloadAction<Employee[]>) => {
       state.employee = removeDuplicates([...state.employee, ...action.payload]);
     },
+    setEmployeeInfo: (state, action: PayloadAction<Employee>) => {
+      state.employeeInfo = action.payload;
+    },
     setLeave: (state, action: PayloadAction<Leave[]>) => {
       state.leave = action.payload;
     },
@@ -48,13 +52,13 @@ const dataSlice = createSlice({
     },
     setEmployeeLeaveEndCursor: (
       state,
-      action: PayloadAction<number | null>
+      action: PayloadAction<number | null>,
     ) => {
       state.employeeLeaveEndCursor.push(action.payload);
     },
     setAssignMemberLeaveEndCursor: (
       state,
-      action: PayloadAction<number | null>
+      action: PayloadAction<number | null>,
     ) => {
       state.assignMemberLeaveEndCursor.push(action.payload);
     },
@@ -80,6 +84,7 @@ export const {
   setAssignMemberLeaveEndCursor,
   setHolidayEndCursor,
   updateEmployeeRole,
+  setEmployeeInfo,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

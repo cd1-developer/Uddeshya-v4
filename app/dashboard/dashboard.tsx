@@ -1,24 +1,23 @@
 "use client";
-import { useEffect, useTransition, useMemo, useState } from "react";
+import { useEffect, useTransition, useState } from "react";
 import axios from "axios";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { useDispatch, useSelector } from "react-redux";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
-import { setEmployee, setHolidays } from "@/libs/dataslice";
+import { setHolidays } from "@/libs/dataslice";
 import { RootState } from "@/libs/store";
 import { Button } from "@/components/ui/button";
 import React from "react";
-import { Plus, Trash2, Calendar, Cake, User, CalendarDays } from "lucide-react";
-import { Employee, Role } from "@/interfaces";
+import { Plus, Trash2, Calendar, User, CalendarDays } from "lucide-react";
+import { Role } from "@/interfaces";
 import type { DatePickerProps } from "antd";
 import { DatePicker } from "antd";
 import { Holiday } from "@prisma/client";
 import { format } from "date-fns";
 import { successToast } from "@/components/custom/SuccessToast";
 import { Input } from "@/components/ui/input";
-import { setLeave } from "@/libs/dataslice";
+import { setEmployeeInfo } from "@/libs/dataslice";
 import dayjs from "dayjs";
-import useFetchEmployees from "@/hooks/useFetchEmployees";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { UpComingDOBType } from "@/interfaces";
 import { sortBirthDay } from "@/helper/SortBirthDay";
@@ -26,16 +25,15 @@ import { sortBirthDay } from "@/helper/SortBirthDay";
 const Dashboard = () => {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const employee = useSelector(
+    (state: RootState) => state.dataSlice.employeeInfo,
+  );
   const [upComingdateOfBirth, setUpComingDataOfBirth] = useState<
     UpComingDOBType[]
   >([]);
-  const { fetchEmployees } = useFetchEmployees();
 
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
   const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
-
-  const employeeId = employee?.id;
 
   const currentUserRole = employee?.role;
 
@@ -57,7 +55,7 @@ const Dashboard = () => {
           return;
         }
 
-        setEmployee(data);
+        dispatch(setEmployeeInfo(data));
       } catch (err) {
         ErrorToast("Failed to load employee data");
       }
@@ -65,57 +63,6 @@ const Dashboard = () => {
 
     fetchEmployeeInfo();
   }, [userInfo]);
-
-  useEffect(() => {
-    const fetchLeavesData = async () => {
-      if (!employeeId) return;
-      if (employee.role === Role.ADMIN) return;
-
-      try {
-        const response = await axios.get(
-          `/api/leave/employee?employeeId=${employeeId}`,
-        );
-
-        const { success, data, message } = response.data;
-
-        if (!success) {
-          ErrorToast(message || "Failed to fetch members");
-          return;
-        }
-
-        dispatch(setLeave(data));
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message;
-        console.error("Error fetching members: ", errorMessage);
-        ErrorToast("Failed to load Leaves ");
-      }
-    };
-    startTransition(() => {
-      fetchLeavesData();
-    });
-  }, [employeeId]);
-
-  useEffect(() => {
-    async function fetchBirthDays() {
-      try {
-        const res = await axios.get("/api/Employee/get-upcoming-birthdays");
-
-        let { success, message, data } = res.data;
-
-        if (!success) {
-          ErrorToast(message || "Failed to load birthdays");
-          return;
-        }
-
-        setUpComingDataOfBirth(data);
-      } catch (error: any) {
-        console.error("Error fetching upcoming birthdays:", error);
-        ErrorToast("Something went wrong while fetching birthdays");
-      }
-    }
-
-    fetchBirthDays();
-  }, []);
 
   const fetchHolidays = () => {
     startTransition(async () => {
@@ -144,10 +91,29 @@ const Dashboard = () => {
     dispatch(setHolidays(updatedHolidays));
     successToast(message);
   };
+  async function fetchBirthDays() {
+    try {
+      const res = await axios.get("/api/Employee/get-upcoming-birthdays");
+
+      let { success, message, data } = res.data;
+
+      if (!success) {
+        ErrorToast(message || "Failed to load birthdays");
+        return;
+      }
+
+      setUpComingDataOfBirth(data);
+    } catch (error: any) {
+      console.error("Error fetching upcoming birthdays:", error);
+      ErrorToast("Something went wrong while fetching birthdays");
+    }
+  }
 
   useEffect(() => {
-    fetchEmployees();
-    fetchHolidays();
+    const fetchData = async () => {
+      await Promise.all([fetchBirthDays(), fetchHolidays()]);
+    };
+    fetchData();
   }, []);
 
   if (isPending) {
