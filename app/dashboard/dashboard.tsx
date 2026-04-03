@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { UpComingDOBType } from "@/interfaces";
 import { sortBirthDay } from "@/helper/SortBirthDay";
+import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
 
 const Dashboard = () => {
   const [isPending, startTransition] = useTransition();
@@ -117,7 +118,7 @@ const Dashboard = () => {
   }, []);
 
   if (isPending) {
-    return <img src="naruto.gif" />;
+    return <ThreeBodyLoader />;
   }
 
   return (
