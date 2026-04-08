@@ -20,7 +20,7 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const params = useParams();
-  const { dashboardRoute, subRoute } = params;
+  const { dashboardRoute } = params;
 
   // const organisation = useSelector(
   //   (state: RootState) => state.dataSlice.organisation
