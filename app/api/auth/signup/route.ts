@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 import { signupSchema } from "@/schemas/auth-schema";
 import bcrypt from "bcryptjs";
-import z, { success } from "zod";
-import { message } from "antd";
+import z from "zod";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -22,7 +21,7 @@ export const POST = async (req: NextRequest) => {
           message: "Invalid input data",
           errors: validation.error.flatten().fieldErrors,
         },
-        { status: 400 } // Bad Request
+        { status: 400 }, // Bad Request
       );
     }
 
@@ -78,7 +77,7 @@ export const POST = async (req: NextRequest) => {
         message: "An unexpected error occurred. Please try again later.",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

@@ -2,7 +2,7 @@ import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { validateLeave } from "@/helper/validateLeave";
 import { getEmployees } from "@/helper/getEmployees";
-import { RedisProvider } from "@/libs/RedisProvider";
+// import { RedisProvider } from "@/libs/RedisProvider";
 import { Leave } from "@prisma/client";
 import { getLeave } from "@/helper/getLeave";
 import { findWithIndex } from "@/helper/findWithIndex";
@@ -36,7 +36,7 @@ export const DELETE = async (req: NextRequest) => {
           success: false,
           message: "Leave not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -45,11 +45,11 @@ export const DELETE = async (req: NextRequest) => {
       where: { id },
     });
     // 2. Then, update the Redis cache to reflect the deletion.
-    await deleteLeaveFromCache(
-      id,
-      leave.employeeId,
-      leave.actionByEmployeeId as string
-    );
+    // await deleteLeaveFromCache(
+    //   id,
+    //   leave.employeeId,
+    //   leave.actionByEmployeeId as string,
+    // );
 
     return NextResponse.json({
       success: true,
@@ -63,7 +63,7 @@ export const DELETE = async (req: NextRequest) => {
         message: "Failed to delete leave",
         error: error.message || "Unknown Server Error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -80,59 +80,59 @@ export const DELETE = async (req: NextRequest) => {
  * @param {string} employeeId - The ID of the employee who applied for the leave.
  * @param {string} reportManagerId - The ID of the manager responsible for actioning the leave.
  */
-const deleteLeaveFromCache = async (
-  leaveId: string,
-  employeeId: string,
-  reportManagerId: string
-) => {
-  // Get a Redis client instance.
-  const redis = RedisProvider.getInstance();
+// const deleteLeaveFromCache = async (
+//   leaveId: string,
+//   employeeId: string,
+//   reportManagerId: string
+// ) => {
+//   // Get a Redis client instance.
+//   const redis = RedisProvider.getInstance();
 
-  // Fetch the entire list of employees from the cache to find the relevant records.
-  // `getEmployees` will fetch from DB and cache if it's a miss.
-  let employees = (await getEmployees()) || [];
+//   // Fetch the entire list of employees from the cache to find the relevant records.
+//   // `getEmployees` will fetch from DB and cache if it's a miss.
+//   let employees = (await getEmployees()) || [];
 
-  // Find the employee and their manager within the cached employee list.
-  const { value: employee, index: employeeIndex } = findWithIndex(
-    employees,
-    employeeId
-  );
-  // Note: It's possible for a manager to not be found if they are not also an employee in the system.
-  const { value: reportManager, index: reportManagerIndex } = findWithIndex(
-    employees,
-    reportManagerId
-  );
+//   // Find the employee and their manager within the cached employee list.
+//   const { value: employee, index: employeeIndex } = findWithIndex(
+//     employees,
+//     employeeId
+//   );
+//   // Note: It's possible for a manager to not be found if they are not also an employee in the system.
+//   const { value: reportManager, index: reportManagerIndex } = findWithIndex(
+//     employees,
+//     reportManagerId
+//   );
 
-  // Step 1: Remove the leave from the global 'leaves:list'.
-  await redis.removeFromListById("leaves:list", leaveId);
+//   // Step 1: Remove the leave from the global 'leaves:list'.
+//   await redis.removeFromListById("leaves:list", leaveId);
 
-  // Step 2: Update the employee's 'leavesApplied' list.
-  if (employee && employeeIndex > -1) {
-    const updatedEmployee = {
-      ...employee,
-      leavesApplied: employee.leavesApplied.filter(
-        (leave: Leave) => leave.id !== leaveId
-      ),
-    };
-    await redis.updateListById(
-      "employees:list",
-      employeeIndex,
-      updatedEmployee
-    );
-  }
+//   // Step 2: Update the employee's 'leavesApplied' list.
+//   if (employee && employeeIndex > -1) {
+//     const updatedEmployee = {
+//       ...employee,
+//       leavesApplied: employee.leavesApplied.filter(
+//         (leave: Leave) => leave.id !== leaveId
+//       ),
+//     };
+//     await redis.updateListById(
+//       "employees:list",
+//       employeeIndex,
+//       updatedEmployee
+//     );
+//   }
 
-  // Step 3: Update the manager's 'leavesActioned' list.
-  if (reportManager && reportManagerIndex > -1) {
-    const updatedReportManager = {
-      ...reportManager,
-      leavesActioned: reportManager.leavesActioned.filter(
-        (leave: Leave) => leave.id !== leaveId
-      ),
-    };
-    await redis.updateListById(
-      "employees:list",
-      reportManagerIndex,
-      updatedReportManager
-    );
-  }
-};
+//   // Step 3: Update the manager's 'leavesActioned' list.
+//   if (reportManager && reportManagerIndex > -1) {
+//     const updatedReportManager = {
+//       ...reportManager,
+//       leavesActioned: reportManager.leavesActioned.filter(
+//         (leave: Leave) => leave.id !== leaveId
+//       ),
+//     };
+//     await redis.updateListById(
+//       "employees:list",
+//       reportManagerIndex,
+//       updatedReportManager
+//     );
+//   }
+// };

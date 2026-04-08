@@ -3,9 +3,9 @@ import validateData from "@/helper/validateData";
 import { prisma } from "@/libs/prisma";
 import { findUser } from "@/helper/findUser";
 import { NextRequest, NextResponse } from "next/server";
-import { RedisProvider } from "@/libs/RedisProvider";
+// import { RedisProvider } from "@/libs/RedisProvider";
 import z from "zod";
-import { Employee, getEmployees } from "@/helper/getEmployees";
+import { getEmployees } from "@/helper/getEmployees";
 import { MessageQueueProvider } from "@/libs/MessageQueueProvider";
 
 // Step 1: Define the validation schema for the incoming request body using Zod.
@@ -24,7 +24,7 @@ const addEmployeeSchema = z.object({
       z.object({
         policyName: z.string(),
         balance: z.number(),
-      })
+      }),
     )
     .optional(),
 });
@@ -32,7 +32,7 @@ const addEmployeeSchema = z.object({
 // Step 2: Define the POST request handler for the '/api/Employee/add-employee' endpoint.
 export const POST = async (req: NextRequest) => {
   // Step 3: Get an instance of the Redis client for caching.
-  const redis = await RedisProvider.getInstance();
+  // const redis = await RedisProvider.getInstance();
   try {
     // Step 4: Parse the JSON body from the incoming request.
     const body = (await req.json()) as any;
@@ -64,7 +64,7 @@ export const POST = async (req: NextRequest) => {
     if (!exists) {
       return NextResponse.json(
         { success: false, message: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -110,7 +110,7 @@ export const POST = async (req: NextRequest) => {
               employee: true,
             },
           });
-        })
+        }),
       );
 
       // Step 13: Append the newly created leave balances to the 'newEmployee' object.
@@ -118,7 +118,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     // Step 14: Cache the newly created employee data by adding it to the 'Employees' list in Redis.
-    await redis.addToList("employees:list", newEmployee as Employee);
+    // await redis.addToList("employees:list", newEmployee as Employee);
 
     // Step 15: Notifiy User when new added to the organisation
     await NotifyUser(email as string, newEmployee.user.username);
@@ -126,7 +126,7 @@ export const POST = async (req: NextRequest) => {
     // Step 16: Return a 201 Created response with the new employee data.
     return NextResponse.json(
       { success: true, data: newEmployee },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     // Step 17: Handle any unexpected errors that occur during the process.
@@ -136,7 +136,7 @@ export const POST = async (req: NextRequest) => {
         success: false,
         message: error?.message || "Internal Server Error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

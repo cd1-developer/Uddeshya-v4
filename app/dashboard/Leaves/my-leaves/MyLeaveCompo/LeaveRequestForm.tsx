@@ -12,7 +12,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -63,7 +62,7 @@ const AbsentTypes = [
 ] as AbsentTypeDetails[];
 
 const EndAbsentTypes = AbsentTypes.filter(
-  (type) => type.key !== AbsentType.SECOND_HALF
+  (type) => type.key !== AbsentType.SECOND_HALF,
 );
 
 interface LeaveRequestFormProp {
@@ -93,7 +92,7 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
       leaves: state.dataSlice.leave,
       employees: state.dataSlice.employee,
       currentUser: state.dataSlice.userInfo,
-    })
+    }),
   );
 
   const deductedBalance = useMemo(() => {
@@ -160,7 +159,7 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
   };
 
   const employee = employees.find(
-    (emp) => emp.userId === currentUser.id
+    (emp) => emp.userId === currentUser.id,
   ) as Employee;
   console.log(employee);
 
@@ -168,27 +167,28 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
     let { startAbsentType, endAbsentType } = leaveData;
 
     const employee = employees.find(
-      (emp) => emp.userId === currentUser.id
+      (emp) => emp.userId === currentUser.id,
     ) as Employee;
 
     if (employee.status === EmployeeStatus.Probation) {
       ErrorToast(
-        "Leave application is not allowed during the probation period."
+        "Leave application is not allowed during the probation period.",
       );
       return;
     }
 
     const currentPolicy = POLICIES.find(
-      (policy) => policy.policyName === leaveData.policyName
+      (policy) => policy.policyName === leaveData.policyName,
     );
 
     const currentBal = (employee?.leaveBalances.find(
-      (leaveBalanceInfo) => leaveBalanceInfo.policyName === leaveData.policyName
+      (leaveBalanceInfo) =>
+        leaveBalanceInfo.policyName === leaveData.policyName,
     )?.balance || 0) as number;
 
     if (currentPolicy?.maxApply && deductedBalance > currentPolicy.maxApply) {
       ErrorToast(
-        `You can apply a maximum of ${currentPolicy.maxApply} consecutive leave(s) under this policy.`
+        `You can apply a maximum of ${currentPolicy.maxApply} consecutive leave(s) under this policy.`,
       );
       return;
     }
@@ -199,7 +199,7 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
       deductedBalance > currentBal
     ) {
       ErrorToast(
-        `Insufficient leave balance. Available balance: ${currentBal}.`
+        `Insufficient leave balance. Available balance: ${currentBal}.`,
       );
       return;
     }
@@ -222,14 +222,14 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
       } else {
         ErrorToast(
           message ||
-            "Unable to apply leave at the moment. Please try again later."
+            "Unable to apply leave at the moment. Please try again later.",
         );
         dispatch(setLeave([]));
       }
     } catch (error: any) {
       console.error("Error creating leave:", error);
       ErrorToast(
-        "Something went wrong while submitting your leave request. Please try again."
+        "Something went wrong while submitting your leave request. Please try again.",
       );
     }
   };
@@ -300,7 +300,7 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
                           onChange={(date) =>
                             form.setValue(
                               "startDateTime",
-                              (date as dayjs.Dayjs).toDate()
+                              (date as dayjs.Dayjs).toDate(),
                             )
                           }
                           allowClear
@@ -380,7 +380,7 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
                           onChange={(date) => {
                             form.setValue(
                               "endDateTime",
-                              (date as dayjs.Dayjs).toDate()
+                              (date as dayjs.Dayjs).toDate(),
                             );
                           }}
                           allowClear

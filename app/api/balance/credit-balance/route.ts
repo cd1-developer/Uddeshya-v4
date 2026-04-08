@@ -5,20 +5,18 @@ import POLICIES from "@/constant/Policies";
 import { leavePolicy, AccuralFrequency } from "@/interfaces";
 import { EmployeeLeaveBalance, Role } from "@prisma/client";
 import { getEmployees } from "@/helper/getEmployees";
-import { RedisProvider } from "@/libs/RedisProvider";
 
 export const POST = async () => {
   try {
     // 🗓️ Current date setup
     const currentDate = new Date();
     const currentYear = getYear(currentDate);
-    const formattedCurrentDate = "1-October-2025"; //formatDate(currentDate, currentYear); // e.g. "11-November-2025"
-
-    const redis = await RedisProvider.getInstance();
+    const currentMonth = format(currentDate, "MMMM");
+    const formattedCurrentDate = `${currentDate.getDate()}-${currentMonth}-${currentYear}`; // e.g. "11-November-2025"
 
     // 🧮 Generate monthlyPeriods and qaurterPeriods
     const monthlyPeriod = months(currentYear).map(
-      (month) => `1-${month}-${currentYear}`
+      (month) => `${currentDate.getDate()}-${month}-${currentYear}`,
     );
 
     const quarterPeriods = monthlyPeriod.filter((_, index) => index % 3 === 0);
@@ -36,7 +34,7 @@ export const POST = async () => {
 
     // 👥 Fetch organisation members (excluding admins)
     const employees = ((await getEmployees()) || []).filter(
-      (emp) => emp.role !== Role.ADMIN
+      (emp) => emp.role !== Role.ADMIN,
     );
     const creditBalanceTask = [];
 
@@ -44,7 +42,7 @@ export const POST = async () => {
     for (const member of employees) {
       const latestIncrements = member.EmployeeLatestIncrement;
       const monthlyLeaveTypes = POLICIES.filter(
-        (leaveType) => leaveType.accuralFrequency === AccuralFrequency.Monthly
+        (leaveType) => leaveType.accuralFrequency === AccuralFrequency.Monthly,
       ).filter((policy) => policy.accural !== 0);
 
       // If not leave creadited to orgMember then credit the leave
@@ -55,15 +53,15 @@ export const POST = async () => {
             monthlyLeaveTypes,
             member.id,
             member.leaveBalances,
-            formattedCurrentDate
-          )
+            formattedCurrentDate,
+          ),
         );
       } else {
         let alreadyCredited = false;
 
         for (const increment of latestIncrements) {
           const isLeaveType = monthlyLeaveTypes.some(
-            (lt) => lt.policyName === increment.policyName
+            (lt) => lt.policyName === increment.policyName,
           );
 
           const sameDate =
@@ -82,7 +80,7 @@ export const POST = async () => {
             monthlyLeaveTypes,
             member.id,
             member.leaveBalances,
-            formattedCurrentDate
+            formattedCurrentDate,
           );
         }
       }
@@ -91,7 +89,8 @@ export const POST = async () => {
     // 📆 Quarterly updates (only if required)
     if (isQuarterPeriod) {
       const quarterLeaves = POLICIES.filter(
-        (leaveType) => leaveType.accuralFrequency === AccuralFrequency.Quarterly
+        (leaveType) =>
+          leaveType.accuralFrequency === AccuralFrequency.Quarterly,
       ).filter((policy) => policy.accural !== 0);
 
       for (const member of employees) {
@@ -100,7 +99,7 @@ export const POST = async () => {
 
         for (const increment of latestIncrements) {
           const isLeaveType = quarterLeaves.some(
-            (lt) => lt.policyName === increment.policyName
+            (lt) => lt.policyName === increment.policyName,
           );
 
           const sameDate =
@@ -120,8 +119,8 @@ export const POST = async () => {
               quarterLeaves,
               member.id,
               member.leaveBalances,
-              formattedCurrentDate
-            )
+              formattedCurrentDate,
+            ),
           );
         }
       }
@@ -129,9 +128,6 @@ export const POST = async () => {
 
     // make Parrel api calling after that i will clear the redis state
     await Promise.all(creditBalanceTask);
-
-    await redis.del("employees:list");
-    await redis.del("leaves:list");
 
     return NextResponse.json({
       success: true,
@@ -157,12 +153,12 @@ async function creditLeaveBalance(
   leaveTypes: leavePolicy[],
   employeeId: string,
   totalBalances: EmployeeLeaveBalance[],
-  formattedDate: string
+  formattedDate: string,
 ) {
   for (const leaveType of leaveTypes) {
     // Find the existing balance for this specific leave type
     const existingBalance = totalBalances.find(
-      (balance) => balance.policyName === leaveType.policyName
+      (balance) => balance.policyName === leaveType.policyName,
     );
     // Check if the organization member already has any leave balance records.
     // - If not: create new total balance entries for all applicable leave types.

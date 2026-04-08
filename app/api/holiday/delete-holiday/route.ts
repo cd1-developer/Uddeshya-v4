@@ -1,7 +1,6 @@
 import { prisma } from "@/libs/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { RedisProvider } from "@/libs/RedisProvider";
-import { Holiday } from "@/interfaces";
+//import { RedisProvider } from "@/libs/RedisProvider";
 
 export const DELETE = async (req: NextRequest) => {
   try {
@@ -12,7 +11,7 @@ export const DELETE = async (req: NextRequest) => {
     if (!id) {
       return NextResponse.json(
         { success: false, message: "Holiday ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -22,7 +21,7 @@ export const DELETE = async (req: NextRequest) => {
       },
     });
 
-    await updateHolidayCache(id);
+    //  await updateHolidayCache(id);
 
     return NextResponse.json({
       success: true,
@@ -37,13 +36,13 @@ export const DELETE = async (req: NextRequest) => {
         message: "Failed to delete holiday",
         error: error.message || error,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
 
-const updateHolidayCache = async (holidayId: string) => {
-  const redis = RedisProvider.getInstance();
+// const updateHolidayCache = async (holidayId: string) => {
+//   const redis = RedisProvider.getInstance();
 
-  await redis.removeFromListById("holiday:list", holidayId);
-};
+//   await redis.removeFromListById("holiday:list", holidayId);
+// };

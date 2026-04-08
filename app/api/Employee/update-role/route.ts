@@ -6,11 +6,9 @@ import getEmployeeInfo from "@//helper/getEmployeeInfo";
 import validateData from "@//helper/validateData";
 import { getEmployees } from "@//helper/getEmployees";
 import { getLeaves } from "@//helper/getLeaves";
-import { RedisProvider } from "@/libs/RedisProvider";
+//import { RedisProvider } from "@/libs/RedisProvider";
 import { Employee } from "@/helper/getEmployees";
 import { findWithIndex } from "@/helper/findWithIndex";
-import { assign } from "nodemailer/lib/shared";
-import { report } from "process";
 
 const RoleSchema = z.object({
   role: z.enum(Role, {
@@ -99,12 +97,12 @@ export const PATCH = async (req: NextRequest) => {
       });
     });
 
-    // Update Redis cache after successful DB transaction
-    try {
-      await updateRedisCache(employee as Employee, role);
-    } catch (error: any) {
-      console.error("Cache update failed:", error.message);
-    }
+    // // Update Redis cache after successful DB transaction
+    // try {
+    //   await updateRedisCache(employee as Employee, role);
+    // } catch (error: any) {
+    //   console.error("Cache update failed:", error.message);
+    // }
 
     return NextResponse.json({
       success: true,
@@ -117,7 +115,7 @@ export const PATCH = async (req: NextRequest) => {
         success: false,
         message: error?.message || "Internal Server Error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -134,86 +132,86 @@ export const PATCH = async (req: NextRequest) => {
  *
  * This ensures cache consistency with DB state and prevents stale references.
  */
-const updateRedisCache = async (employee: Employee, role: Role) => {
-  const employees = (await getEmployees()) || [];
-  const leaves = (await getLeaves()) || [];
-  const redis = RedisProvider.getInstance();
+// const updateRedisCache = async (employee: Employee, role: Role) => {
+//   const employees = (await getEmployees()) || [];
+//   const leaves = (await getLeaves()) || [];
+//   const redis = RedisProvider.getInstance();
 
-  // Locate the employee's index inside the cached employees list
-  const { index: employeeIndex } = findWithIndex(employees, employee.id);
+//   // Locate the employee's index inside the cached employees list
+//   const { index: employeeIndex } = findWithIndex(employees, employee.id);
 
-  /**
-   * Build updated employee object:
-   * - Always update the 'role'.
-   * - If the employee was a REPORT_MANAGER but is no longer one,
-   *   then clear:
-   *     - assigned member list
-   *     - unassing the all the PENDING leaves applied by the assign members
-   */
-  let updatedEmployee: Employee = {
-    ...employee,
-    role,
-    ...(employee.role === Role.REPORT_MANAGER &&
-      role !== Role.REPORT_MANAGER && {
-        assignMembers: [],
-        leavesActioned: employee.leavesActioned.filter(
-          (leave) => leave.LeaveStatus !== LeaveStatus.PENDING
-        ),
-      }),
-  };
+//   /**
+//    * Build updated employee object:
+//    * - Always update the 'role'.
+//    * - If the employee was a REPORT_MANAGER but is no longer one,
+//    *   then clear:
+//    *     - assigned member list
+//    *     - unassing the all the PENDING leaves applied by the assign members
+//    */
+//   let updatedEmployee: Employee = {
+//     ...employee,
+//     role,
+//     ...(employee.role === Role.REPORT_MANAGER &&
+//       role !== Role.REPORT_MANAGER && {
+//         assignMembers: [],
+//         leavesActioned: employee.leavesActioned.filter(
+//           (leave) => leave.LeaveStatus !== LeaveStatus.PENDING,
+//         ),
+//       }),
+//   };
 
-  /**
-   * If the employee is being downgraded from REPORT_MANAGER → non-manager role:
-   * We must:
-   *    1. Unassign all employees who currently have this manager.
-   *    2. Remove this manager from pending leaves they were responsible for.
-   */
-  if (employee.role === Role.REPORT_MANAGER && role !== Role.REPORT_MANAGER) {
-    // ---------------------------------------------
-    // STEP 1: Unassign all employees linked to this manager
-    // ---------------------------------------------
-    await Promise.all(
-      employees.map(async (emp: Employee, index) => {
-        if (emp.reportManagerId === employee.id) {
-          const updatedAssignMembers = {
-            ...emp,
-            reportManagerId: null,
-            reportManager: null,
-          };
+//   /**
+//    * If the employee is being downgraded from REPORT_MANAGER → non-manager role:
+//    * We must:
+//    *    1. Unassign all employees who currently have this manager.
+//    *    2. Remove this manager from pending leaves they were responsible for.
+//    */
+//   if (employee.role === Role.REPORT_MANAGER && role !== Role.REPORT_MANAGER) {
+//     // ---------------------------------------------
+//     // STEP 1: Unassign all employees linked to this manager
+//     // ---------------------------------------------
+//     await Promise.all(
+//       employees.map(async (emp: Employee, index) => {
+//         if (emp.reportManagerId === employee.id) {
+//           const updatedAssignMembers = {
+//             ...emp,
+//             reportManagerId: null,
+//             reportManager: null,
+//           };
 
-          // Return Redis write promise so Promise.all can wait for it
-          return redis.updateListById(
-            "employees:list",
-            index,
-            updatedAssignMembers
-          );
-        }
-      })
-    );
+//           // Return Redis write promise so Promise.all can wait for it
+//           return redis.updateListById(
+//             "employees:list",
+//             index,
+//             updatedAssignMembers,
+//           );
+//         }
+//       }),
+//     );
 
-    // ---------------------------------------------
-    // STEP 2: Remove manager assignment from all pending leaves
-    // ---------------------------------------------
-    await Promise.all(
-      leaves.map(async (leave: Leave, index) => {
-        if (
-          leave.actionByEmployeeId === employee.id &&
-          leave.LeaveStatus === LeaveStatus.PENDING // ensure case consistency
-        ) {
-          const updatedLeave = {
-            ...leave,
-            actionByEmployeeId: null,
-          };
+//     // ---------------------------------------------
+//     // STEP 2: Remove manager assignment from all pending leaves
+//     // ---------------------------------------------
+//     await Promise.all(
+//       leaves.map(async (leave: Leave, index) => {
+//         if (
+//           leave.actionByEmployeeId === employee.id &&
+//           leave.LeaveStatus === LeaveStatus.PENDING // ensure case consistency
+//         ) {
+//           const updatedLeave = {
+//             ...leave,
+//             actionByEmployeeId: null,
+//           };
 
-          // Return Redis write promise
-          return redis.updateListById("leaves:list", index, updatedLeave);
-        }
-      })
-    );
-  }
+//           // Return Redis write promise
+//           return redis.updateListById("leaves:list", index, updatedLeave);
+//         }
+//       }),
+//     );
+//   }
 
-  // ---------------------------------------------
-  // STEP 3: Update the manager's own record in Redis
-  // ---------------------------------------------
-  await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
-};
+//   // ---------------------------------------------
+//   // STEP 3: Update the manager's own record in Redis
+//   // ---------------------------------------------
+//   await redis.updateListById("employees:list", employeeIndex, updatedEmployee);
+// };

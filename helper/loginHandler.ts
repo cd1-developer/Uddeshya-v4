@@ -26,6 +26,14 @@ export const LoginHandler = async (email: string, password: string) => {
     // ✔ Find user
     const isUserExist = await prisma.user.findFirst({
       where: { email: userEmail },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            role: true,
+          },
+        },
+      },
     });
 
     if (!isUserExist) {
@@ -38,7 +46,7 @@ export const LoginHandler = async (email: string, password: string) => {
     // ✔ Compare password
     const isValidPassword = await bcryptjs.compare(
       userPassword,
-      isUserExist.password as string
+      isUserExist.password as string,
     );
 
     if (!isValidPassword) {
@@ -56,6 +64,8 @@ export const LoginHandler = async (email: string, password: string) => {
         id: isUserExist.id,
         username: isUserExist.username,
         email: isUserExist.email,
+        role: isUserExist.employee?.role,
+        employee_id: isUserExist.employee?.id,
       },
     };
   } catch (error) {

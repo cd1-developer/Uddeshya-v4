@@ -37,7 +37,7 @@ export const POST = async (req: NextRequest) => {
         success: true,
         isPasswordExist,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Error in login handler:", error);
@@ -46,7 +46,7 @@ export const POST = async (req: NextRequest) => {
         success: false,
         message: "Interval Server Error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

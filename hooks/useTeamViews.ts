@@ -10,19 +10,19 @@ import {
 
 export const useTeamView = (
   employees: Employee[],
-  currentEmployee?: Employee
+  currentEmployee?: Employee,
 ): TeamViewData => {
   return useMemo(() => {
     const roleOfCurrentUser = currentEmployee?.role;
 
     const getAdminView = (): AdminViewData => {
       const unassignedMembers = employees.filter(
-        (member) => member.role === Role.MEMBER && !member.reportManagerId
+        (member) => member.role === Role.MEMBER && !member.reportManagerId,
       );
 
       const unassignedReportManagers = employees.filter(
         (member) =>
-          member.role === Role.REPORT_MANAGER && !member.reportManagerId
+          member.role === Role.REPORT_MANAGER && !member.reportManagerId,
       );
 
       return {
@@ -36,11 +36,11 @@ export const useTeamView = (
 
     const getReportManagerView = (): ReportManagerViewData => {
       const myTeamMembers = employees.filter(
-        (member) => member.reportManagerId === currentEmployee?.id
+        (member) => member.reportManagerId === currentEmployee?.id,
       );
 
       const membersWithoutManagers = employees.filter(
-        (member) => member.role === Role.MEMBER && !member.reportManagerId
+        (member) => member.role === Role.MEMBER && !member.reportManagerId,
       );
 
       return {
@@ -56,13 +56,13 @@ export const useTeamView = (
 
     const getMemberView = (): MemberViewData => {
       const myManager = employees.find(
-        (emp) => emp.id === currentEmployee?.reportManagerId
+        (emp) => emp.id === currentEmployee?.reportManagerId,
       );
 
       const teamMembers = employees.filter(
         (member) =>
           member.reportManagerId === currentEmployee?.reportManagerId &&
-          member.id !== currentEmployee?.id
+          member.id !== currentEmployee?.id,
       );
 
       return {

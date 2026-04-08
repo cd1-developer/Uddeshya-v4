@@ -16,7 +16,7 @@ export const POST = async (req: NextRequest) => {
           success,
           message,
         },
-        { status: 400 } // Use 400 for validation errors, not 404
+        { status: 400 }, // Use 400 for validation errors, not 404
       );
     }
 
@@ -32,7 +32,7 @@ export const POST = async (req: NextRequest) => {
           success: false,
           message: "User not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -51,7 +51,7 @@ export const POST = async (req: NextRequest) => {
     console.error("Password API Error:", error);
     return NextResponse.json(
       { success: false, message: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

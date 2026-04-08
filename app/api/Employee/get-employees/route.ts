@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Employee, getEmployees } from "@/helper/getEmployees";
-import { RedisProvider } from "@/libs/RedisProvider";
+import { INCLUDES_EMPLOYEES } from "@/helper/getEmployees";
+// import { RedisProvider } from "@/libs/RedisProvider";
+import { prisma } from "@/libs/prisma";
 
 export const GET = async (req: NextRequest) => {
   const params = Object.fromEntries(req.nextUrl.searchParams);
@@ -8,19 +9,22 @@ export const GET = async (req: NextRequest) => {
   let limit = Number(params.limit) || 20;
 
   try {
-    const redis = RedisProvider.getInstance();
-    const { success, data, nextCursor, hasMore } =
-      await redis.paginator<Employee>(
-        "employees:list",
-        cursor,
-        limit,
-        getEmployees
-      );
+    // const redis = RedisProvider.getInstance();
+    let employees = await prisma.employee.findMany({
+      skip: cursor,
+      take: limit,
+      include: INCLUDES_EMPLOYEES,
+    });
 
     // Send response to client
     return NextResponse.json(
-      { success, data, nextCursor, hasMore },
-      { status: 200 }
+      {
+        success: true,
+        data: employees,
+        nextCursor: cursor + limit,
+        hasMore: employees.length !== 0,
+      },
+      { status: 200 },
     );
   } catch (error: any) {
     // Log and return a user-friendly error response if something breaks
@@ -30,7 +34,7 @@ export const GET = async (req: NextRequest) => {
         success: false,
         message: error?.message || "Failed to fetch employee data",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

@@ -2,6 +2,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import { LoginHandler } from "@/helper/loginHandler";
 import axios from "axios";
+import { Role } from "@/interfaces";
 
 export const Next_Auth: NextAuthOptions = {
   providers: [
@@ -28,7 +29,7 @@ export const Next_Auth: NextAuthOptions = {
 
           const response = await LoginHandler(
             credentials.email,
-            credentials.password
+            credentials.password,
           );
 
           const { success, message, user } = response;
@@ -41,6 +42,8 @@ export const Next_Auth: NextAuthOptions = {
             id: user.id,
             email: user.email,
             username: user.username,
+            role: user.role,
+            employee_id: user.employee_id,
           };
         } catch (error: any) {
           console.error("Authorize Error:", error);
@@ -70,6 +73,9 @@ export const Next_Auth: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.username = user.username;
+        token.role = user.role;
+        token.employee_id = user.employee_id;
       }
       return token;
     },
@@ -78,6 +84,9 @@ export const Next_Auth: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        session.user.username = token.username as string;
+        session.user.role = token.role as Role;
+        session.user.employee_id = token.employee_id as string;
       }
 
       return session;

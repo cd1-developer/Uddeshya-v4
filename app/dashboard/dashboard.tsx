@@ -1,40 +1,40 @@
 "use client";
-import { useEffect, useTransition, useMemo, useState } from "react";
+import { useEffect, useTransition, useState } from "react";
 import axios from "axios";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { useDispatch, useSelector } from "react-redux";
 import DialogCompo from "@/components/custom/Dialog-compo/DialogCompo";
-import { setEmployee, setHolidays } from "@/libs/dataslice";
+import { setHolidays } from "@/libs/dataslice";
 import { RootState } from "@/libs/store";
 import { Button } from "@/components/ui/button";
 import React from "react";
-import { Plus, Trash2, Calendar, Cake, User, CalendarDays } from "lucide-react";
-import { Employee, Role } from "@/interfaces";
+import { Plus, Trash2, Calendar, User, CalendarDays } from "lucide-react";
+import { Role } from "@/interfaces";
 import type { DatePickerProps } from "antd";
 import { DatePicker } from "antd";
 import { Holiday } from "@prisma/client";
 import { format } from "date-fns";
 import { successToast } from "@/components/custom/SuccessToast";
 import { Input } from "@/components/ui/input";
-import { setLeave } from "@/libs/dataslice";
+import { setEmployeeInfo } from "@/libs/dataslice";
 import dayjs from "dayjs";
-import useFetchEmployees from "@/hooks/useFetchEmployees";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { UpComingDOBType } from "@/interfaces";
+import { sortBirthDay } from "@/helper/SortBirthDay";
+import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
+
 const Dashboard = () => {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const employee = useSelector(
+    (state: RootState) => state.dataSlice.employeeInfo,
+  );
   const [upComingdateOfBirth, setUpComingDataOfBirth] = useState<
     UpComingDOBType[]
   >([]);
-  const { fetchEmployees } = useFetchEmployees();
 
   const holidays = useSelector((state: RootState) => state.dataSlice.holiday);
   const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
-  const employees = useSelector((state: RootState) => state.dataSlice.employee);
-
-  const employeeId = employee?.id;
 
   const currentUserRole = employee?.role;
 
@@ -46,7 +46,7 @@ const Dashboard = () => {
     async function fetchEmployeeInfo() {
       try {
         const res = await axios.get(
-          `/api/Employee/get-employee?userId=${userInfo.id}`
+          `/api/Employee/get-employee?userId=${userInfo.id}`,
         );
 
         const { success, message, data } = res.data;
@@ -56,7 +56,7 @@ const Dashboard = () => {
           return;
         }
 
-        setEmployee(data);
+        dispatch(setEmployeeInfo(data));
       } catch (err) {
         ErrorToast("Failed to load employee data");
       }
@@ -64,57 +64,6 @@ const Dashboard = () => {
 
     fetchEmployeeInfo();
   }, [userInfo]);
-
-  useEffect(() => {
-    const fetchLeavesData = async () => {
-      if (!employeeId) return;
-      if (employee.role === Role.ADMIN) return;
-
-      try {
-        const response = await axios.get(
-          `/api/leave/employee?employeeId=${employeeId}`
-        );
-
-        const { success, data, message } = response.data;
-
-        if (!success) {
-          ErrorToast(message || "Failed to fetch members");
-          return;
-        }
-
-        dispatch(setLeave(data));
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || error.message;
-        console.error("Error fetching members: ", errorMessage);
-        ErrorToast("Failed to load Leaves ");
-      }
-    };
-    startTransition(() => {
-      fetchLeavesData();
-    });
-  }, [employeeId]);
-
-  useEffect(() => {
-    async function fetchBirthDays() {
-      try {
-        const res = await axios.get("/api/Employee/get-upcoming-birthdays");
-
-        const { success, message, data } = res.data;
-
-        if (!success) {
-          ErrorToast(message || "Failed to load birthdays");
-          return;
-        }
-
-        setUpComingDataOfBirth(data);
-      } catch (error: any) {
-        console.error("Error fetching upcoming birthdays:", error);
-        ErrorToast("Something went wrong while fetching birthdays");
-      }
-    }
-
-    fetchBirthDays();
-  }, []);
 
   const fetchHolidays = () => {
     startTransition(async () => {
@@ -143,17 +92,33 @@ const Dashboard = () => {
     dispatch(setHolidays(updatedHolidays));
     successToast(message);
   };
+  async function fetchBirthDays() {
+    try {
+      const res = await axios.get("/api/Employee/get-upcoming-birthdays");
+
+      let { success, message, data } = res.data;
+
+      if (!success) {
+        ErrorToast(message || "Failed to load birthdays");
+        return;
+      }
+
+      setUpComingDataOfBirth(data);
+    } catch (error: any) {
+      console.error("Error fetching upcoming birthdays:", error);
+      ErrorToast("Something went wrong while fetching birthdays");
+    }
+  }
 
   useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  useEffect(() => {
-    fetchHolidays();
+    const fetchData = async () => {
+      await Promise.all([fetchBirthDays(), fetchHolidays()]);
+    };
+    fetchData();
   }, []);
 
   if (isPending) {
-    return <img src="naruto.gif" />;
+    return <ThreeBodyLoader />;
   }
 
   return (
@@ -238,7 +203,7 @@ const Dashboard = () => {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                          }
+                          },
                         )}
                       </p>
                     </div>
@@ -300,43 +265,45 @@ const Dashboard = () => {
                   </p>
                 </div>
               ) : (
-                upComingdateOfBirth.map((dobInfo: UpComingDOBType) => (
-                  <div
-                    key={dobInfo.id}
-                    className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    {/* Avatar */}
-                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-600" />
-                    </div>
+                sortBirthDay(upComingdateOfBirth).map(
+                  (dobInfo: UpComingDOBType) => (
+                    <div
+                      key={dobInfo.id}
+                      className="flex items-center gap-4 p-4 m-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      {/* Avatar */}
+                      <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-gray-600" />
+                      </div>
 
-                    {/* User info */}
-                    <div className="flex-1">
-                      <p className="font-gilSemiBold text-gray-900">
-                        {dobInfo.username}
-                      </p>
-                      <p className="text-sm font-gilRegular text-gray-600">
-                        {new Date(dobInfo.dateOfBirth).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "long",
-                            day: "numeric",
-                          }
+                      {/* User info */}
+                      <div className="flex-1">
+                        <p className="font-gilSemiBold text-gray-900">
+                          {dobInfo.username}
+                        </p>
+                        <p className="text-sm font-gilRegular text-gray-600">
+                          {new Date(dobInfo.dateOfBirth).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "long",
+                              day: "numeric",
+                            },
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Today badge */}
+                      {new Date(dobInfo.dateOfBirth).getDate() ===
+                        new Date().getDate() &&
+                        new Date(dobInfo.dateOfBirth).getMonth() ===
+                          new Date().getMonth() && (
+                          <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
+                            Today
+                          </span>
                         )}
-                      </p>
                     </div>
-
-                    {/* Today badge */}
-                    {new Date(dobInfo.dateOfBirth).getDate() ===
-                      new Date().getDate() &&
-                      new Date(dobInfo.dateOfBirth).getMonth() ===
-                        new Date().getMonth() && (
-                        <span className="px-2.5 py-1 bg-gray-900 text-white text-xs font-gilMedium rounded-full">
-                          Today
-                        </span>
-                      )}
-                  </div>
-                ))
+                  ),
+                )
               )}
             </div>
 
@@ -388,7 +355,7 @@ const Dashboard = () => {
                   upComingdateOfBirth.filter(
                     (dob) =>
                       new Date(dob.dateOfBirth).getMonth() ===
-                      new Date().getMonth()
+                      new Date().getMonth(),
                   ).length
                 }
               </p>
@@ -442,7 +409,7 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
     const isHolidayExist = holidays.some(
       (holiday: Holiday) =>
         format(holiday.holidayDate, "yyyy-MM-dd") ===
-        format(holidayDate, "yyyy-MM-dd")
+        format(holidayDate, "yyyy-MM-dd"),
     );
 
     if (!isHolidayExist) {
@@ -487,8 +454,8 @@ const AddOccasionCompo = ({ setIsOpen }: AddOccasionCompoProps) => {
       ErrorToast(
         `${format(
           holidayDate,
-          "yyyy-MM-dd"
-        )} already exist in Occasion Calender`
+          "yyyy-MM-dd",
+        )} already exist in Occasion Calender`,
       );
     }
   }

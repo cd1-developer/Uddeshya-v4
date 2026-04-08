@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/sidebar";
 import { sidebarData } from "@/components/Sidebar/app-sidebar";
 import { useParams, usePathname } from "next/navigation";
-import { ComponentType, useEffect } from "react";
-import { LucideProps, LayoutPanelTop, Globe2, Globe } from "lucide-react";
+import { ComponentType } from "react";
+import { LucideProps, LayoutPanelTop } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
@@ -26,7 +26,7 @@ export default function ClientLayout({
   //   (state: RootState) => state.dataSlice.organisation
   // );
   const isLoading = useSelector(
-    (state: RootState) => state.dataSlice.isLoading
+    (state: RootState) => state.dataSlice.isLoading,
   );
 
   const isDashboard = pathname?.startsWith("/dashboard");

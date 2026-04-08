@@ -51,7 +51,7 @@ model Employee {
 model EmployeeLeaveBalance {
   id             String      @id @default(auto()) @map("_id") @db.ObjectId
   employeeId     String @db.ObjectId
-  balance        Int         @default(0)
+  balance        Float       @default(0)
   lastUpdated    DateTime    @default(now())
   employee       Employee    @relation("EmployeeLeaveBalance",fields: [employeeId], references: [id])
   policyName     String
@@ -110,7 +110,7 @@ enum LeaveStatus {
 enum AbsentType {
   FULL_DAY
   FIRST_HALF
-  SECOND_HALF
+  SECOND_HALFt
 }
 
 enum EmployeeStatus {

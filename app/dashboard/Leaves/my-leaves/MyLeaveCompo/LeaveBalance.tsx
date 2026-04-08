@@ -10,6 +10,8 @@ import {
 import { RootState } from "@/libs/store";
 import { EmployeeLeaveBalance, LeaveStatus } from "@/interfaces";
 import POLICIES from "@/constant/Policies";
+import useLeaveBalance from "@/hooks/useLeaveBalance";
+import { useSession } from "next-auth/react";
 
 // import { TotalBalance } from "@/libs/Dataslice";
 
@@ -23,58 +25,15 @@ const leaveBalanceHeader = [
 ];
 
 const LeaveBalance = () => {
-  const employees = useSelector((state: RootState) => state.dataSlice.employee);
-  const userId = useSelector((state: RootState) => state.dataSlice.userInfo.id);
-
-  const leaves = useSelector((state: RootState) => state.dataSlice.leave);
+  const { data: session } = useSession();
 
   // ?.totalBalances as TotalBalance[];
 
-  const currentEmployee = employees.find((emp) => emp.userId === userId);
-  // const allLeaveInfo = [];
+  const { allLeaveInfo, loading, error } = useLeaveBalance(
+    session?.user.employee_id as string,
+  );
 
-  let allLeaveInfo: {
-    policyName: string;
-    balance: number;
-    approved: number;
-    rejected: number;
-    pending: number;
-  }[] = [];
-
-  POLICIES.map((policy) => {
-    const leaveType = policy.policyName;
-    let policyBalance =
-      currentEmployee?.leaveBalances.find(
-        (balance: EmployeeLeaveBalance) => balance.policyName === leaveType
-      )?.balance || 0;
-
-    let approved =
-      leaves.filter(
-        (leave) =>
-          leave.LeaveStatus === LeaveStatus.APPROVED &&
-          leave.policyName === leaveType
-      ).length || 0;
-    let rejected =
-      leaves.filter(
-        (leave) =>
-          leave.LeaveStatus === LeaveStatus.REJECTED &&
-          leave.policyName === leaveType
-      ).length || 0;
-    let pending =
-      leaves.filter(
-        (leave) =>
-          leave.LeaveStatus === LeaveStatus.PENDING &&
-          leave.policyName === leaveType
-      ).length || 0;
-
-    allLeaveInfo.push({
-      policyName: leaveType,
-      balance: policyBalance,
-      approved,
-      rejected,
-      pending,
-    });
-  });
+  console.log(loading, error, allLeaveInfo);
 
   return (
     <div className="w-full">

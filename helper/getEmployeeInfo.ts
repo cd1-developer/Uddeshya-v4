@@ -1,6 +1,6 @@
-import { Employee, getEmployees } from "@/helper/getEmployees";
+import { Employee } from "@/helper/getEmployees";
 import { prisma } from "@/libs/prisma";
-import { RedisProvider } from "@/libs/RedisProvider";
+// import { RedisProvider } from "@/libs/RedisProvider";
 
 /**
  * Fetches employee information by ID.
@@ -10,27 +10,27 @@ import { RedisProvider } from "@/libs/RedisProvider";
 const getEmployeeInfo = async (id: string) => {
   try {
     // 🔹 Try to get all employees from Redis/cache
-    const allEmployee = await getEmployees();
+    // const allEmployee = await getEmployees();
 
     // ❌ Cache MISS → Fetch only required employee from database
-    if (!allEmployee) {
-      console.log("Cache MISS ❌ → Fetching employee from DB");
-      return await prisma.employee.findFirst({
-        where: { id },
-        include: {
-          assignMembers: true,
-          leavesApplied: true,
-        },
-      });
-    }
+    // if (!allEmployee) {
+    //   console.log("Cache MISS ❌ → Fetching employee from DB");
+    return await prisma.employee.findFirst({
+      where: { id },
+      include: {
+        assignMembers: true,
+        leavesApplied: true,
+      },
+    });
+    // }
 
     // ✨ Cache HIT → Fetch employee from cached list
-    console.log("Cache HIT ✅ → Returning employee from Redis");
-    const employeeInfo = allEmployee.find(
-      (employee: Employee) => employee.id === id
-    );
+    // console.log("Cache HIT ✅ → Returning employee from Redis");
+    // const employeeInfo = allEmployee.find(
+    //   (employee: Employee) => employee.id === id
+    // );
 
-    return employeeInfo;
+    // return employeeInfo;
   } catch (error) {
     // 🔥 Handle unexpected failures (DB or Redis errors)
     console.error("Employee fetching error:", error);
