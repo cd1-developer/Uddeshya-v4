@@ -3,6 +3,7 @@ import { NextAuthOptions } from "next-auth";
 import { LoginHandler } from "@/helper/loginHandler";
 import axios from "axios";
 import { Role } from "@/interfaces";
+import { mapRole } from "@/helper/mapRole";
 
 export const Next_Auth: NextAuthOptions = {
   providers: [
@@ -21,7 +22,9 @@ export const Next_Auth: NextAuthOptions = {
           placeholder: "Enter your password",
         },
       },
-      async authorize(credentials: any) {
+      async authorize(
+        credentials: Record<"email" | "password", string> | undefined,
+      ) {
         try {
           if (!credentials?.email || !credentials?.password) {
             throw new Error("Email and password are required");
@@ -42,7 +45,7 @@ export const Next_Auth: NextAuthOptions = {
             id: user.id,
             email: user.email,
             username: user.username,
-            role: user.role,
+            role: mapRole(user.role as string),
             employee_id: user.employee_id,
           };
         } catch (error: any) {
@@ -74,7 +77,7 @@ export const Next_Auth: NextAuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.username = user.username;
-        token.role = user.role;
+        token.role = user.role as Role;
         token.employee_id = user.employee_id;
       }
       return token;
@@ -86,7 +89,7 @@ export const Next_Auth: NextAuthOptions = {
         session.user.email = token.email as string;
         session.user.username = token.username as string;
         session.user.role = token.role as Role;
-        session.user.employee_id = token.employee_id as string;
+        session.user.employee_id = token.employee_id;
       }
 
       return session;
