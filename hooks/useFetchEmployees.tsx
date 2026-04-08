@@ -11,7 +11,7 @@ function useFetchEmployees() {
   const [isPending, startTransition] = useTransition();
 
   const employeeInfoEndCursors = useSelector(
-    (state: RootState) => state.dataSlice.employeeInfoEndCursor
+    (state: RootState) => state.dataSlice.employeeInfoEndCursor,
   );
 
   const fetchEmployees = () => {
@@ -24,7 +24,7 @@ function useFetchEmployees() {
     startTransition(async () => {
       try {
         const res = await axios.get(
-          `/api/Employee/get-employees?cursor=${cursor}&limit=9`
+          `/api/Employee/get-employees?cursor=${cursor}&limit=9`,
         );
 
         const { success, data, nextCursor, hasMore: more, message } = res.data;

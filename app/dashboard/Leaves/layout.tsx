@@ -1,27 +1,24 @@
 "use client";
 import React, { useEffect } from "react";
 import { Role } from "@/interfaces";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/libs/store";
+import { useDispatch } from "react-redux";
 import { setLeave } from "@/libs/dataslice";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 function LeaveLayout({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
-  const employee = useSelector(
-    (state: RootState) => state.dataSlice.employeeInfo,
-  );
+  const { data: session } = useSession();
   useEffect(() => {
     const fetchLeavesData = async () => {
-      if (!employee.id) return;
-      if (employee.role === Role.ADMIN) return;
+      if (!session?.user.employee_id) return;
+      if (session.user.role === Role.ADMIN) return;
 
       try {
         const response = await axios.get(
-          `/api/leave/employee?employeeId=${employee.id}`,
+          `/api/leave/employee?employeeId=${session.user.employee_id}`,
         );
-
         const { success, data, message } = response.data;
 
         if (!success) {
@@ -38,7 +35,7 @@ function LeaveLayout({ children }: { children: React.ReactNode }) {
     };
 
     fetchLeavesData();
-  }, [employee.id]);
+  }, [session?.user.employee_id]);
 
   return <div>{children}</div>;
 }

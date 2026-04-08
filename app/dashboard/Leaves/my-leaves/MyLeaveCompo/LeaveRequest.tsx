@@ -9,7 +9,6 @@ import { LeaveSchema } from "@/schemas/leave.schema";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { Badge } from "@/components/ui/badge";
-import { useDispatch } from "react-redux";
 import { differenceInDays } from "date-fns";
 
 import { AbsentType, Employee, LeaveStatus, Role } from "@/interfaces";
@@ -23,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
-import { ChevronRight } from "lucide-react";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
@@ -31,11 +29,11 @@ const LeaveRequest = () => {
   const leaveData = useSelector((state: RootState) => state.dataSlice.leave);
   const employees = useSelector((state: RootState) => state.dataSlice.employee);
   const currentUserId = useSelector(
-    (state: RootState) => state.dataSlice.userInfo.id
+    (state: RootState) => state.dataSlice.userInfo.id,
   );
 
   const employee = employees.find(
-    (emp) => emp.userId === currentUserId
+    (emp) => emp.userId === currentUserId,
   ) as Employee;
 
   const reportManagerId = employee?.reportManagerId;
@@ -154,8 +152,8 @@ const LeaveRequest = () => {
                       leave.LeaveStatus === LeaveStatus.APPROVED
                         ? "bg-green-100 text-green-800"
                         : leave.LeaveStatus === LeaveStatus.REJECTED
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
                     {leave.LeaveStatus}
@@ -171,7 +169,7 @@ const LeaveRequest = () => {
                     <div className="text-xs text-gray-500">
                       {differenceInDays(
                         new Date(leave.endDateTime as Date),
-                        new Date(leave.startDateTime)
+                        new Date(leave.startDateTime),
                       ) + 1}{" "}
                       days
                     </div>
@@ -187,8 +185,8 @@ const LeaveRequest = () => {
                     {leave.startAbsentType === AbsentType.FIRST_HALF
                       ? "First Half"
                       : leave.startAbsentType === AbsentType.SECOND_HALF
-                      ? "Second Half"
-                      : "Full Day"}
+                        ? "Second Half"
+                        : "Full Day"}
                   </span>
                   <span>
                     {format(new Date(leave.startDateTime), "dd/MM/yy")}
@@ -245,8 +243,8 @@ const LeaveRequest = () => {
                           leave.LeaveStatus === LeaveStatus.APPROVED
                             ? "outline"
                             : leave.LeaveStatus === LeaveStatus.REJECTED
-                            ? "destructive"
-                            : "default"
+                              ? "destructive"
+                              : "default"
                         }
                         className={`px-2 py-1 rounded-full text-xs font-gilMedium`}
                       >

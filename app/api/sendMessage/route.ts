@@ -30,7 +30,7 @@ export const POST = async (req: NextRequest) => {
     if (!validationSuccess) {
       return NextResponse.json(
         { success: false, message: validationMessage },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -47,7 +47,7 @@ export const POST = async (req: NextRequest) => {
     if (type === "otp" && !otp) {
       return NextResponse.json(
         { success: false, message: "OTP is required for type 'otp'." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,7 +68,7 @@ export const POST = async (req: NextRequest) => {
     // Return a generic error response to the client with a 500 Internal Server Error status.
     return NextResponse.json(
       { success: false, message: "Failed to send message." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

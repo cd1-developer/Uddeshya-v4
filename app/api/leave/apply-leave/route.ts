@@ -3,20 +3,15 @@ import validateData from "@/helper/validateData";
 import z from "zod";
 import { LeaveSchema } from "@//schemas/leave.schema";
 import { NextRequest, NextResponse } from "next/server";
-import { Leave } from "@prisma/client";
-//import { RedisProvider } from "@/libs/RedisProvider";
-import { Employee, getEmployees } from "@/helper/getEmployees";
-import { findWithIndex } from "@/helper/findWithIndex";
 
 /**
  * API endpoint for an employee to apply for a leave.
  * It validates the leave request, creates a new leave record in the database,
  * and updates the Redis cache to reflect the new leave application.
- 
  */
 export const POST = async (req: NextRequest) => {
   try {
-    const body = (await req.json()) as any;
+    const body = await req.json();
 
     // 1. Pre-process the request body: Convert date strings to Date objects for validation.
     body.startDateTime = new Date(body.startDateTime);
