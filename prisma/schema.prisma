@@ -110,7 +110,7 @@ enum LeaveStatus {
 enum AbsentType {
   FULL_DAY
   FIRST_HALF
-  SECOND_HALFt
+  SECOND_HALF
 }
 
 enum EmployeeStatus {
