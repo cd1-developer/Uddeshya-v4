@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import ThreeBodyLoader from "@/components/custom/Loader/ThreeBodyLoader";
 import {
   Table,
   TableHeader,
@@ -7,9 +7,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { RootState } from "@/libs/store";
-import { EmployeeLeaveBalance, LeaveStatus } from "@/interfaces";
-import POLICIES from "@/constant/Policies";
+
 import useLeaveBalance from "@/hooks/useLeaveBalance";
 import { useSession } from "next-auth/react";
 
@@ -33,7 +31,9 @@ const LeaveBalance = () => {
     session?.user.employee_id as string,
   );
 
-  console.log(loading, error, allLeaveInfo);
+  if (loading) {
+    return <ThreeBodyLoader />;
+  }
 
   return (
     <div className="w-full">
