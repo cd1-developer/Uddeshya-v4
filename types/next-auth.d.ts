@@ -11,6 +11,7 @@ declare module "next-auth" {
     email: string;
     role?: Role;
     employee_id: string | undefined;
+    reportManagerId: string | null;
   }
 
   interface Session extends DefaultSession {
@@ -21,6 +22,7 @@ declare module "next-auth" {
       email: string;
       role?: Role;
       employee_id: string | undefined;
+      reportManagerId: string | null;
     } & DefaultSession["user"];
   }
 }
@@ -33,5 +35,6 @@ declare module "next-auth/jwt" {
     email: string;
     role: Role;
     employee_id: string | undefined;
+    reportManagerId: string | null;
   }
 }

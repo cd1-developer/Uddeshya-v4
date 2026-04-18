@@ -11,7 +11,7 @@ import { RootState } from "@/libs/store";
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays } from "date-fns";
 
-import { AbsentType, Employee, LeaveStatus, Role } from "@/interfaces";
+import { AbsentType, LeaveStatus } from "@/interfaces";
 
 import {
   Select,
@@ -22,36 +22,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
 const LeaveRequest = () => {
   const leaveData = useSelector((state: RootState) => state.dataSlice.leave);
-  const employees = useSelector((state: RootState) => state.dataSlice.employee);
-  const currentUserId = useSelector(
-    (state: RootState) => state.dataSlice.userInfo.id,
-  );
 
-  const employee = employees.find(
-    (emp) => emp.userId === currentUserId,
-  ) as Employee;
-
-  const reportManagerId = employee?.reportManagerId;
-
-  const adminId = employees.find((emp) => emp.role === Role.ADMIN)?.id;
+  const { data: session } = useSession();
 
   const form = useForm<CreateLeaveFormValues>({
     resolver: zodResolver(LeaveSchema),
     mode: "onBlur",
     defaultValues: {
-      employeeId: employee?.id as string,
+      employeeId: session?.user.employee_id as string,
       policyName: "",
       startDateTime: undefined,
       endDateTime: undefined,
       startAbsentType: AbsentType.FIRST_HALF, // Add this
       endAbsentType: undefined,
       reason: "",
-      actionByEmployeeId: reportManagerId || adminId, // Those who does not have reportManager
+      actionByEmployeeId: session?.user.reportManagerId as string, // Those who does not have reportManager
       // then their leave request is handel my Admin
     },
   });

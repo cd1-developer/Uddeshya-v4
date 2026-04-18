@@ -47,6 +47,7 @@ export const Next_Auth: NextAuthOptions = {
             username: user.username,
             role: mapRole(user.role as string),
             employee_id: user.employee_id,
+            reportManagerId: user.reportManagerId ?? null,
           };
         } catch (error: any) {
           console.error("Authorize Error:", error);
@@ -79,6 +80,7 @@ export const Next_Auth: NextAuthOptions = {
         token.username = user.username;
         token.role = user.role as Role;
         token.employee_id = user.employee_id;
+        token.reportManagerId = user.reportManagerId;
       }
       return token;
     },
@@ -90,6 +92,7 @@ export const Next_Auth: NextAuthOptions = {
         session.user.username = token.username as string;
         session.user.role = token.role as Role;
         session.user.employee_id = token.employee_id;
+        session.user.reportManagerId = token.reportManagerId;
       }
 
       return session;
