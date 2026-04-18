@@ -26,18 +26,14 @@ import dayjs from "dayjs";
 import { isSameDay } from "date-fns";
 import z from "zod";
 import { getBalance } from "@/helper/getBalance";
-import {
-  AbsentType,
-  Employee,
-  leavePolicy,
-  EmployeeStatus,
-} from "@/interfaces";
+import { AbsentType, leavePolicy, EmployeeStatus } from "@/interfaces";
 import axios from "axios";
 import { successToast } from "@/components/custom/SuccessToast";
 import { ErrorToast } from "@/components/custom/ErrorToast";
 import { setLeave } from "@/libs/dataslice";
 import { useDispatch } from "react-redux";
 import POLICIES from "@/constant/Policies";
+import { Loader2 } from "lucide-react";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
@@ -68,17 +64,22 @@ const EndAbsentTypes = AbsentTypes.filter(
 interface LeaveRequestFormProp {
   form: UseFormReturn<CreateLeaveFormValues>;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  status: EmployeeStatus;
 }
 
-const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
+const LeaveRequestForm = ({
+  form,
+  setIsOpen,
+  status,
+}: LeaveRequestFormProp) => {
   const policyName = form.watch("policyName");
-  const selectedLeaveType = form.watch("policyName");
   const startDate = form.watch("startDateTime");
   const startAbsentType = form.watch("startAbsentType");
   const endDate = form.watch("endDateTime") as Date;
   const endAbsentType = form.watch("endAbsentType");
   const isLeaveTypeSelected = policyName !== "" || policyName;
   const dispatch = useDispatch();
+  const [loading, setLoading] = React.useState(false);
 
   useEffect(() => {
     if (startAbsentType === AbsentType.FIRST_HALF && startDate) {
@@ -86,14 +87,11 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
     }
   }, [startDate, startAbsentType]);
 
-  const { holidays, leaves, employees, currentUser } = useSelector(
-    (state: RootState) => ({
-      holidays: state.dataSlice.holiday,
-      leaves: state.dataSlice.leave,
-      employees: state.dataSlice.employee,
-      currentUser: state.dataSlice.userInfo,
-    }),
-  );
+  const { holidays, leaves, employee } = useSelector((state: RootState) => ({
+    holidays: state.dataSlice.holiday,
+    leaves: state.dataSlice.leave,
+    employee: state.dataSlice.employeeInfo,
+  }));
 
   const deductedBalance = useMemo(() => {
     const leaveInfo = POLICIES.find((data) => data.policyName === policyName);
@@ -158,59 +156,52 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
     return "Select absent type";
   };
 
-  const employee = employees.find(
-    (emp) => emp.userId === currentUser.id,
-  ) as Employee;
-  console.log(employee);
-
   const onSubmit = async (leaveData: CreateLeaveFormValues) => {
-    let { startAbsentType, endAbsentType } = leaveData;
-
-    const employee = employees.find(
-      (emp) => emp.userId === currentUser.id,
-    ) as Employee;
-
-    if (employee.status === EmployeeStatus.Probation) {
-      ErrorToast(
-        "Leave application is not allowed during the probation period.",
-      );
-      return;
-    }
-
-    const currentPolicy = POLICIES.find(
-      (policy) => policy.policyName === leaveData.policyName,
-    );
-
-    const currentBal = (employee?.leaveBalances.find(
-      (leaveBalanceInfo) =>
-        leaveBalanceInfo.policyName === leaveData.policyName,
-    )?.balance || 0) as number;
-
-    if (currentPolicy?.maxApply && deductedBalance > currentPolicy.maxApply) {
-      ErrorToast(
-        `You can apply a maximum of ${currentPolicy.maxApply} consecutive leave(s) under this policy.`,
-      );
-      return;
-    }
-
-    if (
-      currentPolicy?.policyName !== "Un-Paid Leave" &&
-      currentPolicy?.policyName !== "Exam Leave" &&
-      deductedBalance > currentBal
-    ) {
-      ErrorToast(
-        `Insufficient leave balance. Available balance: ${currentBal}.`,
-      );
-      return;
-    }
-
-    const payload = {
-      ...leaveData,
-      startAbsentType,
-      endAbsentType,
-    };
+    setLoading(true); // ✅ start loading
 
     try {
+      let { startAbsentType, endAbsentType } = leaveData;
+
+      if (status === EmployeeStatus.Probation) {
+        ErrorToast(
+          "Leave application is not allowed during the probation period.",
+        );
+        return;
+      }
+
+      const currentPolicy = POLICIES.find(
+        (policy) => policy.policyName === leaveData.policyName,
+      );
+
+      const currentBal = (employee?.leaveBalances.find(
+        (leaveBalanceInfo) =>
+          leaveBalanceInfo.policyName === leaveData.policyName,
+      )?.balance || 0) as number;
+
+      if (currentPolicy?.maxApply && deductedBalance > currentPolicy.maxApply) {
+        ErrorToast(
+          `You can apply a maximum of ${currentPolicy.maxApply} consecutive leave(s) under this policy.`,
+        );
+        return;
+      }
+
+      if (
+        currentPolicy?.policyName !== "Un-Paid Leave" &&
+        currentPolicy?.policyName !== "Exam Leave" &&
+        deductedBalance > currentBal
+      ) {
+        ErrorToast(
+          `Insufficient leave balance. Available balance: ${currentBal}.`,
+        );
+        return;
+      }
+
+      const payload = {
+        ...leaveData,
+        startAbsentType,
+        endAbsentType,
+      };
+
       const res = await axios.post("/api/leave/apply-leave", payload);
       const { success, message, data } = res.data;
 
@@ -220,17 +211,14 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
         setIsOpen(false);
         form.reset();
       } else {
-        ErrorToast(
-          message ||
-            "Unable to apply leave at the moment. Please try again later.",
-        );
+        ErrorToast(message || "Unable to apply leave at the moment.");
         dispatch(setLeave([]));
       }
     } catch (error: any) {
       console.error("Error creating leave:", error);
-      ErrorToast(
-        "Something went wrong while submitting your leave request. Please try again.",
-      );
+      ErrorToast("Something went wrong while submitting your leave request.");
+    } finally {
+      setLoading(false); // ✅ stop loading ALWAYS
     }
   };
 
@@ -469,10 +457,12 @@ const LeaveRequestForm = ({ form, setIsOpen }: LeaveRequestFormProp) => {
 
           <div className="add">
             <Button
+              disabled={loading}
               type="submit"
               className="flex items-center gap-3 px-4 py-1 text-sm font-gilSemiBold rounded-sm text-white"
             >
-              Create
+              {loading && <Loader2 className="animate-spin h-4 w-4" />}
+              {loading ? "Creating..." : "Create"}
             </Button>
           </div>
         </div>

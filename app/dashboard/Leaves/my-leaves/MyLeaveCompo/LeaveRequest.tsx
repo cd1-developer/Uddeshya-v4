@@ -11,7 +11,7 @@ import { RootState } from "@/libs/store";
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays } from "date-fns";
 
-import { AbsentType, LeaveStatus } from "@/interfaces";
+import { AbsentType, EmployeeStatus, LeaveStatus } from "@/interfaces";
 
 import {
   Select,
@@ -60,11 +60,6 @@ const LeaveRequest = () => {
       value: "Rejected",
     },
   ];
-  const statusVariant = {
-    Approved: "default",
-    Rejected: "destructive",
-    Pending: "secondary",
-  };
 
   return (
     <section className="">
@@ -86,7 +81,11 @@ const LeaveRequest = () => {
             title="Create Leave Request"
             className="max-w-2xl"
           >
-            <LeaveRequestForm form={form} setIsOpen={setIsOpen} />
+            <LeaveRequestForm
+              form={form}
+              setIsOpen={setIsOpen}
+              status={session?.user.status as EmployeeStatus}
+            />
           </DialogCompo>
         </div>
       </header>

@@ -32,6 +32,7 @@ export const LoginHandler = async (email: string, password: string) => {
             id: true,
             role: true,
             reportManagerId: true,
+            status: true,
           },
         },
       },
@@ -76,6 +77,7 @@ export const LoginHandler = async (email: string, password: string) => {
         role: isUserExist.employee?.role,
         employee_id: isUserExist.employee?.id,
         reportManagerId: isUserExist.employee?.reportManagerId,
+        status: isUserExist.employee?.status,
       },
     };
   } catch (error) {

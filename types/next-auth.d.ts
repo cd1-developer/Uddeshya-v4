@@ -1,5 +1,5 @@
 // types/next-auth.d.ts
-import { Role } from "@/interfaces";
+import { EmployeeStatus, Role } from "@/interfaces";
 import "next-auth";
 import { DefaultSession } from "next-auth";
 
@@ -12,6 +12,7 @@ declare module "next-auth" {
     role?: Role;
     employee_id: string | undefined;
     reportManagerId: string | null;
+    status: EmployeeStatus;
   }
 
   interface Session extends DefaultSession {
@@ -23,6 +24,7 @@ declare module "next-auth" {
       role?: Role;
       employee_id: string | undefined;
       reportManagerId: string | null;
+      status: EmployeeStatus;
     } & DefaultSession["user"];
   }
 }
@@ -36,5 +38,6 @@ declare module "next-auth/jwt" {
     role: Role;
     employee_id: string | undefined;
     reportManagerId: string | null;
+    status: EmployeeStatus;
   }
 }
