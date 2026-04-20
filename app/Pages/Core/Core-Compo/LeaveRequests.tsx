@@ -20,6 +20,7 @@ import { LeaveStatus } from "@/interfaces";
 
 import useUpdateLeaveStatus from "@/hooks/useUpdateLeaveStatus";
 import { Input } from "@/components/ui/input";
+import { start } from "repl";
 
 const getStartTime = (absentType: AbsentType) => {
   return absentType === AbsentType.FIRST_HALF
@@ -29,10 +30,18 @@ const getStartTime = (absentType: AbsentType) => {
       : "Full Day";
 };
 
-const getEndTime = (absentType: string) => {
-  return absentType === "First Half" || absentType === ""
-    ? "6:00 PM"
-    : "Full Day";
+const getEndTime = (startAbsentType: string, endAbsentType: string) => {
+  // return absentType === "First Half" || absentType === ""
+  //   ? "6:00 PM"
+  //   : "Full Day";
+
+  return startAbsentType === AbsentType.FIRST_HALF
+    ? "1:00 PM"
+    : startAbsentType === AbsentType.SECOND_HALF &&
+        endAbsentType === AbsentType.FIRST_HALF
+      ? "Full Day"
+      : startAbsentType === AbsentType.SECOND_HALF &&
+        endAbsentType === AbsentType.FULL_DAY;
 };
 const getStatusIcon = (status: string) => {
   switch (status) {
@@ -58,13 +67,10 @@ const getStatusColor = (status: string) => {
 };
 
 function getExactTime(leave: Leave) {
-  let time = `${format(
-    new Date(leave.startDateTime),
-    "dd/MM/yyyy",
-  )} ( ${getStartTime(leave.startAbsentType)} ) - ${format(
+  let time = `${format(new Date(leave.startDateTime), "dd/MM/yyyy")} - ${format(
     new Date(leave.endDateTime as Date),
     "dd/MM/yyyy",
-  )} ( ${getEndTime(leave.endAbsentType || "")} )`;
+  )}`;
   return time;
 }
 
