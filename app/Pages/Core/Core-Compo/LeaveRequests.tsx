@@ -19,21 +19,19 @@ import AlertDialogCompo from "@/components/custom/AlertDialog/AlertDialogCompo";
 import { LeaveStatus } from "@/interfaces";
 
 import useUpdateLeaveStatus from "@/hooks/useUpdateLeaveStatus";
-import { useSelector } from "react-redux";
-import { RootState } from "@/libs/store";
 import { Input } from "@/components/ui/input";
 
 const getStartTime = (absentType: AbsentType) => {
   return absentType === AbsentType.FIRST_HALF
     ? "9:00 AM"
     : absentType === AbsentType.SECOND_HALF
-    ? "1:00 PM"
-    : "Full Day";
+      ? "1:00 PM"
+      : "Full Day";
 };
 
 const getEndTime = (absentType: string) => {
   return absentType === "First Half" || absentType === ""
-    ? "1:00 PM"
+    ? "6:00 PM"
     : "Full Day";
 };
 const getStatusIcon = (status: string) => {
@@ -62,10 +60,10 @@ const getStatusColor = (status: string) => {
 function getExactTime(leave: Leave) {
   let time = `${format(
     new Date(leave.startDateTime),
-    "dd/MM/yyyy"
+    "dd/MM/yyyy",
   )} ( ${getStartTime(leave.startAbsentType)} ) - ${format(
     new Date(leave.endDateTime as Date),
-    "dd/MM/yyyy"
+    "dd/MM/yyyy",
   )} ( ${getEndTime(leave.endAbsentType || "")} )`;
   return time;
 }
@@ -164,7 +162,7 @@ const LeaveRequests = ({
                                 {getExactTime(leave)}
                               </span>
                             </div>
-                            {(leave.startAbsentType === AbsentType.FIRST_HALF ||
+                            {/* {(leave.startAbsentType === AbsentType.FIRST_HALF ||
                               (leave.startAbsentType ===
                                 AbsentType.SECOND_HALF &&
                                 !leave.endAbsentType)) && (
@@ -172,6 +170,23 @@ const LeaveRequests = ({
                                 <Clock className="h-3.5 w-3.5" />
                                 <span className="text-slate-500 font-gilRegular">
                                   Half Day
+                                </span>
+                              </div>
+                            )} */}
+                            {leave.startAbsentType === AbsentType.FIRST_HALF ||
+                            (leave.startAbsentType === AbsentType.SECOND_HALF &&
+                              !leave.endAbsentType) ? (
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span className="text-slate-500 font-gilRegular">
+                                  Half Day
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span className="text-slate-500 font-gilRegular">
+                                  Full Day
                                 </span>
                               </div>
                             )}
