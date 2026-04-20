@@ -67,10 +67,10 @@ export const Next_Auth: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60, // 🕐 1 hour session expiry (in seconds)
+    maxAge: 60 * 60 * 24 * 7, // 🕐 1 week session expiry (in seconds)
   },
   jwt: {
-    maxAge: 60 * 60, // 🕐 1 hour session expiry (in seconds)
+    maxAge: 60 * 60 * 24 * 7, // 🕐 1 week session expiry (in seconds)
   },
   callbacks: {
     jwt: ({ token, user }) => {
