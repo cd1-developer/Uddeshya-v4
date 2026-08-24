@@ -30,6 +30,7 @@ import {
 
 import useUpdateLeaveStatus from "@/hooks/useUpdateLeaveStatus";
 import { Input } from "@/components/ui/input";
+import { getLeaveDurationLabel } from "@/helper/getLeaveDurationLabel";
 
 const getStartTime = (absentType: AbsentType) => {
   return absentType === AbsentType.FIRST_HALF
@@ -283,6 +284,12 @@ const LeaveRequests = ({
                             <div className="flex items-center space-x-1">
                               <span className="font-gilMedium text-xs">
                                 {getExactTime(leave)}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span className="font-gilMedium text-xs text-slate-700">
+                                {getLeaveDurationLabel(leave)}
                               </span>
                             </div>
                             {/* {(leave.startAbsentType === AbsentType.FIRST_HALF ||

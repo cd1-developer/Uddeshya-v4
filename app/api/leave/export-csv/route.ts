@@ -3,6 +3,7 @@ import { prisma } from "@/libs/prisma";
 import { getEmployees } from "@/helper/getEmployees";
 import POLICIES from "@/constant/Policies";
 import { Role } from "@/interfaces";
+import { getLeaveDurationLabel } from "@/helper/getLeaveDurationLabel";
 
 // Admin-only export of every employee's leave balances + leaves taken in a
 // given period, as a downloadable CSV.
@@ -61,6 +62,7 @@ export const GET = async (req: NextRequest) => {
       "Leave Policy",
       "Start Date",
       "End Date",
+      "Duration",
       "Status",
       "Reason",
     ];
@@ -85,7 +87,9 @@ export const GET = async (req: NextRequest) => {
       if (leaves.length === 0) {
         // Still emit one row so the admin sees this employee's balances.
         rows.push(
-          [name, email, ...balances, "", "", "", "", ""].map(csvCell).join(","),
+          [name, email, ...balances, "", "", "", "", "", ""]
+            .map(csvCell)
+            .join(","),
         );
         continue;
       }
@@ -99,6 +103,7 @@ export const GET = async (req: NextRequest) => {
             l.policyName,
             fmtDate(l.startDateTime),
             fmtDate(l.endDateTime),
+            getLeaveDurationLabel(l),
             l.LeaveStatus,
             l.reason ?? "",
           ]
