@@ -1,0 +1,128 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/libs/prisma";
+import { getEmployees } from "@/helper/getEmployees";
+import POLICIES from "@/constant/Policies";
+import { Role } from "@/interfaces";
+
+// Admin-only export of every employee's leave balances + leaves taken in a
+// given period, as a downloadable CSV.
+// GET /api/leave/export-csv?userId=<adminUserId>&from=YYYY-MM-DD&to=YYYY-MM-DD
+
+const csvCell = (value: unknown): string => {
+  const s = value == null ? "" : String(value);
+  // Quote if it contains comma, quote or newline; escape inner quotes.
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+const fmtDate = (d?: Date | null): string =>
+  d ? new Date(d).toISOString().slice(0, 10) : "";
+
+export const GET = async (req: NextRequest) => {
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const fromStr = searchParams.get("from");
+    const toStr = searchParams.get("to");
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: "userId is required" },
+        { status: 400 },
+      );
+    }
+
+    // Only ADMIN may export.
+    const requester = await prisma.employee.findFirst({
+      where: { userId },
+      select: { role: true },
+    });
+    if (requester?.role !== Role.ADMIN) {
+      return NextResponse.json(
+        { success: false, message: "Only admins can export leave balances" },
+        { status: 403 },
+      );
+    }
+
+    // Period bounds (inclusive). Default: all-time if not provided.
+    const from = fromStr ? new Date(fromStr) : null;
+    const to = toStr ? new Date(`${toStr}T23:59:59.999Z`) : null;
+
+    const employees = (await getEmployees()).filter(
+      (e) => e.role !== Role.ADMIN,
+    );
+
+    const policyNames = POLICIES.map((p) => p.policyName);
+
+    // Header: identity + one balance column per policy + leave detail columns.
+    const header = [
+      "Employee",
+      "Email",
+      ...policyNames.map((p) => `${p} Balance`),
+      "Leave Policy",
+      "Start Date",
+      "End Date",
+      "Status",
+      "Reason",
+    ];
+
+    const rows: string[] = [header.map(csvCell).join(",")];
+
+    for (const emp of employees) {
+      const name = emp.user?.username ?? "";
+      const email = emp.user?.email ?? "";
+      const balances = policyNames.map(
+        (p) =>
+          emp.leaveBalances.find((b) => b.policyName === p)?.balance ?? 0,
+      );
+
+      const leaves = emp.leavesApplied.filter((l) => {
+        const start = new Date(l.startDateTime);
+        if (from && start < from) return false;
+        if (to && start > to) return false;
+        return true;
+      });
+
+      if (leaves.length === 0) {
+        // Still emit one row so the admin sees this employee's balances.
+        rows.push(
+          [name, email, ...balances, "", "", "", "", ""].map(csvCell).join(","),
+        );
+        continue;
+      }
+
+      for (const l of leaves) {
+        rows.push(
+          [
+            name,
+            email,
+            ...balances,
+            l.policyName,
+            fmtDate(l.startDateTime),
+            fmtDate(l.endDateTime),
+            l.LeaveStatus,
+            l.reason ?? "",
+          ]
+            .map(csvCell)
+            .join(","),
+        );
+      }
+    }
+
+    const csv = rows.join("\n");
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="leave-balances-${stamp}.csv"`,
+      },
+    });
+  } catch (error: any) {
+    console.error("Export CSV Error:", error);
+    return NextResponse.json(
+      { success: false, message: error?.message || "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+};

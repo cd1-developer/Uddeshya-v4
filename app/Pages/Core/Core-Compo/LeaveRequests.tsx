@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { forwardRef } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -14,13 +14,22 @@ import {
   ChevronRight,
   Calendar,
   Clock,
+  Search,
+  RotateCcw,
 } from "lucide-react";
 import AlertDialogCompo from "@/components/custom/AlertDialog/AlertDialogCompo";
 import { LeaveStatus } from "@/interfaces";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import useUpdateLeaveStatus from "@/hooks/useUpdateLeaveStatus";
 import { Input } from "@/components/ui/input";
-import { start } from "repl";
 
 const getStartTime = (absentType: AbsentType) => {
   return absentType === AbsentType.FIRST_HALF
@@ -92,6 +101,48 @@ const LeaveRequests = ({
     rejectedReason,
   });
 
+  // Local-only filters (no API calls). "All" = every status.
+  const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [status, setStatus] = useState<"All" | LeaveStatus>("All");
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStartDate("");
+    setEndDate("");
+    setStatus("All");
+  };
+
+  // Derive the filtered list from existing state — never mutate allLeaves.
+  const filteredLeaves = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const rangeStart = startDate ? new Date(`${startDate}T00:00:00`) : null;
+    const rangeEnd = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
+
+    return allLeaves.filter((leave) => {
+      // Search by username / email.
+      if (q) {
+        const username = leave.applicant?.user?.username?.toLowerCase() || "";
+        const email = leave.applicant?.user?.email?.toLowerCase() || "";
+        if (!username.includes(q) && !email.includes(q)) return false;
+      }
+
+      // Status.
+      if (status !== "All" && leave.LeaveStatus !== status) return false;
+
+      // Date range — keep leaves whose span overlaps the selected interval.
+      if (rangeStart || rangeEnd) {
+        const ls = new Date(leave.startDateTime);
+        const le = leave.endDateTime ? new Date(leave.endDateTime) : ls;
+        if (rangeStart && le < rangeStart) return false;
+        if (rangeEnd && ls > rangeEnd) return false;
+      }
+
+      return true;
+    });
+  }, [allLeaves, searchQuery, startDate, endDate, status]);
+
   const handleApproveLeave = (leave: Leave) => {
     updateLeaveStatus(leave, LeaveStatus.APPROVED);
   };
@@ -102,13 +153,77 @@ const LeaveRequests = ({
 
   return (
     <section className="">
-      <header className="flex justify-between items-center border-b pt-2 pb-4">
-        {/* <img src="" alt="" /> */}
+      <header className="border-b pt-2 pb-4">
+        <div className="rounded-lg border border-gray-100 bg-gray-50/60 p-3 space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search user by email or username"
+              className="pl-9 bg-white"
+            />
+          </div>
+
+          {/* Date range + status + clear */}
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+              Start Date
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-1 bg-white w-38"
+              />
+            </label>
+            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+              End Date
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="mt-1 bg-white w-38"
+              />
+            </label>
+            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+              Status
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as "All" | LeaveStatus)}
+              >
+                <SelectTrigger className="mt-1 bg-white w-38">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="All">All</SelectItem>
+                    <SelectItem value={LeaveStatus.PENDING}>Pending</SelectItem>
+                    <SelectItem value={LeaveStatus.APPROVED}>
+                      Approved
+                    </SelectItem>
+                    <SelectItem value={LeaveStatus.REJECTED}>
+                      Rejected
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </label>
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="font-gilMedium text-gray-600"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+          </div>
+        </div>
       </header>
 
       <main className="mt-5 leave-data">
         <div className="space-y-5">
-          {allLeaves && allLeaves.length === 0 ? (
+          {filteredLeaves.length === 0 ? (
             // <div className="flex items-center w-full bg-red-600 not-found">
             //   <img className="w-28" src="/not-found.png" alt="not-found" />
             // </div>
@@ -122,12 +237,14 @@ const LeaveRequests = ({
                   <img src="/not-found.png" alt="not-found" className="w-28" />
                 </div>
                 <h3 className="font-gilSemiBold text-xl text-gray-700 mb-3">
-                  No leave requests available.
+                  {allLeaves.length === 0
+                    ? "No leave requests available."
+                    : "No leave requests found."}
                 </h3>
               </CardContent>
             </Card>
           ) : (
-            allLeaves.flatMap((leave, i) => (
+            filteredLeaves.flatMap((leave, i) => (
               <div key={i}>
                 <Card className="py-3">
                   <CardHeader className="pb-3 px-2 md:px-6 pt-2 md:pt-6">

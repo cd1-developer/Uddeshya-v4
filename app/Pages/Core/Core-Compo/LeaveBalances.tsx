@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import {
   Accordion,
   AccordionItem,
@@ -8,6 +9,7 @@ import {
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeaveStatus, Employee, Role } from "@/interfaces";
+import { RootState } from "@/libs/store";
 import {
   FileText,
   CheckCircle,
@@ -16,6 +18,7 @@ import {
   User,
   Calendar,
   TrendingUp,
+  Download,
 } from "lucide-react";
 
 interface LeaveBalancesProps {
@@ -42,6 +45,20 @@ const LeaveBalances = ({
   // console.log(assignMembers);
   const employeesData = assignMembers.filter((emp) => emp.role !== Role.ADMIN);
 
+  const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
+  const isAdmin = userInfo?.employee?.role === Role.ADMIN;
+
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  const exportCsv = () => {
+    const params = new URLSearchParams({ userId: userInfo.id });
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    // Content-Disposition: attachment makes the browser download it.
+    window.location.href = `/api/leave/export-csv?${params.toString()}`;
+  };
+
   return (
     <section className="py-2">
       <header className="mb-8">
@@ -61,6 +78,36 @@ const LeaveBalances = ({
             </span>
           </div>
         </div>
+
+        {isAdmin && (
+          <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
+            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+              From
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="mt-1 rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-800"
+              />
+            </label>
+            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+              To
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="mt-1 rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-800"
+              />
+            </label>
+            <button
+              onClick={exportCsv}
+              className="flex items-center gap-2 rounded-md bg-sky-600 px-4 py-1.5 text-sm font-gilMedium text-white transition-colors hover:bg-sky-700"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
+          </div>
+        )}
       </header>
 
       <main className="">
