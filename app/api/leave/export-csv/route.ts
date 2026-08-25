@@ -3,7 +3,17 @@ import { prisma } from "@/libs/prisma";
 import { getEmployees } from "@/helper/getEmployees";
 import POLICIES from "@/constant/Policies";
 import { Role } from "@/interfaces";
-import { getLeaveDurationLabel } from "@/helper/getLeaveDurationLabel";
+import { LeaveStatus } from "@prisma/client";
+import {
+  getLeaveDurationLabel,
+  getLeaveDurationDays,
+} from "@/helper/getLeaveDurationLabel";
+
+// Policies that never accrue a balance (accrual 0). For these the "balance"
+// column instead reports how many days the employee has taken.
+const ZERO_ACCRUAL = new Set(
+  POLICIES.filter((p) => p.accural === 0).map((p) => p.policyName),
+);
 
 // Admin-only export of every employee's leave balances + leaves taken in a
 // given period, as a downloadable CSV.
@@ -58,7 +68,7 @@ export const GET = async (req: NextRequest) => {
     const header = [
       "Employee",
       "Email",
-      ...policyNames.map((p) => `${p} Balance`),
+      ...policyNames.map((p) => `${p} ${ZERO_ACCRUAL.has(p) ? "Taken" : "Balance"}`),
       "Leave Policy",
       "Start Date",
       "End Date",
@@ -72,16 +82,26 @@ export const GET = async (req: NextRequest) => {
     for (const emp of employees) {
       const name = emp.user?.username ?? "";
       const email = emp.user?.email ?? "";
-      const balances = policyNames.map(
-        (p) =>
-          emp.leaveBalances.find((b) => b.policyName === p)?.balance ?? 0,
-      );
 
       const leaves = emp.leavesApplied.filter((l) => {
         const start = new Date(l.startDateTime);
         if (from && start < from) return false;
         if (to && start > to) return false;
         return true;
+      });
+
+      // Accrual policies → remaining balance. Zero-accrual policies
+      // (Exam / Un-Paid) → days actually taken (approved) in this period.
+      const balances = policyNames.map((p) => {
+        if (ZERO_ACCRUAL.has(p)) {
+          return leaves
+            .filter(
+              (l) =>
+                l.policyName === p && l.LeaveStatus === LeaveStatus.APPROVED,
+            )
+            .reduce((sum, l) => sum + getLeaveDurationDays(l), 0);
+        }
+        return emp.leaveBalances.find((b) => b.policyName === p)?.balance ?? 0;
       });
 
       if (leaves.length === 0) {
@@ -105,7 +125,8 @@ export const GET = async (req: NextRequest) => {
             fmtDate(l.endDateTime),
             getLeaveDurationLabel(l),
             l.LeaveStatus,
-            l.reason ?? "",
+            // Prefix the leave type so the reason column carries both.
+            l.reason ? `${l.policyName}: ${l.reason}` : l.policyName,
           ]
             .map(csvCell)
             .join(","),
@@ -114,13 +135,18 @@ export const GET = async (req: NextRequest) => {
     }
 
     const csv = rows.join("\n");
-    const stamp = new Date().toISOString().slice(0, 10);
+
+    // Filename reflects the picked range; missing bounds fall back to today.
+    const today = new Date().toISOString().slice(0, 10);
+    const startStamp = from ? fromStr! : today;
+    const endStamp = to ? toStr! : today;
+    const filename = `leave-balances-${startStamp}_to_${endStamp}.csv`;
 
     return new NextResponse(csv, {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="leave-balances-${stamp}.csv"`,
+        "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
   } catch (error: any) {
