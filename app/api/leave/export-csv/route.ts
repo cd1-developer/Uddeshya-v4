@@ -15,6 +15,9 @@ const ZERO_ACCRUAL = new Set(
   POLICIES.filter((p) => p.accural === 0).map((p) => p.policyName),
 );
 
+// Un-Paid is the only unpaid policy; everything else counts as paid leave.
+const UNPAID_POLICY = "Un-Paid Leave";
+
 // Admin-only export of every employee's leave balances + leaves taken in a
 // given period, as a downloadable CSV.
 // GET /api/leave/export-csv?userId=<adminUserId>&from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -64,11 +67,19 @@ export const GET = async (req: NextRequest) => {
 
     const policyNames = POLICIES.map((p) => p.policyName);
 
-    // Header: identity + one balance column per policy + leave detail columns.
+    // "Paid Leaves" sits right after Exam Leave; it totals approved days from
+    // every policy except Un-Paid.
+    const paidInsertAt = policyNames.indexOf("Exam Leave") + 1;
+    const balanceHeaders = policyNames.map(
+      (p) => `${p} ${ZERO_ACCRUAL.has(p) ? "Taken" : "Balance"}`,
+    );
+    balanceHeaders.splice(paidInsertAt, 0, "Paid Leaves");
+
+    // Header: identity + balance columns + leave detail columns.
     const header = [
       "Employee",
       "Email",
-      ...policyNames.map((p) => `${p} ${ZERO_ACCRUAL.has(p) ? "Taken" : "Balance"}`),
+      ...balanceHeaders,
       "Leave Policy",
       "Start Date",
       "End Date",
@@ -103,6 +114,16 @@ export const GET = async (req: NextRequest) => {
         }
         return emp.leaveBalances.find((b) => b.policyName === p)?.balance ?? 0;
       });
+
+      // Paid leaves = approved days from all policies except Un-Paid.
+      const paidLeaves = leaves
+        .filter(
+          (l) =>
+            l.LeaveStatus === LeaveStatus.APPROVED &&
+            l.policyName !== UNPAID_POLICY,
+        )
+        .reduce((sum, l) => sum + getLeaveDurationDays(l), 0);
+      balances.splice(paidInsertAt, 0, paidLeaves);
 
       if (leaves.length === 0) {
         // Still emit one row so the admin sees this employee's balances.
