@@ -9,7 +9,6 @@ import { LeaveSchema } from "@/schemas/leave.schema";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/store";
 import { Badge } from "@/components/ui/badge";
-import { differenceInDays } from "date-fns";
 
 import { AbsentType, EmployeeStatus, LeaveStatus } from "@/interfaces";
 
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
+import { getLeaveDurationLabel } from "@/helper/getLeaveDurationLabel";
 
 type CreateLeaveFormValues = z.infer<typeof LeaveSchema>;
 
@@ -157,11 +157,7 @@ const LeaveRequest = () => {
                       {format(new Date(leave.endDateTime as Date), "MMM dd")}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {differenceInDays(
-                        new Date(leave.endDateTime as Date),
-                        new Date(leave.startDateTime),
-                      ) + 1}{" "}
-                      days
+                      {getLeaveDurationLabel(leave)}
                     </div>
                   </div>
                 </div>
@@ -193,6 +189,7 @@ const LeaveRequest = () => {
                 <th className="text-left p-3 font-gilRegular">Policy Name</th>
                 <th className="text-left p-3 font-gilRegular">Start Date</th>
                 <th className="text-left p-3 font-gilRegular">End Date</th>
+                <th className="text-left p-3 font-gilRegular">Duration</th>
                 <th className="text-left p-3 font-gilRegular">Reason</th>
                 <th className="text-left p-3 font-gilRegular">Status</th>
               </tr>
@@ -200,7 +197,7 @@ const LeaveRequest = () => {
             <tbody>
               {leaveData && leaveData.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center p-8">
+                  <td colSpan={6} className="text-center p-8">
                     <div className="flex flex-col items-center justify-center">
                       <img
                         src="/not-found.png"
@@ -225,6 +222,9 @@ const LeaveRequest = () => {
                     </td>
                     <td className="p-3 font-gilLight">
                       {new Date(leave.endDateTime as Date).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 font-gilLight">
+                      {getLeaveDurationLabel(leave)}
                     </td>
                     <td className="p-3 font-gilLight">{leave.reason}</td>
                     <td className="p-3 font-gilLight">

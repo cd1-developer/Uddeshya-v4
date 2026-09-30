@@ -6,14 +6,21 @@ import { useSelector } from "react-redux";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import LeaveRequests from "./Core-Compo/LeaveRequests";
 import LeaveBalances from "./Core-Compo/LeaveBalances";
+import UserDetails from "./Core-Compo/UserDetails";
 import { RootState } from "@/libs/store";
 import axios from "axios";
 import { ErrorToast } from "@/components/custom/ErrorToast";
-import { Leave, Employee } from "@/interfaces";
+import { Leave, Employee, Role } from "@/interfaces";
 
 const Core = () => {
   const [allLeaves, setAllLeaves] = useState<Leave[]>([]);
   const [assignMembers, setAssignMembers] = useState<Employee[]>([]);
+
+  const userInfo = useSelector((state: RootState) => state.dataSlice.userInfo);
+  const role = userInfo?.employee?.role;
+  const canManageUsers =
+    role === Role.ADMIN || role === Role.REPORT_MANAGER;
+
   const TABS = [
     {
       tab: "Leave Balances",
@@ -34,6 +41,10 @@ const Core = () => {
         />
       ),
     },
+    // Admin & Report Manager only.
+    ...(canManageUsers
+      ? [{ tab: "User Details", compo: <UserDetails /> }]
+      : []),
   ];
   const [activeTab, setActiveTab] = useState(TABS[0].tab);
 
