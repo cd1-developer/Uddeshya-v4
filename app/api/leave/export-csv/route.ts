@@ -28,8 +28,18 @@ const csvCell = (value: unknown): string => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-const fmtDate = (d?: Date | null): string =>
-  d ? new Date(d).toISOString().slice(0, 10) : "";
+// Leave dates are stored as UTC instants but were picked as calendar days in
+// IST, so render and compare them in IST. toISOString() reads them in the
+// server's zone (UTC in prod) and rolls a 15 Sep leave back to 14 Sep.
+// en-CA renders as YYYY-MM-DD, which also sorts as a plain string.
+const IST = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Kolkata",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+const fmtDate = (d?: Date | null): string => (d ? IST.format(new Date(d)) : "");
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -56,10 +66,6 @@ export const GET = async (req: NextRequest) => {
         { status: 403 },
       );
     }
-
-    // Period bounds (inclusive). Default: all-time if not provided.
-    const from = fromStr ? new Date(fromStr) : null;
-    const to = toStr ? new Date(`${toStr}T23:59:59.999Z`) : null;
 
     const employees = (await getEmployees()).filter(
       (e) => e.role !== Role.ADMIN,
@@ -94,10 +100,11 @@ export const GET = async (req: NextRequest) => {
       const name = emp.user?.username ?? "";
       const email = emp.user?.email ?? "";
 
+      // Period bounds are inclusive; YYYY-MM-DD strings compare as dates.
       const leaves = emp.leavesApplied.filter((l) => {
-        const start = new Date(l.startDateTime);
-        if (from && start < from) return false;
-        if (to && start > to) return false;
+        const day = fmtDate(l.startDateTime);
+        if (fromStr && day < fromStr) return false;
+        if (toStr && day > toStr) return false;
         return true;
       });
 
@@ -158,9 +165,9 @@ export const GET = async (req: NextRequest) => {
     const csv = rows.join("\n");
 
     // Filename reflects the picked range; missing bounds fall back to today.
-    const today = new Date().toISOString().slice(0, 10);
-    const startStamp = from ? fromStr! : today;
-    const endStamp = to ? toStr! : today;
+    const today = fmtDate(new Date());
+    const startStamp = fromStr || today;
+    const endStamp = toStr || today;
     const filename = `leave-balances-${startStamp}_to_${endStamp}.csv`;
 
     return new NextResponse(csv, {
