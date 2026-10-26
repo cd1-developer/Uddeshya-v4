@@ -121,8 +121,8 @@ const LeaveBalances = ({
                   className="mt-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-800"
                 >
                   <option value="">All leave types</option>
-                  <option value="Earned Leave,Casual Leave,Un-Paid Leave">
-                    Earned + Casual + Un-Paid
+                  <option value="Earned Leave,Casual Leave">
+                    Earned + Casual only
                   </option>
                 </select>
               </label>
