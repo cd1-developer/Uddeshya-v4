@@ -50,11 +50,17 @@ const LeaveBalances = ({
 
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  // "" exports every policy; otherwise a comma-separated policy list.
+  const [policies, setPolicies] = useState("");
+  // One row per employee instead of one row per leave.
+  const [summary, setSummary] = useState(false);
 
   const exportCsv = () => {
     const params = new URLSearchParams({ userId: userInfo.id });
     if (from) params.set("from", from);
     if (to) params.set("to", to);
+    if (policies) params.set("policies", policies);
+    if (summary) params.set("summary", "1");
     // Content-Disposition: attachment makes the browser download it.
     window.location.href = `/api/leave/export-csv?${params.toString()}`;
   };
@@ -80,32 +86,63 @@ const LeaveBalances = ({
         </div>
 
         {isAdmin && (
-          <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
-            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
-              From
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="mt-1 rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-800"
-              />
-            </label>
-            <label className="flex flex-col text-xs font-gilMedium text-gray-600">
-              To
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="mt-1 rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-800"
-              />
-            </label>
-            <button
-              onClick={exportCsv}
-              className="flex items-center gap-2 rounded-md bg-sky-600 px-4 py-1.5 text-sm font-gilMedium text-white transition-colors hover:bg-sky-700"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
+          <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50/60 p-3">
+            <h2 className="font-gilSemiBold text-sm text-gray-800">
+              Export Leave Data
+            </h2>
+            <p className="mb-3 text-xs font-gilRegular text-gray-500">
+              Download every employee's balances and leaves as CSV. Leave the
+              dates empty to export all time.
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+                From
+                <input
+                  type="date"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  className="mt-1 rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-800"
+                />
+              </label>
+              <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+                To
+                <input
+                  type="date"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  className="mt-1 rounded-md border border-gray-200 px-2 py-1 text-sm text-gray-800"
+                />
+              </label>
+              <label className="flex flex-col text-xs font-gilMedium text-gray-600">
+                Leave Type
+                <select
+                  value={policies}
+                  onChange={(e) => setPolicies(e.target.value)}
+                  className="mt-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-800"
+                >
+                  <option value="">All leave types</option>
+                  <option value="Casual Leave,Earned Leave">
+                    Casual + Earned only
+                  </option>
+                </select>
+              </label>
+              <label className="flex items-center gap-2 pb-1.5 text-xs font-gilMedium text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={summary}
+                  onChange={(e) => setSummary(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 accent-sky-600"
+                />
+                One row per employee
+              </label>
+              <button
+                onClick={exportCsv}
+                className="flex items-center gap-2 rounded-md bg-sky-600 px-4 py-1.5 text-sm font-gilMedium text-white transition-colors hover:bg-sky-700"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
+            </div>
           </div>
         )}
       </header>

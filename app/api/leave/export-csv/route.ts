@@ -71,37 +71,75 @@ export const GET = async (req: NextRequest) => {
       (e) => e.role !== Role.ADMIN,
     );
 
-    const policyNames = POLICIES.map((p) => p.policyName);
+    // Optional policy filter, e.g. ?policies=Casual Leave,Earned Leave.
+    // Omitted → every policy. Restricts both the balance columns and the
+    // leave rows, so the file covers only the policies asked for.
+    const selectedPolicies = searchParams
+      .get("policies")
+      ?.split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
 
-    // "Paid Leaves" sits right after Exam Leave; it totals approved days from
-    // every policy except Un-Paid.
-    const paidInsertAt = policyNames.indexOf("Exam Leave") + 1;
+    // ?summary=1 → one row per employee (unique Employee/Email), identity and
+    // balances only. Otherwise one row per leave, which repeats the employee.
+    const summary = searchParams.get("summary") === "1";
+
+    const policyNames = POLICIES.map((p) => p.policyName).filter(
+      (p) => !selectedPolicies?.length || selectedPolicies.includes(p),
+    );
+
+    if (policyNames.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid policy names in 'policies'" },
+        { status: 400 },
+      );
+    }
+
+    // "Paid Leaves" sits right after Exam Leave, or last when Exam Leave is
+    // filtered out. It totals approved days from every exported policy
+    // except Un-Paid.
+    const paidInsertAt = policyNames.includes("Exam Leave")
+      ? policyNames.indexOf("Exam Leave") + 1
+      : policyNames.length;
     const balanceHeaders = policyNames.map(
       (p) => `${p} ${ZERO_ACCRUAL.has(p) ? "Taken" : "Balance"}`,
     );
     balanceHeaders.splice(paidInsertAt, 0, "Paid Leaves");
 
-    // Header: identity + balance columns + leave detail columns.
+    // Header: identity + balance columns, then leave detail unless summarising.
     const header = [
       "Employee",
       "Email",
       ...balanceHeaders,
-      "Leave Policy",
-      "Start Date",
-      "End Date",
-      "Duration",
-      "Status",
-      "Reason",
+      ...(summary
+        ? []
+        : [
+            "Leave Policy",
+            "Start Date",
+            "End Date",
+            "Duration",
+            "Status",
+            "Reason",
+          ]),
     ];
 
     const rows: string[] = [header.map(csvCell).join(",")];
+
+    // Guards against two employee records resolving to the same user. Falls
+    // back to the employee id so rows with no user are never collapsed.
+    const seen = new Set<string>();
 
     for (const emp of employees) {
       const name = emp.user?.username ?? "";
       const email = emp.user?.email ?? "";
 
+      const key = email || emp.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
       // Period bounds are inclusive; YYYY-MM-DD strings compare as dates.
       const leaves = emp.leavesApplied.filter((l) => {
+        if (!policyNames.includes(l.policyName)) return false;
         const day = fmtDate(l.startDateTime);
         if (fromStr && day < fromStr) return false;
         if (toStr && day > toStr) return false;
@@ -131,6 +169,11 @@ export const GET = async (req: NextRequest) => {
         )
         .reduce((sum, l) => sum + getLeaveDurationDays(l), 0);
       balances.splice(paidInsertAt, 0, paidLeaves);
+
+      if (summary) {
+        rows.push([name, email, ...balances].map(csvCell).join(","));
+        continue;
+      }
 
       if (leaves.length === 0) {
         // Still emit one row so the admin sees this employee's balances.
@@ -168,7 +211,11 @@ export const GET = async (req: NextRequest) => {
     const today = fmtDate(new Date());
     const startStamp = fromStr || today;
     const endStamp = toStr || today;
-    const filename = `leave-balances-${startStamp}_to_${endStamp}.csv`;
+    // Name the file after the exported policies so two exports don't collide.
+    const scope = selectedPolicies?.length
+      ? policyNames.map((p) => p.split(" ")[0].toLowerCase()).join("-")
+      : "all";
+    const filename = `leave-${scope}${summary ? "-summary" : ""}-${startStamp}_to_${endStamp}.csv`;
 
     return new NextResponse(csv, {
       status: 200,
